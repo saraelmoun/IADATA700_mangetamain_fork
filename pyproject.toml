@@ -1,0 +1,11 @@
+[project]
+name = "iadata700-mangetamain"
+version = "0.1.0"
+description = "Dans le cadre d'un enseignement à Telecom Paris, ce projet est une application web interactive sur une analyse de données d'une entreprise factice : Mangetamain ; leader dans la recommandation B2C de recettes de cuisine à l'ancienne bio."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.10.6",
+    "numpy>=2.3.3",
+    "pandas>=2.3.2",
+]
