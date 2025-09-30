@@ -1,6 +1,19 @@
 # Env
 .venv
 
-# Data
+# Python/Streamlit : essentiel
+__pycache__/
+.venv/
+*.pyc
+*.egg-info/
+.streamlit/
+
+# Données volumineuses ou brutes
 data/raw/
+
+# Notebooks checkpoints
+*.ipynb_checkpoints
+
+# OS
+.DS_Store
 
