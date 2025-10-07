@@ -1,0 +1,29 @@
+name: Vérification PEP8 avec flake8
+
+on:
+  push:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Récupération du code
+      uses: actions/checkout@v4
+    
+    - name: Installation de Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Installation de uv
+      uses: astral-sh/setup-uv@v3
+    
+    - name: Synchronisation des dépendances
+      run: uv sync
+    
+    - name: Vérification PEP8 avec flake8
+      run: uv run flake8 src/
+      
