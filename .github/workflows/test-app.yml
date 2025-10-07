@@ -32,5 +32,5 @@ jobs:
       
       - name: Tester que Streamlit démarre
         run: |
-          timeout 30s uv run streamlit run src/main.py --server.headless true || code=$?
+          timeout 30s uv run streamlit run src/app.py --server.headless true || code=$?
           if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
