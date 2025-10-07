@@ -1,0 +1,36 @@
+name: Tests Application
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-streamlit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+      
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      
+      - name: Installer UV
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      
+      - name: Créer l'environnement virtuel
+        run: uv venv
+      
+      - name: Installer les dépendances
+        run: uv pip install -e .
+      
+      - name: Tester que Streamlit démarre
+        run: |
+          timeout 30s uv run streamlit run src/main.py --server.headless true || code=$?
+          if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
