@@ -12,8 +12,6 @@ __pycache__/
 data/raw/
 data/
 
-#flake8
-.flake8
 
 # Build utilitaire
 Makefile
