@@ -10,6 +10,13 @@ __pycache__/
 
 # Données volumineuses ou brutes
 data/raw/
+data/
+
+#flake8
+.flake8
+
+# Build utilitaire
+Makefile
 
 # Notebooks checkpoints
 *.ipynb_checkpoints
