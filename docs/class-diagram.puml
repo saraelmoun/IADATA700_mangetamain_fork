@@ -5,54 +5,104 @@ skinparam shadowing false
 skinparam defaultFontName JetBrains Mono
 skinparam dpi 150
 
-class AppConfig {
-  +Path default_recipes_path
-  +Path default_interactions_path
-  +str page_title
-  +str layout
+package "src" {
+    class App {
+        -AppConfig config
+        +run()
+        ..internes..
+        -_sidebar(): dict
+        -_render_home_page()
+        -_render_clustering_page()
+    }
+
+    class AppConfig {
+        +Path default_recipes_path
+        +str page_title
+        +str layout
+    }
 }
 
-class App {
-  -AppConfig config
-  +run()
-  ..internes..
-  -_sidebar()
-  -_load_dataframe(path)
+package "core" {
+    class DataLoader {
+        -Path file_path
+        +load_data(): DataFrame
+        +get_data_info(): dict
+        +validate_data(): bool
+    }
+
+    class DataExplorer {
+        -DataFrame df
+        -DataLoader loader
+        +get_basic_stats(): dict
+        +get_missing_values(): dict
+        +render_basic_info()
+        +render_data_overview()
+    }
+
+    class IngredientsAnalyzer {
+        -DataLoader data_loader
+        +load_and_process_data(): DataFrame
+        +parse_ingredients(ingredients_str): list
+        +get_top_ingredients(n): list
+        +create_cooccurrence_matrix(ingredients): ndarray
+        +perform_clustering(matrix, n_clusters): ndarray
+        +get_tsne_coordinates(matrix, perplexity): ndarray
+    }
 }
 
-class DataLoader {
-  -Path path
-  -DataFrame _df
-  +load_data(force=False): DataFrame
+package "components" {
+    class IngredientsClusteringPage {
+        -str default_recipes_path
+        +render()
+        ..internes..
+        -_load_and_prepare_data(): DataFrame
+        +render_sidebar(): dict
+        +render_data_overview(data)
+        +render_cooccurrence_analysis(ingredients, matrix)
+        +render_clusters(clusters, ingredients, n_clusters)
+        +render_tsne_visualization(analyzer, clusters, perplexity)
+        +render_sidebar_statistics(clusters, ingredients)
+    }
 }
 
-class DataExplorer {
-  -DataFrame _df
-  -DataLoader loader
-  +df: DataFrame
-  +reload(force=True): DataFrame
-}
+' Relations principales
+App --> AppConfig : utilise
+App --> DataLoader : crée
+App --> DataExplorer : crée
+App --> IngredientsClusteringPage : crée
 
-class RecipesExplorer {
-  +ingredient_diversity(): int
-  +avg_ingredients_per_recipe(): float
-}
+' Relations dans core
+DataExplorer --> DataLoader : utilise
+IngredientsAnalyzer --> DataLoader : utilise
 
-class InteractionsExplorer {
-  +popularity_vs_rating(): DataFrame
-  +plot_popularity_vs_rating(min_interactions=1)
-}
-
-App --> AppConfig
+' Relations principales
 App --> DataLoader : utilise
-DataExplorer --> DataLoader : optionnel
-RecipesExplorer --|> DataExplorer
-InteractionsExplorer --|> DataExplorer
-App --> RecipesExplorer : instancie
-App --> InteractionsExplorer : instancie
-'
-' NOTE: Si vous voyez une erreur liée à "dot" (Graphviz), installez graphviz ou utilisez docker:
-'   sudo apt-get install graphviz
-'   docker run --rm -v "$PWD":/workspace plantuml/plantuml -tpng docs/class-diagram.puml
-' Le nom du diagramme (class-diagram) permet de générer class-diagram.png automatiquement.
+App --> DataExplorer : utilise
+App --> IngredientsClusteringPage : utilise
+
+' Relations avec components
+IngredientsClusteringPage --> DataLoader : utilise
+IngredientsClusteringPage --> IngredientsAnalyzer : utilise
+
+note right of App
+  Application principale simplifiée
+  2 pages seulement :
+  - Home (aperçu des données)
+  - Analyse de clustering des ingrédients
+end note
+
+note right of IngredientsAnalyzer
+  Logique métier principale :
+  - Parsing des ingrédients
+  - Matrice de co-occurrence
+  - Clustering K-means
+  - Visualisation t-SNE
+end note
+
+note right of IngredientsClusteringPage
+  Page interactive Streamlit pour
+  l'analyse de clustering avec
+  paramètres configurables
+end note
+
 @enduml

@@ -9,10 +9,10 @@ from typing import (
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from data_explorer import (
+from core.data_explorer import (
     DataExplorer,
 )
-from data_loader import (
+from core.data_loader import (
     DataLoader,
 )
 

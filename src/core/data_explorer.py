@@ -10,7 +10,7 @@ from typing import (
     Optional,
 )
 import pandas as pd
-from data_loader import (
+from .data_loader import (
     DataLoader,
 )
 
