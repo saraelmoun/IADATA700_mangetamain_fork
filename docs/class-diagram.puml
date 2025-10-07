@@ -1,0 +1,58 @@
+@startuml class-diagram
+hide empty methods
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName JetBrains Mono
+skinparam dpi 150
+
+class AppConfig {
+  +Path default_recipes_path
+  +Path default_interactions_path
+  +str page_title
+  +str layout
+}
+
+class App {
+  -AppConfig config
+  +run()
+  ..internes..
+  -_sidebar()
+  -_load_dataframe(path)
+}
+
+class DataLoader {
+  -Path path
+  -DataFrame _df
+  +load_data(force=False): DataFrame
+}
+
+class DataExplorer {
+  -DataFrame _df
+  -DataLoader loader
+  +df: DataFrame
+  +reload(force=True): DataFrame
+}
+
+class RecipesExplorer {
+  +ingredient_diversity(): int
+  +avg_ingredients_per_recipe(): float
+}
+
+class InteractionsExplorer {
+  +popularity_vs_rating(): DataFrame
+  +plot_popularity_vs_rating(min_interactions=1)
+}
+
+App --> AppConfig
+App --> DataLoader : utilise
+DataExplorer --> DataLoader : optionnel
+RecipesExplorer --|> DataExplorer
+InteractionsExplorer --|> DataExplorer
+App --> RecipesExplorer : instancie
+App --> InteractionsExplorer : instancie
+'
+' NOTE: Si vous voyez une erreur liée à "dot" (Graphviz), installez graphviz ou utilisez docker:
+'   sudo apt-get install graphviz
+'   docker run --rm -v "$PWD":/workspace plantuml/plantuml -tpng docs/class-diagram.puml
+' Le nom du diagramme (class-diagram) permet de générer class-diagram.png automatiquement.
+@enduml
