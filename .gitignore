@@ -24,3 +24,13 @@ Makefile
 # OS
 .DS_Store
 
+# Scripts de test et audit temporaires
+comprehensive_audit.py
+test_cache.py
+test_feature_engineering.py
+
+# Test artifacts
+.pytest_cache/
+*.coverage
+htmlcov/
+

@@ -7,6 +7,7 @@ import streamlit as st
 from core.data_loader import DataLoader
 from core.data_explorer import DataExplorer
 from components.ingredients_clustering_page import IngredientsClusteringPage
+from components.popularity_analysis_page import PopularityAnalysisPage
 
 
 DEFAULT_RECIPES = Path("data/RAW_recipes.csv")
@@ -34,13 +35,17 @@ class App:
         # Sélection de la page
         page = st.sidebar.selectbox(
             "Page",
-            ["Home", "Analyse de clustering des ingrédients"],
+            ["Home", "Analyse de clustering des ingrédients", "Analyse popularité des recettes"],
             key="page_select_box",
         )
 
         if page == "Analyse de clustering des ingrédients":
             st.sidebar.markdown(f"### {page}")
             st.sidebar.caption("Clustering d'ingrédients basé sur la co-occurrence.")
+            return {"page": page}
+        if page == "Analyse popularité des recettes":
+            st.sidebar.markdown(f"### {page}")
+            st.sidebar.caption("Relations popularité / notes / caractéristiques")
             return {"page": page}
 
         # Configuration pour la page Home
@@ -87,6 +92,8 @@ class App:
         
         if page == "Analyse de clustering des ingrédients":
             st.title("🍳 Analyse de clustering des ingrédients")
+        elif page == "Analyse popularité des recettes":
+            st.title("🔥 Analyse popularité des recettes")
         else:
             st.title("🏠 Home - Data Explorer")
 
@@ -99,6 +106,13 @@ class App:
                 str(self.config.default_recipes_path)
             )
             clustering_page.run()
+            return
+        if page == "Analyse popularité des recettes":
+            popularity_page = PopularityAnalysisPage(
+                interactions_path=str(self.config.default_interactions_path),
+                recipes_path=str(self.config.default_recipes_path),
+            )
+            popularity_page.run()
             return
 
         # Page Home - Affichage des données avec exploration
@@ -153,7 +167,11 @@ class App:
                 st.metric("Valeurs manquantes", f"{df.isnull().sum().sum():,}")
                 
         with st.expander("Types de données"):
-            st.dataframe(df.dtypes.to_frame("Type"))
+            # Certains objets dtype (extension / objets Python) provoquent une erreur
+            # ArrowInvalid lors de la conversion interne Streamlit -> Arrow
+            # (ex: numpy.dtype objects non sérialisables). On convertit donc en str.
+            dtypes_df = df.dtypes.apply(lambda x: str(x)).to_frame("Type")
+            st.dataframe(dtypes_df)
             
         with st.expander("Analyse des colonnes clés"):
             # Analyse spécifique aux recettes si les colonnes existent

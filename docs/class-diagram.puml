@@ -2,21 +2,21 @@
 hide empty methods
 skinparam classAttributeIconSize 0
 skinparam shadowing false
-skinparam defaultFontName JetBrains Mono
+skinparam defaultFontName JetBrains Mono, Consolas, monospace
 skinparam dpi 150
 
-package "src" {
+title Architecture logique (core / components / app)
+
+package "app" {
     class App {
         -AppConfig config
         +run()
-        ..internes..
         -_sidebar(): dict
-        -_render_home_page()
-        -_render_clustering_page()
+        -_render_home_page(selection)
     }
-
     class AppConfig {
         +Path default_recipes_path
+        +Path default_interactions_path
         +str page_title
         +str layout
     }
@@ -24,85 +24,107 @@ package "src" {
 
 package "core" {
     class DataLoader {
-        -Path file_path
-        +load_data(): DataFrame
-        +get_data_info(): dict
-        +validate_data(): bool
+        -Path data_path
+        -bool cache
+        -DataFrame _df
+        +load_data(force=False): DataFrame
+        +preprocess(df): DataFrame
+        +get_data(): DataFrame
     }
 
     class DataExplorer {
-        -DataFrame df
+        -DataFrame _df
         -DataLoader loader
-        +get_basic_stats(): dict
-        +get_missing_values(): dict
-        +render_basic_info()
-        +render_data_overview()
+        +df : DataFrame <<property>>
+        +reload(force=True): DataFrame
+    }
+
+    class InteractionsAnalyzer <<dataclass>> {
+        +DataFrame? interactions
+        +DataFrame? recipes
+        +DataFrame? merged
+        -DataFrame _df
+        +aggregate(): DataFrame
+        +popularity_vs_rating(min_interactions=1): DataFrame
+        +rating_vs_feature(feature, min_interactions=1): DataFrame
+        +popularity_vs_feature(feature, min_interactions=1): DataFrame
     }
 
     class IngredientsAnalyzer {
-        -DataLoader data_loader
-        +load_and_process_data(): DataFrame
-        +parse_ingredients(ingredients_str): list
-        +get_top_ingredients(n): list
-        +create_cooccurrence_matrix(ingredients): ndarray
-        +perform_clustering(matrix, n_clusters): ndarray
-        +get_tsne_coordinates(matrix, perplexity): ndarray
+        -DataFrame data
+        -list ingredient_names
+        -DataFrame ingredients_matrix
+        +process_ingredients(n_ingredients=50): (DataFrame, list)
+        +get_most_common_ingredients(n_ingredients=50): list
+        +create_cooccurrence_matrix(top_ingredients): DataFrame
+        +perform_clustering(co_occurrence_df, n_clusters=5): ndarray
+        +generate_tsne_visualization(cluster_labels, perplexity=30): dict
     }
 }
 
 package "components" {
     class IngredientsClusteringPage {
         -str default_recipes_path
-        +render()
-        ..internes..
-        -_load_and_prepare_data(): DataFrame
         +render_sidebar(): dict
-        +render_data_overview(data)
-        +render_cooccurrence_analysis(ingredients, matrix)
+        +render_cooccurrence_analysis(ingredient_names, matrix)
         +render_clusters(clusters, ingredients, n_clusters)
         +render_tsne_visualization(analyzer, clusters, perplexity)
-        +render_sidebar_statistics(clusters, ingredients)
+    }
+
+    class PopularityAnalysisPage {
+        -PopularityAnalysisConfig config
+        +run()
+        -_sidebar(): dict
+        -_load_data(): (DataFrame, DataFrame)
+        -_scatter(data, x, y, size=None, title=""): Figure
+    }
+
+    class PopularityAnalysisConfig {
+        +Path interactions_path
+        +Path recipes_path
+        +int min_interactions_default
     }
 }
 
-' Relations principales
-App --> AppConfig : utilise
-App --> DataLoader : crée
-App --> DataExplorer : crée
-App --> IngredientsClusteringPage : crée
-
-' Relations dans core
-DataExplorer --> DataLoader : utilise
-IngredientsAnalyzer --> DataLoader : utilise
-
-' Relations principales
+' ================= Relationships =================
+App --> AppConfig : configure
 App --> DataLoader : utilise
-App --> DataExplorer : utilise
-App --> IngredientsClusteringPage : utilise
+App --> DataExplorer : instancie
+App --> IngredientsClusteringPage : page
+App --> PopularityAnalysisPage : page
 
-' Relations avec components
-IngredientsClusteringPage --> DataLoader : utilise
-IngredientsClusteringPage --> IngredientsAnalyzer : utilise
+DataExplorer --> DataLoader : charge
+InteractionsAnalyzer --> DataLoader : (données brutes)
+IngredientsAnalyzer --> DataLoader : (données recettes)
+
+PopularityAnalysisPage --> InteractionsAnalyzer : analyse
+PopularityAnalysisPage --> DataLoader : charge CSV
+IngredientsClusteringPage --> IngredientsAnalyzer : analyse
+IngredientsClusteringPage --> DataLoader : charge CSV
+
+note right of InteractionsAnalyzer
+    Analyse popularité / notes
+    Jointure interactions + recettes
+    Dérive n_ingredients si possible
+end note
+
+note right of PopularityAnalysisPage
+    Visualisation:
+    - Note vs popularité
+    - Features vs popularité
+    - Aperçu merged df
+end note
+
+note right of DataExplorer
+    Couche d'accès minimale
+    (plus de logique d'analyse ici)
+end note
 
 note right of App
-  Application principale simplifiée
-  2 pages seulement :
-  - Home (aperçu des données)
-  - Analyse de clustering des ingrédients
-end note
-
-note right of IngredientsAnalyzer
-  Logique métier principale :
-  - Parsing des ingrédients
-  - Matrice de co-occurrence
-  - Clustering K-means
-  - Visualisation t-SNE
-end note
-
-note right of IngredientsClusteringPage
-  Page interactive Streamlit pour
-  l'analyse de clustering avec
-  paramètres configurables
+    Actuellement 3 pages :
+    - Home (aperçu dataset)
+    - Clustering ingrédients
+    - Popularité recettes
 end note
 
 @enduml
