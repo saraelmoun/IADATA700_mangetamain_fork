@@ -8,6 +8,7 @@ from pathlib import (
 from dataclasses import (
     dataclass,
 )
+import sys
 import streamlit as st
 
 from data_loader import (
@@ -68,6 +69,17 @@ class App:
         return (
             loader.load_data()
         )
+
+    def _ensure_data_files(self):
+        """Download data files from S3 if not present locally."""
+        try:
+            sys.path.insert(0, str(Path(__file__).parent.parent))
+            from download_data import ensure_data_files
+            ensure_data_files()
+        except Exception as e:
+            st.error(f"⚠️ Error downloading data files: {e}")
+            st.info("Please check your internet connection and refresh the page.")
+            st.stop()
 
     # ---------- UI Sections ---------- #
     def _sidebar(
@@ -257,6 +269,8 @@ class App:
     def run(
         self,
     ):  # noqa: D401 - Streamlit entry
+        # Ensure data files are downloaded from S3 if missing
+        self._ensure_data_files()
         st.set_page_config(
             page_title=self.config.page_title,
             layout=self.config.layout,
