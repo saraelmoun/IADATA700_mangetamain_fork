@@ -22,3 +22,5 @@ Makefile
 # OS
 .DS_Store
 
+# sphinx
+.github/workflows/docs.yml
