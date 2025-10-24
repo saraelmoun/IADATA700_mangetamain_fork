@@ -1,0 +1,26 @@
+# Env
+.venv
+
+# Python/Streamlit : essentiel
+__pycache__/
+.venv/
+*.pyc
+*.egg-info/
+.streamlit/
+
+# Données volumineuses ou brutes
+data/raw/
+data/
+
+
+# Build utilitaire
+Makefile
+
+# Notebooks checkpoints
+*.ipynb_checkpoints
+
+# OS
+.DS_Store
+
+# sphinx
+.github/workflows/docs.yml
