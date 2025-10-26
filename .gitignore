@@ -21,13 +21,19 @@ Makefile
 # Notebooks checkpoints
 *.ipynb_checkpoints
 
-# OS
+# OS 
 .DS_Store
 
-# Scripts de test et audit temporaires
+# Dossier de debug et scripts de test temporaires
+debug/
+cache/
+
+# Scripts de test temporaires (gardés pour compatibilité si des fichiers restent)
 comprehensive_audit.py
 test_cache.py
 test_feature_engineering.py
+verify_*.py
+run_tests.py
 
 # Test artifacts
 .pytest_cache/

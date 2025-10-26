@@ -4,6 +4,7 @@ skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam defaultFontName JetBrains Mono, Consolas, monospace
 skinparam dpi 150
+skinparam linetype ortho
 
 title Architecture logique (core / components / app)
 
@@ -11,8 +12,6 @@ package "app" {
     class App {
         -AppConfig config
         +run()
-        -_sidebar(): dict
-        -_render_home_page(selection)
     }
     class AppConfig {
         +Path default_recipes_path
@@ -27,38 +26,39 @@ package "core" {
         -Path data_path
         -bool cache
         -DataFrame _df
-        +load_data(force=False): DataFrame
-        +preprocess(df): DataFrame
+        +load_data(): DataFrame
         +get_data(): DataFrame
     }
 
     class DataExplorer {
-        -DataFrame _df
         -DataLoader loader
         +df : DataFrame <<property>>
-        +reload(force=True): DataFrame
+    }
+
+    class PreprocessingConfig <<dataclass>> {
+        +bool enable_preprocessing
+        +str outlier_method
+        +float outlier_threshold
+        +bool enable_cache
     }
 
     class InteractionsAnalyzer <<dataclass>> {
         +DataFrame? interactions
         +DataFrame? recipes
-        +DataFrame? merged
+        +PreprocessingConfig? preprocessing
         -DataFrame _df
+        -dict _popularity_segments_info
         +aggregate(): DataFrame
-        +popularity_vs_rating(min_interactions=1): DataFrame
-        +rating_vs_feature(feature, min_interactions=1): DataFrame
-        +popularity_vs_feature(feature, min_interactions=1): DataFrame
+        +popularity_vs_rating(): DataFrame
+        +create_popularity_segments(): DataFrame
     }
 
     class IngredientsAnalyzer {
         -DataFrame data
         -list ingredient_names
         -DataFrame ingredients_matrix
-        +process_ingredients(n_ingredients=50): (DataFrame, list)
-        +get_most_common_ingredients(n_ingredients=50): list
-        +create_cooccurrence_matrix(top_ingredients): DataFrame
-        +perform_clustering(co_occurrence_df, n_clusters=5): ndarray
-        +generate_tsne_visualization(cluster_labels, perplexity=30): dict
+        +process_ingredients(): (DataFrame, list)
+        +perform_clustering(): ndarray
     }
 }
 
@@ -66,23 +66,16 @@ package "components" {
     class IngredientsClusteringPage {
         -str default_recipes_path
         +render_sidebar(): dict
-        +render_cooccurrence_analysis(ingredient_names, matrix)
-        +render_clusters(clusters, ingredients, n_clusters)
-        +render_tsne_visualization(analyzer, clusters, perplexity)
     }
 
     class PopularityAnalysisPage {
         -PopularityAnalysisConfig config
         +run()
-        -_sidebar(): dict
-        -_load_data(): (DataFrame, DataFrame)
-        -_scatter(data, x, y, size=None, title=""): Figure
     }
 
     class PopularityAnalysisConfig {
         +Path interactions_path
         +Path recipes_path
-        +int min_interactions_default
     }
 }
 
@@ -95,34 +88,39 @@ App --> PopularityAnalysisPage : page
 
 DataExplorer --> DataLoader : charge
 InteractionsAnalyzer --> DataLoader : (données brutes)
+InteractionsAnalyzer --> PreprocessingConfig : configure
 IngredientsAnalyzer --> DataLoader : (données recettes)
 
 PopularityAnalysisPage --> InteractionsAnalyzer : analyse
-PopularityAnalysisPage --> DataLoader : charge CSV
+PopularityAnalysisPage --> PopularityAnalysisConfig : configure
 IngredientsClusteringPage --> IngredientsAnalyzer : analyse
-IngredientsClusteringPage --> DataLoader : charge CSV
+
+note right of PreprocessingConfig
+    Configuration IQR:
+    - Seuil configurable (1.0-20.0)
+    - Méthode outlier (iqr/zscore)
+    - Features à traiter
+    - Cache activable
+end note
 
 note right of InteractionsAnalyzer
-    Analyse popularité / notes
-    Jointure interactions + recettes
-    Dérive n_ingredients si possible
+    Analyse avancée:
+    - Popularité / notes avec preprocessing
+    - Segmentation automatique (4 niveaux)
+    - Jointure interactions + recettes
 end note
 
 note right of PopularityAnalysisPage
-    Visualisation:
-    - Note vs popularité
-    - Features vs popularité
-    - Aperçu merged df
-end note
-
-note right of DataExplorer
-    Couche d'accès minimale
-    (plus de logique d'analyse ici)
+    Interface complète en 4 étapes:
+    - Relation qualité-popularité
+    - Segmentation par engagement
+    - Facteurs d'influence
+    - Analyse temporelle 3D
 end note
 
 note right of App
-    Actuellement 3 pages :
-    - Home (aperçu dataset)
+    Application Streamlit:
+    - Home (exploration générale)
     - Clustering ingrédients
     - Popularité recettes
 end note

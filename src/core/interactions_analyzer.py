@@ -22,7 +22,6 @@ from dataclasses import dataclass, field
 from typing import Optional, Iterable
 import pandas as pd
 import numpy as np
-from sklearn.impute import KNNImputer
 import pickle
 import hashlib
 from pathlib import Path
@@ -38,14 +37,12 @@ class PreprocessingConfig:
     enable_preprocessing: bool = True
     outlier_method: str = "iqr"  # "iqr", "zscore", "none"
     outlier_threshold: float = 1.5  # IQR multiplier or Z-score threshold
-    knn_neighbors: int = 5
-    knn_features: list = field(default_factory=lambda: ["minutes", "n_steps", "n_ingredients", "rating"])
     enable_cache: bool = True
     cache_dir: str = "cache"
     
     def get_hash(self) -> str:
         """Generate hash for cache validation."""
-        config_str = f"{self.enable_preprocessing}_{self.outlier_method}_{self.outlier_threshold}_{self.knn_neighbors}_{sorted(self.knn_features)}"
+        config_str = f"{self.enable_preprocessing}_{self.outlier_method}_{self.outlier_threshold}"
         return hashlib.md5(config_str.encode()).hexdigest()[:8]
 
 
@@ -147,7 +144,7 @@ class InteractionsAnalyzer:
 
     # ------------------ Preprocessing methods ------------------ #
     def _preprocess_data(self, df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-        """Apply preprocessing: outlier removal and KNN imputation.
+        """Apply preprocessing: outlier removal.
         
         Returns:
             Tuple of (processed_dataframe, statistics_dict)
@@ -156,23 +153,17 @@ class InteractionsAnalyzer:
         stats = {
             "original_rows": len(df),
             "outliers_removed": 0,
-            "values_imputed": 0,
             "features_processed": []
         }
         
-        # Get numerical features that exist in the dataframe
-        available_features = [f for f in self.preprocessing.knn_features if f in df_processed.columns]
+        # Get numerical features that exist in the dataframe  
+        available_features = [f for f in ["minutes", "n_steps", "n_ingredients", "rating"] if f in df_processed.columns]
         stats["features_processed"] = available_features
         
         if not available_features:
             return df_processed, stats
-        
-        # 1. KNN imputation for missing values (first to have complete data)
-        if any(df_processed[available_features].isnull().sum() > 0):
-            df_processed, imputed_count = self._knn_imputation(df_processed, available_features)
-            stats["values_imputed"] = imputed_count
 
-        # 2. Outlier detection and removal (after imputation on complete data)
+        # Outlier detection and removal
         if self.preprocessing.outlier_method != "none":
             df_processed, outliers_count = self._remove_outliers(df_processed, available_features)
             stats["outliers_removed"] = outliers_count
@@ -215,32 +206,6 @@ class InteractionsAnalyzer:
         
         return df_clean, outliers_removed
     
-    def _knn_imputation(self, df: pd.DataFrame, features: list) -> tuple[pd.DataFrame, int]:
-        """Apply KNN imputation to missing values."""
-        df_imputed = df.copy()
-        
-        # Count missing values before imputation
-        missing_before = df[features].isnull().sum().sum()
-        
-        if missing_before == 0:
-            return df_imputed, 0
-        
-        # Create imputer
-        imputer = KNNImputer(n_neighbors=self.preprocessing.knn_neighbors)
-        
-        # Apply imputation only to the specified features
-        feature_data = df[features].values
-        imputed_data = imputer.fit_transform(feature_data)
-        
-        # Replace the values in the dataframe
-        df_imputed[features] = imputed_data
-        
-        # Count missing values after imputation
-        missing_after = df_imputed[features].isnull().sum().sum()
-        values_imputed = missing_before - missing_after
-        
-        return df_imputed, values_imputed
-    
     def get_preprocessing_stats(self) -> Optional[dict]:
         """Get preprocessing statistics if available."""
         return getattr(self, 'preprocessing_stats', None)
@@ -248,11 +213,38 @@ class InteractionsAnalyzer:
     # ------------------ Cache management ------------------ #
     def _get_cache_key(self) -> str:
         """Generate cache key based on data and preprocessing config."""
-        # Create hash from interactions and recipes data shapes + config
-        interactions_hash = hashlib.md5(str(len(self.interactions) if self.interactions is not None else 0).encode()).hexdigest()[:8]
-        recipes_hash = hashlib.md5(str(len(self.recipes) if self.recipes is not None else 0).encode()).hexdigest()[:8]
+        # Create more robust hash from data content + config
+        hash_components = []
+        
+        # Add data content hashes (more robust than just length)
+        if self.interactions is not None:
+            # Hash based on shape, columns, and first/last few rows for content stability
+            interactions_info = f"{self.interactions.shape}_{sorted(self.interactions.columns)}"
+            # Add sample of data (stable across runs)
+            if len(self.interactions) > 0:
+                sample_rows = min(5, len(self.interactions))
+                first_rows_hash = hashlib.md5(str(self.interactions.head(sample_rows).values.tolist()).encode()).hexdigest()[:8]
+                last_rows_hash = hashlib.md5(str(self.interactions.tail(sample_rows).values.tolist()).encode()).hexdigest()[:8]
+                interactions_info += f"_{first_rows_hash}_{last_rows_hash}"
+            interactions_hash = hashlib.md5(interactions_info.encode()).hexdigest()[:8]
+            hash_components.append(f"interactions_{interactions_hash}")
+        
+        if self.recipes is not None:
+            # Hash based on shape, columns, and sample data
+            recipes_info = f"{self.recipes.shape}_{sorted(self.recipes.columns)}"
+            if len(self.recipes) > 0:
+                sample_rows = min(5, len(self.recipes))
+                first_rows_hash = hashlib.md5(str(self.recipes.head(sample_rows).values.tolist()).encode()).hexdigest()[:8]
+                last_rows_hash = hashlib.md5(str(self.recipes.tail(sample_rows).values.tolist()).encode()).hexdigest()[:8]
+                recipes_info += f"_{first_rows_hash}_{last_rows_hash}"
+            recipes_hash = hashlib.md5(recipes_info.encode()).hexdigest()[:8]
+            hash_components.append(f"recipes_{recipes_hash}")
+        
+        # Add config hash
         config_hash = self.preprocessing.get_hash()
-        return f"interactions_{interactions_hash}_recipes_{recipes_hash}_config_{config_hash}"
+        hash_components.append(f"config_{config_hash}")
+        
+        return "_".join(hash_components)
     
     def _get_cache_path(self) -> Path:
         """Get cache file path."""
@@ -277,13 +269,20 @@ class InteractionsAnalyzer:
             with open(cache_path, 'rb') as f:
                 cached_data = pickle.load(f)
                 
-            # Validate cache structure
+            # Validate cache structure and config compatibility
             if isinstance(cached_data, dict) and 'dataframe' in cached_data:
-                return cached_data['dataframe']
+                # Check if preprocessing config matches
+                if 'preprocessing_config' in cached_data:
+                    cached_config = cached_data['preprocessing_config']
+                    if cached_config.get_hash() != self.preprocessing.get_hash():
+                        return None
+                
+                df = cached_data['dataframe']
+                return df
+            
             return None
             
         except Exception as e:
-            # If any error, just don't use cache
             return None
     
     def _save_to_cache(self, df: pd.DataFrame) -> None:
@@ -297,11 +296,18 @@ class InteractionsAnalyzer:
                 'stats': getattr(self, 'preprocessing_stats', {})
             }
             
+            # Create parent directory if it doesn't exist
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            
             with open(cache_path, 'wb') as f:
                 pickle.dump(cache_data, f)
+            
+            # Verify the file was created
+            if not cache_path.exists():
+                pass  # Silent fail - caching is optional
                 
         except Exception as e:
-            # Silently fail - caching is optional
+            # Silent fail - caching is optional
             pass
     
     def clear_cache(self) -> bool:

@@ -20,4 +20,9 @@ dependencies = [
     "streamlit>=1.50.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.0.0",
+]
+
 

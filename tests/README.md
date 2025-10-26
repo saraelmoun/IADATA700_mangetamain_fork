@@ -39,10 +39,10 @@ uv run pytest tests/test_interactions_analyzer.py::TestInteractionsAnalyzer::tes
 - `test_aggregation_sorting` - Tri des résultats
 - `test_preprocessing_disabled` - Preprocessing désactivé
 
-### ✅ Pipeline de preprocessing (3 tests)
+### ✅ Pipeline de preprocessing (4 tests)
 - `test_preprocessing_enabled` - Preprocessing activé
 - `test_outlier_removal_iqr` - Suppression d'outliers IQR
-- `test_knn_imputation` - Imputation KNN
+- `test_missing_values_preservation` - Préservation des valeurs manquantes (plus d'imputation KNN)
 
 ### ✅ Feature engineering (4 tests)
 - `test_popularity_segmentation` - Segmentation par popularité
@@ -77,7 +77,7 @@ TestInteractionsAnalyzer::test_aggregation_sorting PASSED                       
 TestInteractionsAnalyzer::test_preprocessing_disabled PASSED                     [ 25%]
 TestInteractionsAnalyzer::test_preprocessing_enabled PASSED                      [ 30%]
 TestInteractionsAnalyzer::test_outlier_removal_iqr PASSED                        [ 35%]
-TestInteractionsAnalyzer::test_knn_imputation PASSED                             [ 40%]
+TestInteractionsAnalyzer::test_missing_values_preservation PASSED                [ 40%]
 TestInteractionsAnalyzer::test_popularity_segmentation PASSED                    [ 45%]
 TestInteractionsAnalyzer::test_recipe_categorization PASSED                      [ 50%]
 TestInteractionsAnalyzer::test_efficiency_score_calculation PASSED               [ 55%]
