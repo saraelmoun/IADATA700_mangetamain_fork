@@ -1181,9 +1181,113 @@ class PopularityAnalysisPage:
             
             **Principe directeur :** Conserver toutes les interactions légitimes, filtrer uniquement 
             les anomalies techniques évidentes.
+            """)
             
+            # Vérification en temps réel des valeurs manquantes
+            st.markdown("#### 🔍 Vérification des valeurs manquantes")
+            
+            # Chargement temporaire pour vérification
+            temp_interactions_df, temp_recipes_df = self._load_data()
+            
+            # Analyse des valeurs manquantes dans les colonnes critiques pour l'analyse
+            critical_interactions_cols = ['rating', 'recipe_id', 'user_id']
+            critical_recipes_cols = ['minutes', 'n_steps', 'n_ingredients', 'id']
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**🎯 Colonnes critiques (interactions) :**")
+                interactions_critical_missing = 0
+                for col in critical_interactions_cols:
+                    if col in temp_interactions_df.columns:
+                        missing = temp_interactions_df[col].isnull().sum()
+                        interactions_critical_missing += missing
+                        status = "✅" if missing == 0 else "❌"
+                        st.write(f"{status} `{col}`: {missing:,} manquantes")
+                    else:
+                        st.write(f"❌ `{col}`: colonne absente")
+                
+                if interactions_critical_missing == 0:
+                    st.success("✅ Toutes les colonnes critiques sont complètes")
+                else:
+                    st.error(f"❌ {interactions_critical_missing} valeurs manquantes dans les colonnes critiques")
+            
+            with col2:
+                st.markdown("**🎯 Colonnes critiques (recettes) :**")
+                recipes_critical_missing = 0
+                for col in critical_recipes_cols:
+                    if col in temp_recipes_df.columns:
+                        missing = temp_recipes_df[col].isnull().sum()
+                        recipes_critical_missing += missing
+                        status = "✅" if missing == 0 else "❌"
+                        st.write(f"{status} `{col}`: {missing:,} manquantes")
+                    else:
+                        st.write(f"❌ `{col}`: colonne absente")
+                
+                if recipes_critical_missing == 0:
+                    st.success("✅ Toutes les colonnes critiques sont complètes")
+                else:
+                    st.error(f"❌ {recipes_critical_missing} valeurs manquantes dans les colonnes critiques")
+            
+            # Analyse complète (toutes colonnes)
+            interactions_total_missing = temp_interactions_df.isnull().sum().sum()
+            recipes_total_missing = temp_recipes_df.isnull().sum().sum()
+            
+            with st.expander("📊 Analyse complète de toutes les colonnes", expanded=False):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Fichier interactions :**")
+                    interactions_missing = temp_interactions_df.isnull().sum()
+                    if interactions_total_missing == 0:
+                        st.success("✅ Aucune valeur manquante")
+                    else:
+                        st.info(f"ℹ️ {interactions_total_missing} valeurs manquantes (colonnes non-critiques)")
+                        missing_details = interactions_missing[interactions_missing > 0]
+                        if len(missing_details) > 0:
+                            st.code(missing_details.to_string())
+                
+                with col2:
+                    st.markdown("**Fichier recettes :**")
+                    recipes_missing = temp_recipes_df.isnull().sum()
+                    if recipes_total_missing == 0:
+                        st.success("✅ Aucune valeur manquante")
+                    else:
+                        st.info(f"ℹ️ {recipes_total_missing} valeurs manquantes (colonnes non-critiques)")
+                        missing_details = recipes_missing[recipes_missing > 0]
+                        if len(missing_details) > 0:
+                            st.code(missing_details.to_string())
+            
+            # Conclusion sur la nécessité du KNN
+            total_critical_missing = interactions_critical_missing + recipes_critical_missing
+            if total_critical_missing == 0:
+                st.success("""
+                **🎯 Conclusion :** Aucune valeur manquante dans les colonnes critiques pour l'analyse numérique.
+                
+                ✅ **KNN imputation non nécessaire** - toutes les données numériques (rating, minutes, n_steps, n_ingredients) sont complètes.
+                
+                ℹ️ Les valeurs manquantes détectées sont dans des colonnes textuelles (review, description) non utilisées dans les calculs.
+                """)
+            else:
+                st.warning("""
+                **⚠️ Attention :** Des valeurs manquantes existent dans les colonnes critiques.
+                
+                🔧 **KNN imputation recommandée** pour maintenir l'intégrité de l'analyse.
+                """)
+            
+            # Statistiques globales
+            total_cells_interactions = temp_interactions_df.shape[0] * temp_interactions_df.shape[1]
+            total_cells_recipes = temp_recipes_df.shape[0] * temp_recipes_df.shape[1]
+            total_missing = interactions_total_missing + recipes_total_missing
+            total_cells = total_cells_interactions + total_cells_recipes
+            
+            completeness_rate = ((total_cells - total_missing) / total_cells) * 100
+            
+            st.info(f"**Taux de complétude global :** {completeness_rate:.2f}% ({total_cells - total_missing:,} cellules complètes sur {total_cells:,})")
+            
+            st.markdown("""
             **🔧 Méthode IQR (Interquartile Range) :**
-            - **Seuil configurable** : 1.0 à 20.0 (par défaut : 3.0)
+            - **Seuil configurable** : 1.0 à 20.0 (par défaut : 10.0)
             - **Calcul** : Q1 - seuil×IQR ≤ valeurs ≤ Q3 + seuil×IQR
             - **Cibles** : Variables numériques continues (temps, étapes, ingrédients)
             
@@ -1224,16 +1328,54 @@ class PopularityAnalysisPage:
             preprocessing=config_selective
         )
         
-        # Affichage de l'impact du preprocessing
+        # Affichage de l'impact du preprocessing avec détails statistiques
         try:
             merged_df = analyzer._df  # type: ignore[attr-defined]
             original_count = len(interactions_df)
             filtered_count = len(merged_df)
             filtered_percentage = (filtered_count / original_count) * 100
             
-            st.info(f"**Preprocessing** (seuil {outlier_threshold:.1f}) : {filtered_count:,} observations conservées ({filtered_percentage:.1f}%)")
-        except:
-            st.info(f"**Preprocessing** (seuil {outlier_threshold:.1f})")
+            # Récupération des stats de preprocessing
+            preprocessing_stats = analyzer.get_preprocessing_stats()
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric(
+                    "📊 Observations conservées", 
+                    f"{filtered_count:,}",
+                    delta=f"{filtered_percentage:.1f}% du total"
+                )
+            with col2:
+                if preprocessing_stats and 'outliers_removed' in preprocessing_stats:
+                    outliers_removed = preprocessing_stats['outliers_removed']
+                    st.metric(
+                        "🚫 Outliers supprimés", 
+                        f"{outliers_removed:,}",
+                        delta=f"-{(outliers_removed/original_count)*100:.1f}%" if outliers_removed > 0 else "0%"
+                    )
+                else:
+                    st.metric("🚫 Outliers supprimés", "0")
+            with col3:
+                st.metric(
+                    "⚙️ Seuil IQR actuel", 
+                    f"{outlier_threshold:.1f}x",
+                    help="Multiplicateur appliqué à l'écart interquartile"
+                )
+            
+            # Détails des features traitées
+            if preprocessing_stats and 'features_processed' in preprocessing_stats:
+                features_processed = preprocessing_stats['features_processed']
+                if features_processed:
+                    st.info(f"**Features analysées :** {', '.join(features_processed)}")
+                    
+                    # Bouton pour afficher les détails complets du preprocessing
+                    if st.button("🔍 Voir les détails du preprocessing"):
+                        st.json(preprocessing_stats)
+                        
+            st.success(f"✅ **Preprocessing terminé** - {filtered_percentage:.1f}% des données conservées avec le seuil {outlier_threshold:.1f}x")
+            
+        except Exception as e:
+            st.info(f"**Preprocessing** (seuil {outlier_threshold:.1f}) - Détails non disponibles: {str(e)}")
         
         # Cache management in sidebar
         self._render_cache_controls(analyzer)
