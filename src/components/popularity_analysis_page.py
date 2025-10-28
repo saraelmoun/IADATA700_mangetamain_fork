@@ -271,8 +271,8 @@ class PopularityAnalysisPage:
         - **Engagement Viral** : Plus de {int(thresholds['high_max'])} interactions
           (5% des recettes - phénomènes d'adoption exceptionnelle)
         
-        **� Constat :** Cette segmentation confirme que la popularité suit une distribution 
-        de type Pareto plutôt qu'une progression linéaire.
+        **🎯 Constat :** Cette segmentation basée sur les percentiles révèle une concentration
+        progressive de la popularité plutôt qu'une progression linéaire.
         """)
 
     def _render_step_3(self, analyzer: InteractionsAnalyzer, agg: pd.DataFrame, 
@@ -848,14 +848,13 @@ class PopularityAnalysisPage:
         **Morphologie observée sur les 3 recettes les plus virales :**
         - **Phase 1** : Accumulation lente (dZ/dt faible) - période d'émergence
         - **Phase 2** : Accélération massive (d²Z/dt² > 0) - explosion virale
-        - **Phase 3** : Plateau puis déclin (dZ/dt → 0 puis négatif) - fin de mode
+        - **Phase 3** : Plateau puis déclin possible à prévoir (dZ/dt → 0 puis négatif) - fin de mode
         
         **Explication simple :** Comme toute tendance, les recettes virales suivent 
         le même cycle : émergence discrète, explosion quand elles deviennent "à la mode", 
         puis retour progressif à la normale quand l'effet de nouveauté s'estompe.
         
-        **💡 Point clé :** La qualité (note ≥ 4.0) détermine l'intensité de chaque phase, 
-        mais le pattern temporel reste universel - c'est la signature du succès viral.
+        
         """)
         
         
@@ -1112,7 +1111,7 @@ class PopularityAnalysisPage:
         ax.grid(True, alpha=0.3, axis='y')
     # ---------------- Main Render ---------------- #
     def run(self):
-        st.header("� Analyse des données")
+        
         
         # Introduction analytique
         with st.expander("🎯 Objectifs et méthodologie de l'analyse", expanded=True):
@@ -1384,7 +1383,7 @@ class PopularityAnalysisPage:
         **1. Relation qualité-popularité :** Non-linéaire avec formation de clusters distincts
         selon le niveau d'engagement, confirmant que l'excellence seule ne garantit pas la viralité.
         
-        **2. Segmentation comportementale :** Distribution de type Pareto révélant 4 segments 
+        **2. Segmentation comportementale :** Segmentation par percentiles révélant 4 segments 
         (faible/modéré/élevé/viral) avec des dynamiques d'adoption distinctes.
         
         **3. Facteurs d'optimisation :** Les caractéristiques techniques révèlent des zones 
@@ -1394,18 +1393,10 @@ class PopularityAnalysisPage:
         - Richesse compositionnelle : balance entre richesse et accessibilité
         
         **4. Pattern universel de viralité :** Les recettes les plus populaires suivent 
-        un cycle commun : émergence progressive → explosion virale → stabilisation/déclin.
+        un cycle commun : émergence progressive, explosion virale, stabilisation ou déclin.
         Ce pattern reflète les mécanismes naturels des tendances culturelles.
         
-        ### Implications analytiques
         
-        Cette analyse révèle que le succès culinaire digital obéit à des lois comportementales 
-        prévisibles. La viralité n'est pas un phénomène aléatoire mais suit des patterns 
-        temporels identifiables.
-        
-        **Insight principal :** La qualité constitue un prérequis nécessaire mais non suffisant. 
-        Le succès viral résulte de l'alignement entre excellence intrinsèque, timing optimal 
-        et mécanismes d'amplification sociale.
         """)
         
         st.markdown("---")
