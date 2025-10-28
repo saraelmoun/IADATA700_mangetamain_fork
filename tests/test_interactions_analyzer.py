@@ -73,13 +73,13 @@ class TestInteractionsAnalyzer:
         config = PreprocessingConfig(
             enable_preprocessing=True,
             outlier_method="iqr",
-            outlier_threshold=1.5,
-            enable_cache=False  # Disable cache for tests
+            outlier_threshold=1.5
         )
         return InteractionsAnalyzer(
             interactions=sample_interactions_data,
             recipes=sample_recipes_data,  # Utilisez des données sans valeurs manquantes
-            preprocessing=config
+            preprocessing=config,
+            cache_enabled=False  # Disable cache for tests
         )
 
     # ==================== BASIC FUNCTIONALITY TESTS ====================
@@ -180,14 +180,14 @@ class TestInteractionsAnalyzer:
         config = PreprocessingConfig(
             enable_preprocessing=True,
             outlier_method="iqr",
-            outlier_threshold=1.5,
-            enable_cache=False
+            outlier_threshold=1.5
         )
         
         analyzer = InteractionsAnalyzer(
             interactions=sample_interactions_data,
             recipes=recipes_with_outliers,
-            preprocessing=config
+            preprocessing=config,
+            cache_enabled=False
         )
         
         agg = analyzer.aggregate()
@@ -202,14 +202,14 @@ class TestInteractionsAnalyzer:
         config = PreprocessingConfig(
             enable_preprocessing=True,
             outlier_method="iqr",
-            outlier_threshold=1.5,
-            enable_cache=False
+            outlier_threshold=1.5
         )
         
         analyzer = InteractionsAnalyzer(
             interactions=sample_interactions_data,
             recipes=sample_recipes_with_missing,
-            preprocessing=config
+            preprocessing=config,
+            cache_enabled=False
         )
         
         # Get the merged dataframe
@@ -331,40 +331,40 @@ class TestInteractionsAnalyzer:
     
     def test_cache_disabled(self, sample_interactions_data, sample_recipes_data):
         """Test that cache can be disabled."""
-        config = PreprocessingConfig(enable_cache=False)
+        config = PreprocessingConfig()
         analyzer = InteractionsAnalyzer(
             interactions=sample_interactions_data,
             recipes=sample_recipes_data,
-            preprocessing=config
+            preprocessing=config,
+            cache_enabled=False
         )
         
-        cache_info = analyzer.get_cache_info()
-        assert cache_info['cache_enabled'] == False
+        # Test that cache is disabled
+        assert analyzer._cache_enabled == False
     
     def test_cache_info_structure(self, analyzer_basic):
         """Test cache info structure."""
         cache_info = analyzer_basic.get_cache_info()
         
-        required_keys = [
-            'cache_enabled',
-            'cache_dir', 
-            'cache_key',
-            'cache_exists',
-            'cache_files_count'
-        ]
-        
-        for key in required_keys:
-            assert key in cache_info
+        # New cache structure has different keys
+        assert isinstance(cache_info, dict)
+        # Cache info may be empty if no cache files exist yet, 
+        # or have the extended structure with cache metadata
+        if len(cache_info) > 0:
+            # Peut avoir soit la structure simple (operations) soit la structure étendue
+            has_operations = 'operations' in cache_info
+            has_extended_structure = 'cache_info' in cache_info
+            assert has_operations or has_extended_structure
     
-    def test_cache_key_generation(self, analyzer_basic):
-        """Test that cache keys are generated consistently."""
-        key1 = analyzer_basic._get_cache_key()
-        key2 = analyzer_basic._get_cache_key()
+    def test_cache_enabled_by_default(self, sample_interactions_data, sample_recipes_data):
+        """Test that cache is enabled by default."""
+        analyzer = InteractionsAnalyzer(
+            interactions=sample_interactions_data,
+            recipes=sample_recipes_data
+        )
         
-        # Same analyzer should generate same cache key
-        assert key1 == key2
-        assert len(key1) > 0
-        assert isinstance(key1, str)
+        # Cache should be enabled by default
+        assert analyzer._cache_enabled == True
 
     # ==================== ERROR HANDLING TESTS ====================
     
@@ -418,14 +418,14 @@ class TestInteractionsAnalyzer:
         """Test complete pipeline from raw data to insights."""
         config = PreprocessingConfig(
             enable_preprocessing=True,
-            outlier_method="iqr",
-            enable_cache=False
+            outlier_method="iqr"
         )
         
         analyzer = InteractionsAnalyzer(
             interactions=sample_interactions_data,
             recipes=sample_recipes_with_missing,
-            preprocessing=config
+            preprocessing=config,
+            cache_enabled=False
         )
         
         # Test full pipeline

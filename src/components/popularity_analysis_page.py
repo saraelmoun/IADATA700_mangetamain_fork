@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 
 from core.data_loader import DataLoader
 from core.interactions_analyzer import InteractionsAnalyzer, PreprocessingConfig
+from core.logger import get_logger
 
 
 @dataclass
@@ -29,6 +30,7 @@ class PopularityAnalysisPage:
             interactions_path=Path(interactions_path),
             recipes_path=Path(recipes_path),
         )
+        self.logger = get_logger()
 
     # ---------------- Sidebar ---------------- #
     def _sidebar(self):
@@ -688,9 +690,15 @@ class PopularityAnalysisPage:
         - **Y** : Note moyenne à cette date  
         - **Z** : Nombre cumulé d'interactions
         - **Trajectoire** : Plus elle s'accélère, plus la recette devient virale
+        
+        📊 **Note :** La visualisation 3D utilise les données brutes pour préserver toutes les recettes.
+        Les statistiques d'analyse peuvent différer car elles utilisent des données nettoyées.
         """)
         
-        # Create 3D visualization using real data from the dataset
+        # Create 3D visualization using RAW data to preserve all recipes
+        # Note: 3D visualization shows actual recipe trajectories without preprocessing
+        # to ensure no recipes are excluded from visualization
+        self.logger.info("Using raw data for 3D visualization to preserve all recipe trajectories")
         self._create_3d_visualization_real(selected_recipe_ids, interactions_df, recipe_display, selected_indices)
 
     def _create_3d_visualization_real(self, recipe_ids: list, interactions_df: pd.DataFrame,
@@ -1313,20 +1321,23 @@ class PopularityAnalysisPage:
         outlier_threshold = params["outlier_threshold"]
 
         with st.spinner("Chargement des données..."):
+            self.logger.info("Loading data for popularity analysis")
             interactions_df, recipes_df = self._load_data()
+            self.logger.debug(f"Loaded interactions: {interactions_df.shape}, recipes: {recipes_df.shape}")
 
         # Configuration preprocessing sélective : filtrer les valeurs techniques aberrantes mais garder toutes les notes
         config_selective = PreprocessingConfig(
             enable_preprocessing=True,
             outlier_method="iqr",     # Méthode IQR avec seuil configurable
-            outlier_threshold=outlier_threshold,   # Seuil configuré via sidebar
-            enable_cache=True
+            outlier_threshold=outlier_threshold   # Seuil configuré via sidebar
         )
         analyzer = InteractionsAnalyzer(
             interactions=interactions_df, 
             recipes=recipes_df,
-            preprocessing=config_selective
+            preprocessing=config_selective,
+            cache_enabled=True  # Cache activé pour de meilleures performances
         )
+        self.logger.info(f"Initialized InteractionsAnalyzer with preprocessing threshold {outlier_threshold}")
         
         # Affichage de l'impact du preprocessing avec détails statistiques
         try:

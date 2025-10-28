@@ -13,10 +13,12 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 
+from .cacheable_mixin import CacheableMixin
 from .data_loader import DataLoader
+from .logger import get_logger
 
 
-class IngredientsAnalyzer:
+class IngredientsAnalyzer(CacheableMixin):
     """Classe pour analyser les ingrédients et effectuer le clustering basé sur la co-occurrence."""
     
     def __init__(self, data: pd.DataFrame):
@@ -31,6 +33,45 @@ class IngredientsAnalyzer:
         self.ingredients_matrix = None
         self.ingredient_groups = []
         self.ingredient_mapping = {}
+        self.logger = get_logger()
+        self.logger.info(f"IngredientsAnalyzer initialized with {len(data)} recipes")
+        
+        # Enable cache
+        self.enable_cache(True)
+    
+    def _get_default_cache_params(self) -> dict:
+        """Generate cache parameters for the current configuration."""
+        return {
+            'data_shape': self.data.shape,
+            'data_hash': hash(str(self.data.columns.tolist()) + str(self.data.index.tolist())),
+            'analyzer_type': 'ingredients'
+        }
+    
+    def get_cache_info(self) -> dict:
+        """Get cache information compatible with the old interface."""
+        from .cache_manager import get_cache_manager
+        
+        cache_manager = get_cache_manager()
+        cache_info = cache_manager.get_info()
+        
+        # Check if cache exists for this analyzer
+        analyzer_name = "ingredients"
+        analyzer_files = 0
+        cache_exists = False
+        
+        if analyzer_name in cache_info.get('analyzers', {}):
+            analyzer_files = cache_info['analyzers'][analyzer_name].get('files', 0)
+            cache_exists = analyzer_files > 0
+        
+        # Return format compatible with old interface
+        return {
+            'cache_enabled': True,  # Always enabled with new cache system
+            'cache_exists': cache_exists,
+            'cache_files_count': analyzer_files,  # Add missing key for compatibility
+            'cache_info': cache_info,  # Include full cache info for advanced usage
+            'total_files': cache_info.get('total_files', 0),
+            'total_size_mb': cache_info.get('total_size_mb', 0.0)
+        }
     
     def normalize_ingredient(self, txt: str) -> str:
         """
@@ -356,6 +397,16 @@ class IngredientsAnalyzer:
         Returns:
             Tuple (matrice de co-occurrence DataFrame, noms des ingrédients représentatifs)
         """
+        return self.cached_operation(
+            operation_name="process_ingredients",
+            operation_func=lambda: self._compute_process_ingredients(n_ingredients),
+            cache_params={'n_ingredients': n_ingredients, **self._get_default_cache_params()}
+        )
+    
+    def _compute_process_ingredients(self, n_ingredients: int = 50) -> tuple[pd.DataFrame, list]:
+        """Compute the ingredients processing (called when not in cache)."""
+        self.logger.info(f"Computing ingredients processing from scratch with n_ingredients={n_ingredients}")
+        
         # Obtenir les ingrédients représentatifs avec regroupement
         self.ingredient_names = self.get_most_common_ingredients(n_ingredients)
         
@@ -375,6 +426,24 @@ class IngredientsAnalyzer:
         Returns:
             Labels des clusters pour chaque ingrédient
         """
+        # Create cache key based on matrix and parameters
+        matrix_hash = hash(str(co_occurrence_df.values.tolist()))
+        cache_params = {
+            'n_clusters': n_clusters,
+            'matrix_hash': matrix_hash,
+            **self._get_default_cache_params()
+        }
+        
+        return self.cached_operation(
+            operation_name="perform_clustering",
+            operation_func=lambda: self._compute_clustering(co_occurrence_df, n_clusters),
+            cache_params=cache_params
+        )
+    
+    def _compute_clustering(self, co_occurrence_df: pd.DataFrame, n_clusters: int = 5) -> np.ndarray:
+        """Compute the clustering (called when not in cache)."""
+        self.logger.info(f"Computing clustering from scratch with n_clusters={n_clusters}")
+        
         # Appliquer KMeans sur la matrice de co-occurrence
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
         
@@ -399,6 +468,27 @@ class IngredientsAnalyzer:
         """
         if not hasattr(self, 'ingredients_matrix') or self.ingredients_matrix is None:
             return {"error": "Matrice de co-occurrence non disponible"}
+        
+        # Create cache key based on matrix, clusters and parameters
+        matrix_hash = hash(str(self.ingredients_matrix.values.tolist()))
+        clusters_hash = hash(str(cluster_labels.tolist()))
+        cache_params = {
+            'matrix_hash': matrix_hash,
+            'clusters_hash': clusters_hash,
+            'perplexity': perplexity,
+            'random_state': random_state,
+            **self._get_default_cache_params()
+        }
+        
+        return self.cached_operation(
+            operation_name="generate_tsne_visualization",
+            operation_func=lambda: self._compute_tsne_visualization(cluster_labels, perplexity, random_state),
+            cache_params=cache_params
+        )
+    
+    def _compute_tsne_visualization(self, cluster_labels: np.ndarray, perplexity: int = 30, random_state: int = 42) -> dict:
+        """Compute t-SNE visualization (called when not in cache)."""
+        self.logger.info(f"Computing t-SNE visualization from scratch with perplexity={perplexity}, random_state={random_state}")
         
         # Utiliser la matrice de co-occurrence comme données d'entrée pour t-SNE
         matrix_data = self.ingredients_matrix.values

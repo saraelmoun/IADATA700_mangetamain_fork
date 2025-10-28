@@ -24,9 +24,12 @@ Makefile
 # OS 
 .DS_Store
 
-# Dossier de debug et scripts de test temporaires
-debug/
+# Dossier des caches
 cache/
+
+# Logs et debug
+debug/
+*.log
 
 # Scripts de test temporaires (gardés pour compatibilité si des fichiers restent)
 comprehensive_audit.py
@@ -40,3 +43,4 @@ run_tests.py
 *.coverage
 htmlcov/
 
+CACHE_ MIGRATION_PLAN.md

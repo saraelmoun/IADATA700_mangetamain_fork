@@ -22,11 +22,17 @@ from dataclasses import dataclass, field
 from typing import Optional, Iterable
 import pandas as pd
 import numpy as np
-import pickle
 import hashlib
+
+from .logger import get_logger
+from .cacheable_mixin import CacheableMixin
+
+
 from pathlib import Path
 
+from .logger import get_logger
 
+# Column name mappings for compatibility
 RECIPE_ID_COL = "recipe_id"
 RATING_COL = "rating"
 
@@ -37,8 +43,6 @@ class PreprocessingConfig:
     enable_preprocessing: bool = True
     outlier_method: str = "iqr"  # "iqr", "zscore", "none"
     outlier_threshold: float = 1.5  # IQR multiplier or Z-score threshold
-    enable_cache: bool = True
-    cache_dir: str = "cache"
     
     def get_hash(self) -> str:
         """Generate hash for cache validation."""
@@ -47,7 +51,7 @@ class PreprocessingConfig:
 
 
 @dataclass
-class InteractionsAnalyzer:
+class InteractionsAnalyzer(CacheableMixin):
     """Compute relational aggregates between interactions & recipe metadata.
 
     Parameters
@@ -65,18 +69,66 @@ class InteractionsAnalyzer:
     recipes: Optional[pd.DataFrame] = None
     merged: Optional[pd.DataFrame] = None
     preprocessing: PreprocessingConfig = field(default_factory=PreprocessingConfig)
+    cache_enabled: bool = True  # Cache control parameter
     
     def __post_init__(self) -> None:
-        # Try to load from cache first
-        if self.preprocessing.enable_cache:
-            cached_df = self._load_from_cache()
-            if cached_df is not None:
-                self._df = cached_df
-                self.preprocessing_stats = {"loaded_from_cache": True}
-                return
-                
+        # Initialize mixin first
+        CacheableMixin.__init__(self)
+        self.logger = get_logger()
+        
+        # Enable/disable cache based on parameter
+        self.enable_cache(self.cache_enabled)
+        
+        # Use cached operation for data preprocessing
+        self._df = self.cached_operation(
+            operation_name='preprocess_data',
+            operation_func=self._compute_preprocessed_data,
+            cache_params=self._get_default_cache_params()
+        )
+    
+    def _get_default_cache_params(self) -> dict:
+        """Generate cache parameters for the current configuration."""
+        return {
+            'preprocessing_config': self.preprocessing.get_hash(),
+            'has_merged': self.merged is not None,
+            'interactions_shape': self.interactions.shape if self.interactions is not None else None,
+            'recipes_shape': self.recipes.shape if self.recipes is not None else None,
+            'merged_shape': self.merged.shape if self.merged is not None else None,
+        }
+    
+    def get_cache_info(self) -> dict:
+        """Get cache information compatible with the old interface."""
+        from .cache_manager import get_cache_manager
+        
+        cache_manager = get_cache_manager()
+        cache_info = cache_manager.get_info()
+        
+        # Check if cache exists for this analyzer
+        analyzer_name = "interactions"
+        analyzer_files = 0
+        cache_exists = False
+        
+        if analyzer_name in cache_info.get('analyzers', {}):
+            analyzer_files = cache_info['analyzers'][analyzer_name].get('files', 0)
+            cache_exists = analyzer_files > 0
+        
+        # Return format compatible with old interface
+        return {
+            'cache_enabled': True,  # Always enabled with new cache system
+            'cache_exists': cache_exists,
+            'cache_files_count': analyzer_files,  # Add missing key for compatibility
+            'cache_info': cache_info,  # Include full cache info for advanced usage
+            'total_files': cache_info.get('total_files', 0),
+            'total_size_mb': cache_info.get('total_size_mb', 0.0)
+        }
+    
+    def _compute_preprocessed_data(self) -> pd.DataFrame:
+        """Compute the preprocessed data (called when not in cache)."""
+        self.logger.info("Computing preprocessed data from scratch")
+        
+        # Step 1: Initial data merging and standardization
         if self.merged is not None:
-            self._df = self._standardize_cols(self.merged.copy())
+            df = self._standardize_cols(self.merged.copy())
         else:
             if self.interactions is None:
                 raise ValueError("Provide either 'merged' or 'interactions' DataFrame")
@@ -88,25 +140,28 @@ class InteractionsAnalyzer:
                     rec = rec.rename(columns={'id': RECIPE_ID_COL})
                 # prefer left join to keep only interactions that occurred
                 if RECIPE_ID_COL in rec.columns:
-                    self._df = inter.merge(rec, on=RECIPE_ID_COL, how="left", suffixes=("", "_r"))
+                    df = inter.merge(rec, on=RECIPE_ID_COL, how="left", suffixes=("", "_r"))
                 else:
-                    self._df = inter
+                    df = inter
             else:
-                self._df = inter
+                df = inter
 
-        # Derive n_ingredients if ingredients list present and column absent
-        if "n_ingredients" not in self._df.columns:
-            ingredient_col = self._detect_ingredients_column(self._df.columns)
+        # Step 2: Derive n_ingredients if ingredients list present and column absent
+        if "n_ingredients" not in df.columns:
+            ingredient_col = self._detect_ingredients_column(df.columns)
             if ingredient_col:
-                self._df["n_ingredients"] = self._df[ingredient_col].apply(self._safe_count_ingredients)
+                df["n_ingredients"] = df[ingredient_col].apply(self._safe_count_ingredients)
 
-        # Apply preprocessing if enabled
+        # Step 3: Apply preprocessing if enabled
         if self.preprocessing.enable_preprocessing:
-            self._df, self.preprocessing_stats = self._preprocess_data(self._df)
+            self.logger.info("Starting data preprocessing (outlier removal)")
+            df, self.preprocessing_stats = self._preprocess_data(df)
+            outliers_removed = self.preprocessing_stats.get('outliers_removed', 0)
+            self.logger.info(f"Preprocessing completed: {outliers_removed} outliers removed")
+        else:
+            self.preprocessing_stats = {"outliers_removed": 0}
         
-        # Save to cache if enabled
-        if self.preprocessing.enable_cache:
-            self._save_to_cache(self._df)
+        return df
 
     # ------------------ Internal helpers ------------------ #
     @staticmethod
@@ -159,14 +214,18 @@ class InteractionsAnalyzer:
         # Get numerical features that exist in the dataframe  
         available_features = [f for f in ["minutes", "n_steps", "n_ingredients", "rating"] if f in df_processed.columns]
         stats["features_processed"] = available_features
+        # Removed debug logs for performance
         
         if not available_features:
+            self.logger.warning("No numerical features found for preprocessing")
             return df_processed, stats
 
         # Outlier detection and removal
         if self.preprocessing.outlier_method != "none":
             df_processed, outliers_count = self._remove_outliers(df_processed, available_features)
             stats["outliers_removed"] = outliers_count
+            if outliers_count > 0:
+                self.logger.info(f"Removed {outliers_count} outliers using {self.preprocessing.outlier_method} method")
             
         stats["final_rows"] = len(df_processed)
         return df_processed, stats
@@ -209,142 +268,6 @@ class InteractionsAnalyzer:
     def get_preprocessing_stats(self) -> Optional[dict]:
         """Get preprocessing statistics if available."""
         return getattr(self, 'preprocessing_stats', None)
-    
-    # ------------------ Cache management ------------------ #
-    def _get_cache_key(self) -> str:
-        """Generate cache key based on data and preprocessing config."""
-        # Create more robust hash from data content + config
-        hash_components = []
-        
-        # Add data content hashes (more robust than just length)
-        if self.interactions is not None:
-            # Hash based on shape, columns, and first/last few rows for content stability
-            interactions_info = f"{self.interactions.shape}_{sorted(self.interactions.columns)}"
-            # Add sample of data (stable across runs)
-            if len(self.interactions) > 0:
-                sample_rows = min(5, len(self.interactions))
-                first_rows_hash = hashlib.md5(str(self.interactions.head(sample_rows).values.tolist()).encode()).hexdigest()[:8]
-                last_rows_hash = hashlib.md5(str(self.interactions.tail(sample_rows).values.tolist()).encode()).hexdigest()[:8]
-                interactions_info += f"_{first_rows_hash}_{last_rows_hash}"
-            interactions_hash = hashlib.md5(interactions_info.encode()).hexdigest()[:8]
-            hash_components.append(f"interactions_{interactions_hash}")
-        
-        if self.recipes is not None:
-            # Hash based on shape, columns, and sample data
-            recipes_info = f"{self.recipes.shape}_{sorted(self.recipes.columns)}"
-            if len(self.recipes) > 0:
-                sample_rows = min(5, len(self.recipes))
-                first_rows_hash = hashlib.md5(str(self.recipes.head(sample_rows).values.tolist()).encode()).hexdigest()[:8]
-                last_rows_hash = hashlib.md5(str(self.recipes.tail(sample_rows).values.tolist()).encode()).hexdigest()[:8]
-                recipes_info += f"_{first_rows_hash}_{last_rows_hash}"
-            recipes_hash = hashlib.md5(recipes_info.encode()).hexdigest()[:8]
-            hash_components.append(f"recipes_{recipes_hash}")
-        
-        # Add config hash
-        config_hash = self.preprocessing.get_hash()
-        hash_components.append(f"config_{config_hash}")
-        
-        return "_".join(hash_components)
-    
-    def _get_cache_path(self) -> Path:
-        """Get cache file path."""
-        cache_dir = Path(self.preprocessing.cache_dir)
-        cache_dir.mkdir(exist_ok=True)
-        cache_key = self._get_cache_key()
-        return cache_dir / f"{cache_key}.pkl"
-    
-    def _load_from_cache(self) -> Optional[pd.DataFrame]:
-        """Load preprocessed data from cache if available and valid."""
-        try:
-            cache_path = self._get_cache_path()
-            if not cache_path.exists():
-                return None
-            
-            # Check if cache is recent (less than 1 hour old)
-            import time
-            cache_age = time.time() - cache_path.stat().st_mtime
-            if cache_age > 3600:  # 1 hour
-                return None
-            
-            with open(cache_path, 'rb') as f:
-                cached_data = pickle.load(f)
-                
-            # Validate cache structure and config compatibility
-            if isinstance(cached_data, dict) and 'dataframe' in cached_data:
-                # Check if preprocessing config matches
-                if 'preprocessing_config' in cached_data:
-                    cached_config = cached_data['preprocessing_config']
-                    if cached_config.get_hash() != self.preprocessing.get_hash():
-                        return None
-                
-                df = cached_data['dataframe']
-                return df
-            
-            return None
-            
-        except Exception as e:
-            return None
-    
-    def _save_to_cache(self, df: pd.DataFrame) -> None:
-        """Save preprocessed data to cache."""
-        try:
-            cache_path = self._get_cache_path()
-            cache_data = {
-                'dataframe': df,
-                'preprocessing_config': self.preprocessing,
-                'timestamp': pd.Timestamp.now(),
-                'stats': getattr(self, 'preprocessing_stats', {})
-            }
-            
-            # Create parent directory if it doesn't exist
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            with open(cache_path, 'wb') as f:
-                pickle.dump(cache_data, f)
-            
-            # Verify the file was created
-            if not cache_path.exists():
-                pass  # Silent fail - caching is optional
-                
-        except Exception as e:
-            # Silent fail - caching is optional
-            pass
-    
-    def clear_cache(self) -> bool:
-        """Clear all cache files for this analyzer."""
-        try:
-            cache_dir = Path(self.preprocessing.cache_dir)
-            if cache_dir.exists():
-                for cache_file in cache_dir.glob("*.pkl"):
-                    cache_file.unlink()
-                return True
-        except Exception:
-            pass
-        return False
-    
-    def get_cache_info(self) -> dict:
-        """Get information about cache status."""
-        cache_path = self._get_cache_path()
-        cache_dir = Path(self.preprocessing.cache_dir)
-        
-        info = {
-            "cache_enabled": self.preprocessing.enable_cache,
-            "cache_dir": str(cache_dir),
-            "cache_key": self._get_cache_key(),
-            "cache_exists": cache_path.exists(),
-            "cache_files_count": len(list(cache_dir.glob("*.pkl"))) if cache_dir.exists() else 0
-        }
-        
-        if cache_path.exists():
-            import time
-            stat = cache_path.stat()
-            info.update({
-                "cache_size_mb": stat.st_size / (1024*1024),
-                "cache_age_minutes": (time.time() - stat.st_mtime) / 60,
-                "cache_modified": pd.Timestamp.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-            })
-        
-        return info
 
     # ------------------ Aggregations ------------------ #
     def aggregate(self) -> pd.DataFrame:
@@ -355,6 +278,14 @@ class InteractionsAnalyzer:
           - avg_rating (if ratings provided)
           - minutes / n_steps / n_ingredients (if present)
         """
+        return self.cached_operation(
+            operation_name='aggregate',
+            operation_func=self._compute_aggregate,
+            cache_params=self._get_default_cache_params()
+        )
+    
+    def _compute_aggregate(self) -> pd.DataFrame:
+        """Compute the aggregation (called when not in cache)."""
         if RECIPE_ID_COL not in self._df.columns:
             raise KeyError(f"'{RECIPE_ID_COL}' column required for aggregation")
 

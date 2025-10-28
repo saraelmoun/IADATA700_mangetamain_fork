@@ -19,6 +19,8 @@ from typing import (
 )
 import pandas as pd
 
+from .logger import get_logger
+
 
 class DataLoader:
     def __init__(
@@ -36,6 +38,8 @@ class DataLoader:
         self._df: Optional[
             pd.DataFrame
         ] = None
+        self.logger = get_logger()
+        self.logger.debug(f"DataLoader initialized for {self.data_path}")
 
     def load_data(
         self,
@@ -55,21 +59,26 @@ class DataLoader:
             is not None
             and not force
         ):
+            self.logger.debug("Returning cached data")
             return (
                 self._df
             )
         if (
             not self.data_path.exists()
         ):
+            self.logger.error(f"Data file not found: {self.data_path}")
             raise FileNotFoundError(
                 f"Data file not found: {self.data_path}"
             )
 
         # Basic format dispatch (extend as needed)
+        self.logger.info(f"Loading data from {self.data_path}")
+        
         if (
             self.data_path.suffix
             == ".csv"
         ):
+            self.logger.debug("Loading CSV file")
             df = pd.read_csv(
                 self.data_path
             )
@@ -80,10 +89,12 @@ class DataLoader:
                 ".pq",
             }
         ):
+            self.logger.debug("Loading Parquet file")
             df = pd.read_parquet(
                 self.data_path
             )
         else:
+            self.logger.error(f"Unsupported file format: {self.data_path.suffix}")
             raise ValueError(
                 f"Unsupported file format: {self.data_path.suffix}"
             )
@@ -91,6 +102,9 @@ class DataLoader:
         self._df = self.preprocess(
             df
         )
+        
+        self.logger.info(f"Data loaded successfully: {self._df.shape} rows/cols, {self._df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+        
         return (
             self._df
         )
@@ -102,10 +116,13 @@ class DataLoader:
         pd.DataFrame
     ):
         """Apply light preprocessing steps. Override/customize as needed."""
+        self.logger.debug(f"Preprocessing data: {df.shape}")
+        
         # Example: standardize column names
         df = (
             df.copy()
         )
+        original_cols = list(df.columns)
         df.columns = [
             c.strip()
             .lower()
@@ -115,6 +132,10 @@ class DataLoader:
             )
             for c in df.columns
         ]
+        
+        if original_cols != list(df.columns):
+            self.logger.debug("Column names standardized")
+        
         return df
 
     def get_data(

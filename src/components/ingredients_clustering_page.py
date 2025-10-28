@@ -12,6 +12,7 @@ import streamlit as st
 
 from core.data_loader import DataLoader
 from core.ingredients_analyzer import IngredientsAnalyzer
+from core.logger import get_logger
 
 
 class IngredientsClusteringPage:
@@ -25,6 +26,8 @@ class IngredientsClusteringPage:
             default_recipes_path: Chemin par défaut vers le fichier de recettes
         """
         self.default_recipes_path = default_recipes_path
+        self.logger = get_logger()
+        self.logger.info("Initializing IngredientsClusteringPage")
     
     @st.cache_data
     def _load_and_prepare_data(_self):
@@ -36,6 +39,52 @@ class IngredientsClusteringPage:
         except Exception as e:
             st.error(f"Erreur lors du chargement des données : {e}")
             return None
+    
+    def _render_cache_controls(self, analyzer: IngredientsAnalyzer):
+        """Render cache management controls in sidebar."""
+        st.sidebar.markdown("---")
+        st.sidebar.markdown("### Cache Management")
+        
+        # Get cache info
+        cache_info = analyzer.get_cache_info()
+        
+        # Cache status
+        cache_enabled = cache_info["cache_enabled"]
+        cache_exists = cache_info["cache_exists"]
+        
+        if cache_enabled:
+            if cache_exists:
+                st.sidebar.success("Cache disponible")
+                # Show cache details
+                if "cache_age_minutes" in cache_info:
+                    age_str = f"{cache_info['cache_age_minutes']:.1f} min"
+                    size_str = f"{cache_info['cache_size_mb']:.1f} MB"
+                    st.sidebar.info(f"Age: {age_str}, Taille: {size_str}")
+            else:
+                st.sidebar.info("Cache sera créé après traitement")
+                
+            # Cache management buttons
+            col1, col2 = st.sidebar.columns(2)
+            with col1:
+                if st.button("🗑️ Clear Cache", help="Supprimer tous les fichiers de cache", key="clear_ingredients_cache"):
+                    from core.cache_manager import get_cache_manager
+                    cache_manager = get_cache_manager()
+                    deleted_files = cache_manager.clear(analyzer_name="ingredients")
+                    if deleted_files > 0:
+                        st.sidebar.success(f"Cache effacé! ({deleted_files} fichiers)")
+                        st.rerun()
+                    else:
+                        st.sidebar.info("Aucun fichier de cache à supprimer")
+            
+            with col2:
+                if st.button("ℹ️ Info Cache", help="Afficher les détails du cache", key="info_ingredients_cache"):
+                    st.sidebar.json(cache_info)
+                    
+            # Show total cache files
+            if cache_info["cache_files_count"] > 0:
+                st.sidebar.caption(f"📁 {cache_info['cache_files_count']} fichier(s) de cache")
+        else:
+            st.sidebar.warning("Cache désactivé")
     
     def render_sidebar(self) -> dict:
         """
@@ -450,32 +499,44 @@ class IngredientsClusteringPage:
     
     def run(self) -> None:
         """Point d'entrée principal de la page."""
+        self.logger.info("Starting ingredients clustering analysis")
         st.markdown("---")
         
         # Chargement automatique des données
+        self.logger.debug("Loading and preparing data")
         data = self._load_and_prepare_data()
         
         # Sidebar pour les paramètres
         params = self.render_sidebar()
+        self.logger.debug(f"Clustering parameters: {params}")
         
         # Zone principale
         st.header("📈 Analyse des données")
         
         # Traitement des données
         if data is not None:
+            self.logger.info(f"Dataset loaded successfully: {len(data)} recipes")
             st.success(f"Dataset chargé : {len(data)} recettes")
             
             # Initialisation de l'analyseur
             analyzer = IngredientsAnalyzer(data)
             
+            # Cache controls dans la sidebar
+            self._render_cache_controls(analyzer)
+            
             # Lancer l'analyse automatiquement ou avec le bouton
             if params["analyze_button"] or 'ingredient_names' not in st.session_state:
+                self.logger.info("Starting clustering analysis with parameters")
                 with st.spinner("Analyse en cours..."):
                     # Traitement des ingrédients
+                    self.logger.debug(f"Processing ingredients with n_ingredients={params['n_ingredients']}")
                     ingredients_matrix, ingredient_names = analyzer.process_ingredients(params["n_ingredients"])
+                    self.logger.info(f"Processed ingredients matrix: {ingredients_matrix.shape}")
                     
                     # Clustering
+                    self.logger.debug(f"Performing clustering with n_clusters={params['n_clusters']}")
                     clusters = analyzer.perform_clustering(ingredients_matrix, params["n_clusters"])
+                    self.logger.info(f"Clustering completed: {len(set(clusters))} unique clusters found")
                     
                     # Sauvegarde des résultats dans la session
                     st.session_state['ingredient_names'] = ingredient_names
@@ -483,6 +544,7 @@ class IngredientsClusteringPage:
                     st.session_state['ingredients_matrix'] = ingredients_matrix
                     st.session_state['analyzer'] = analyzer
                     
+                self.logger.info("Analysis completed successfully")
                 st.success("Analyse terminée!")
                 
                 # Afficher le résumé de l'analyse
@@ -490,6 +552,7 @@ class IngredientsClusteringPage:
             
             # Affichage des résultats si disponibles
             if 'ingredient_names' in st.session_state:
+                self.logger.debug("Displaying cached clustering results")
                 ingredient_names = st.session_state['ingredient_names']
                 ingredients_matrix = st.session_state['ingredients_matrix']
                 clusters = st.session_state['clusters']

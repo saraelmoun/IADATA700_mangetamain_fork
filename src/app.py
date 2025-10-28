@@ -6,6 +6,7 @@ import streamlit as st
 
 from core.data_loader import DataLoader
 from core.data_explorer import DataExplorer
+from core.logger import setup_logging, get_logger
 from components.ingredients_clustering_page import IngredientsClusteringPage
 from components.popularity_analysis_page import PopularityAnalysisPage
 
@@ -27,6 +28,11 @@ class App:
 
     def __init__(self, config: AppConfig | None = None):
         self.config = config or AppConfig()
+        
+        # Setup logging for the application with performance focus
+        setup_logging(level="WARNING")  # Less verbose for better performance
+        self.logger = get_logger()
+        self.logger.info("Mangetamain application starting")
 
     def _sidebar(self) -> dict:
         """Configuration de la sidebar avec sélection des pages et datasets."""
@@ -128,8 +134,11 @@ class App:
         uploaded_df = None
         
         try:
+            self.logger.debug(f"Attempting to load {dataset_type} data from {data_path}")
             loader.load_data(force=refresh)
+            self.logger.info(f"Successfully loaded {dataset_type} data")
         except FileNotFoundError:
+            self.logger.warning(f"File not found: {data_path}")
             st.warning(f"Fichier introuvable: {data_path}. Vous pouvez en téléverser un ci-dessous.")
             uploaded = st.file_uploader("Déposer un fichier CSV", type=["csv"], key="uploader")
             if uploaded is not None:
@@ -137,19 +146,20 @@ class App:
                 try:
                     tmp_df = pd.read_csv(uploaded)
                     uploaded_df = tmp_df
-                    loader._df = tmp_df  # type: ignore[attr-defined]
-                    st.success("Fichier chargé depuis l'upload.")
+                    self.logger.info(f"Successfully loaded {dataset_type} from upload: {tmp_df.shape}")
                 except Exception as e:
-                    st.error(f"Erreur lecture CSV uploadé: {e}")
+                    self.logger.error(f"Error reading uploaded file: {e}")
+                    st.error(f"Erreur lors de la lecture: {e}")
                     return
-            else:
-                return
         except Exception as e:
+            self.logger.error(f"Unexpected error during data loading: {e}")
             st.error(f"Erreur chargement données: {e}")
             return
 
         # Explorer de base pour tous les types de données
+        self.logger.debug("Initializing DataExplorer")
         explorer = DataExplorer(loader=loader)
+        self.logger.info(f"Data overview: {explorer.df.shape} rows/cols, {explorer.df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
 
         st.subheader("📋 Aperçu des données (10 premières lignes)")
         st.dataframe(explorer.df.head(10))
@@ -158,13 +168,18 @@ class App:
         st.subheader("📊 Informations sur le dataset")
         with st.expander("Informations générales", expanded=True):
             df = explorer.df
+            missing_values = df.isnull().sum().sum()
+            memory_mb = df.memory_usage(deep=True).sum() / 1024**2
+            
+            self.logger.debug(f"Dataset analysis: {len(df)} rows, {len(df.columns)} cols, {missing_values} missing values")
+            
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Nombre de lignes", f"{len(df):,}")
                 st.metric("Nombre de colonnes", len(df.columns))
             with col2:
-                st.metric("Taille mémoire", f"{df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
-                st.metric("Valeurs manquantes", f"{df.isnull().sum().sum():,}")
+                st.metric("Taille mémoire", f"{memory_mb:.1f} MB")
+                st.metric("Valeurs manquantes", f"{missing_values:,}")
                 
         with st.expander("Types de données"):
             # Certains objets dtype (extension / objets Python) provoquent une erreur

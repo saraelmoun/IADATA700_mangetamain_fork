@@ -6,7 +6,7 @@ skinparam defaultFontName JetBrains Mono, Consolas, monospace
 skinparam dpi 150
 skinparam linetype ortho
 
-title Architecture logique (core / components / app)
+title Architecture logique (core / components / app) - Avec Cache Centralisé
 
 package "app" {
     class App {
@@ -35,11 +35,31 @@ package "core" {
         +df : DataFrame <<property>>
     }
 
+    class CacheManager {
+        -Path base_cache_dir
+        -Logger logger
+        +get(analyzer_name, operation, params): Optional[T]
+        +set(analyzer_name, operation, params, data): bool
+        +clear(analyzer_name?, operation?): int
+        +get_info(): Dict[str, Any]
+        -_generate_key(): str
+        -_get_cache_path(): Path
+    }
+
+    abstract class CacheableMixin {
+        -bool _cache_enabled
+        -CacheManager _cache_manager
+        -str _analyzer_name
+        +enable_cache(enabled: bool)
+        +cached_operation(operation_name, operation_func, cache_params): T
+        #{abstract} _get_default_cache_params(): dict
+    }
+
     class PreprocessingConfig <<dataclass>> {
         +bool enable_preprocessing
         +str outlier_method
         +float outlier_threshold
-        +bool enable_cache
+        +get_hash(): str
     }
 
     class InteractionsAnalyzer <<dataclass>> {
@@ -51,14 +71,22 @@ package "core" {
         +aggregate(): DataFrame
         +popularity_vs_rating(): DataFrame
         +create_popularity_segments(): DataFrame
+        +get_cache_info(): dict
+        +_compute_preprocessed_data(): DataFrame
+        +_compute_aggregate(): DataFrame
     }
 
     class IngredientsAnalyzer {
         -DataFrame data
         -list ingredient_names
         -DataFrame ingredients_matrix
-        +process_ingredients(): (DataFrame, list)
-        +perform_clustering(): ndarray
+        +process_ingredients(n_ingredients): (DataFrame, list)
+        +perform_clustering(co_occurrence_df, n_clusters): ndarray
+        +generate_tsne_visualization(cluster_labels, perplexity, random_state): dict
+        +get_cache_info(): dict
+        +_compute_process_ingredients(): (DataFrame, list)
+        +_compute_clustering(): ndarray
+        +_compute_tsne_visualization(): dict
     }
 }
 
@@ -66,11 +94,13 @@ package "components" {
     class IngredientsClusteringPage {
         -str default_recipes_path
         +render_sidebar(): dict
+        +_render_cache_controls(analyzer): void
     }
 
     class PopularityAnalysisPage {
         -PopularityAnalysisConfig config
         +run()
+        +_render_cache_controls(analyzer): void
     }
 
     class PopularityAnalysisConfig {
@@ -95,34 +125,62 @@ PopularityAnalysisPage --> InteractionsAnalyzer : analyse
 PopularityAnalysisPage --> PopularityAnalysisConfig : configure
 IngredientsClusteringPage --> IngredientsAnalyzer : analyse
 
-note right of PreprocessingConfig
-    Configuration IQR:
-    - Seuil configurable (1.0-20.0)
-    - Méthode outlier (iqr/zscore)
-    - Features à traiter
-    - Cache activable
+' Cache System Relationships
+CacheableMixin --> CacheManager : utilise
+InteractionsAnalyzer --|> CacheableMixin : hérite
+IngredientsAnalyzer --|> CacheableMixin : hérite
+CacheManager --> "global instance" : _cache_manager
+
+' Cache Controls in UI
+PopularityAnalysisPage --> CacheManager : gestion cache (via analyzer)
+IngredientsClusteringPage --> CacheManager : gestion cache (via analyzer)
+
+note right of CacheManager
+    Cache Centralisé:
+    - Structure hiérarchique: cache/analyzer/operation/hash.pkl
+    - Métadonnées: timestamp, params, analyzer
+    - Support multi-analyseurs
+    - Nettoyage granulaire
+end note
+
+note right of CacheableMixin
+    Mixin pour Cache:
+    - cached_operation() wrapper
+    - Cache params personnalisables
+    - Activation/désactivation
+    - Compatible avec tout analyzer
 end note
 
 note right of InteractionsAnalyzer
-    Analyse avancée:
+    Analyse avancée avec Cache:
+    - preprocess_data() mise en cache
+    - aggregate() mise en cache
     - Popularité / notes avec preprocessing
     - Segmentation automatique (4 niveaux)
-    - Jointure interactions + recettes
+end note
+
+note right of IngredientsAnalyzer
+    Clustering avec Cache:
+    - process_ingredients() mise en cache
+    - perform_clustering() mise en cache
+    - generate_tsne_visualization() mise en cache
+    - Accélération significative des analyses
 end note
 
 note right of PopularityAnalysisPage
-    Interface complète en 4 étapes:
-    - Relation qualité-popularité
-    - Segmentation par engagement
-    - Facteurs d'influence
-    - Analyse temporelle 3D
+    Interface complète avec Cache:
+    - Contrôles cache dans sidebar
+    - Clear/Info cache
+    - Statut cache en temps réel
+    - 4 étapes d'analyse optimisées
 end note
 
 note right of App
-    Application Streamlit:
+    Application Streamlit Optimisée:
     - Home (exploration générale)
-    - Clustering ingrédients
-    - Popularité recettes
+    - Clustering ingrédients (avec cache)
+    - Popularité recettes (avec cache)
+    - Performance améliorée
 end note
 
 @enduml
