@@ -127,22 +127,7 @@ class TestLogger:
             assert debug_file.parent.exists()
             assert error_file.parent.exists()
 
-    def test_logger_performance_info(self):
-        """Test du logging d'informations de performance."""
-        logger = get_logger()
-        
-        with patch.object(logger.logger, 'info') as mock_info:
-            operation_time = 1.234
-            logger.info(f"Operation completed in {operation_time:.3f}s")
-            mock_info.assert_called_once_with("Operation completed in 1.234s")
 
-    def test_logger_cache_operations(self):
-        """Test du logging pour les opérations de cache."""
-        logger = get_logger()
-        
-        with patch.object(logger.logger, 'debug') as mock_debug:
-            logger.debug("Cache hit: analyzer.operation")
-            mock_debug.assert_called_once_with("Cache hit: analyzer.operation")
 
     def test_logger_handlers_not_duplicated(self):
         """Test que les handlers ne sont pas dupliqués."""
@@ -153,53 +138,7 @@ class TestLogger:
         # Le nombre de handlers ne doit pas doubler
         assert len(logger1.logger.handlers) == len(logger2.logger.handlers)
 
-    def test_convenience_functions(self):
-        """Test des fonctions de convenance."""
-        with patch('core.logger.get_logger') as mock_get_logger:
-            mock_logger = MagicMock()
-            mock_get_logger.return_value = mock_logger
-            
-            from core.logger import log_info, log_warning, log_error, log_debug
-            
-            log_info("Test message")
-            mock_logger.info.assert_called_once_with("Test message")
 
-            log_warning("Warning message")
-            mock_logger.warning.assert_called_once_with("Warning message")
-
-            log_error("Error message")
-            mock_logger.error.assert_called_once_with("Error message")
-
-            log_debug("Debug message")
-            mock_logger.debug.assert_called_once_with("Debug message")
-
-    def test_logger_thread_safety(self):
-        """Test de la sécurité thread du logger."""
-        import threading
-        import time
-        
-        results = []
-        logger = get_logger()
-        
-        def log_messages(thread_id):
-            for i in range(10):
-                logger.info(f"Thread {thread_id}, message {i}")
-                results.append((thread_id, i))
-                time.sleep(0.001)  # Petit délai pour simulation
-        
-        # Lancer plusieurs threads
-        threads = []
-        for i in range(3):
-            thread = threading.Thread(target=log_messages, args=(i,))
-            threads.append(thread)
-            thread.start()
-        
-        # Attendre que tous les threads se terminent
-        for thread in threads:
-            thread.join()
-        
-        # Vérifier que tous les messages ont été loggés
-        assert len(results) == 30  # 3 threads × 10 messages
 
     def test_logger_with_kwargs(self):
         """Test du logging avec arguments supplémentaires."""

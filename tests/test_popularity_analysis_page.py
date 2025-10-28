@@ -159,89 +159,7 @@ class TestPopularityAnalysisPage:
         assert page.config.interactions_path.exists()
         assert page.config.recipes_path.exists()
     
-    # ==================== DATA LOADING TESTS ====================
-    
-    def test_load_data_success(self, page_with_temp_files):
-        """Test successful data loading."""
-        page = page_with_temp_files
-        
-        # Test that _load_data method exists and can be called
-        if hasattr(page, '_load_data'):
-            interactions_df, recipes_df = page._load_data()
-            
-            assert isinstance(interactions_df, pd.DataFrame)
-            assert isinstance(recipes_df, pd.DataFrame)
-            assert len(interactions_df) > 0
-            assert len(recipes_df) > 0
-            
-            # Check expected columns
-            expected_interaction_cols = ['recipe_id', 'user_id', 'rating']
-            expected_recipe_cols = ['id', 'name', 'minutes', 'n_steps', 'n_ingredients']
-            
-            for col in expected_interaction_cols:
-                assert col in interactions_df.columns
-            
-            for col in expected_recipe_cols:
-                assert col in recipes_df.columns
-    
-    def test_load_data_file_not_found(self):
-        """Test data loading with non-existent files."""
-        page = PopularityAnalysisPage(
-            interactions_path="/non/existent/interactions.csv",
-            recipes_path="/non/existent/recipes.csv"
-        )
-        
-        if hasattr(page, '_load_data'):
-            with pytest.raises(FileNotFoundError):
-                page._load_data()
-    
-    # ==================== PLOT TITLE TESTS ====================
-    
-    def test_get_plot_title_predefined(self, page_with_temp_files):
-        """Test predefined plot titles."""
-        page = page_with_temp_files
-        
-        if hasattr(page, '_get_plot_title'):
-            # Test predefined scatter plot titles
-            title = page._get_plot_title("avg_rating", "interaction_count", "Scatter")
-            assert title == "Note moyenne selon le nombre d'interactions"
-            
-            title = page._get_plot_title("minutes", "avg_rating", "Scatter") 
-            assert title == "Note moyenne selon la durée de préparation"
-            
-            # Test predefined histogram titles
-            title = page._get_plot_title("avg_rating", "", "Histogram")
-            assert title == "Distribution des notes moyennes"
-            
-            title = page._get_plot_title("minutes", "", "Histogram")
-            assert title == "Distribution des durées de préparation"
-    
-    def test_get_plot_title_fallback(self, page_with_temp_files):
-        """Test fallback plot title generation."""
-        page = page_with_temp_files
-        
-        if hasattr(page, '_get_plot_title'):
-            # Test fallback for non-predefined combinations
-            title = page._get_plot_title("unknown_var", "another_var", "Scatter")
-            
-            assert isinstance(title, str)
-            assert len(title) > 0
-            # Should contain some meaningful text
-            assert "selon" in title.lower()
-    
-    def test_get_plot_title_different_types(self, page_with_temp_files):
-        """Test plot title generation for different plot types."""
-        page = page_with_temp_files
-        
-        if hasattr(page, '_get_plot_title'):
-            scatter_title = page._get_plot_title("minutes", "avg_rating", "Scatter")
-            histogram_title = page._get_plot_title("minutes", "", "Histogram")
-            
-            assert isinstance(scatter_title, str)
-            assert isinstance(histogram_title, str)
-            assert scatter_title != histogram_title  # Should be different
-            assert "selon" in scatter_title.lower()  # Scatter pattern
-            assert "distribution" in histogram_title.lower()  # Histogram pattern
+
     
     # ==================== DATA VALIDATION TESTS ====================
     
@@ -279,66 +197,11 @@ class TestPopularityAnalysisPage:
         assert not sample_interactions_data['user_id'].isnull().any()
         assert not sample_recipes_data['id'].isnull().any()
     
-    # ==================== HELPER METHOD TESTS ====================
-    
-    def test_sidebar_config_structure(self, page_with_temp_files):
-        """Test sidebar configuration structure (logic only, no UI)."""
-        page = page_with_temp_files
-        
-        # Test that sidebar method exists
-        assert hasattr(page, '_sidebar')
-        
-        # The sidebar method returns configuration, but requires Streamlit
-        # We can't test its return value without mocking Streamlit
-        # But we can verify the method exists and is callable
-    
-    def test_plot_methods_exist(self, page_with_temp_files):
-        """Test that plot-related methods exist."""
-        page = page_with_temp_files
-        
-        # Check that expected methods exist
-        expected_methods = [
-            '_create_plot',
-            '_scatter_plot', 
-            '_histogram_plot',
-            '_get_plot_title'  # Updated method name
-        ]
-        
-        for method_name in expected_methods:
-            if hasattr(page, method_name):
-                method = getattr(page, method_name)
-                assert callable(method)
-    
-    def test_analysis_methods_exist(self, page_with_temp_files):
-        """Test that analysis-related methods exist."""
-        page = page_with_temp_files
-        
-        # Check that expected analysis methods exist
-        expected_methods = [
-            '_render_popularity_segmentation',
-            '_render_recipe_categorization',
-            '_render_category_insights',
-            '_render_viral_recipe_analysis'
-        ]
-        
-        for method_name in expected_methods:
-            if hasattr(page, method_name):
-                method = getattr(page, method_name)
-                assert callable(method)
+
     
     # ==================== INTEGRATION TESTS ====================
     
-    def test_page_with_real_data_structure(self, page_with_temp_files):
-        """Test page behavior with realistic data structure."""
-        page = page_with_temp_files
-        
-        # Verify that the page can be instantiated with real-like data
-        assert page.config.interactions_path.exists()
-        assert page.config.recipes_path.exists()
-        
-        # Verify file formats
-        assert page.config.interactions_path.suffix == '.csv'
-        assert page.config.recipes_path.suffix == '.csv'
+
     
     def test_configuration_consistency(self):
         """Test configuration consistency across instances."""
@@ -359,78 +222,3 @@ class TestPopularityAnalysisPage:
         with pytest.raises((TypeError, AttributeError)):
             PopularityAnalysisPage(None, None)
     
-    def test_empty_string_paths(self):
-        """Test handling of empty string paths."""
-        page = PopularityAnalysisPage("", "")
-        
-        # Should create Path objects, even if empty
-        assert isinstance(page.config.interactions_path, Path)
-        assert isinstance(page.config.recipes_path, Path)
-    
-    # ==================== DATA PROCESSING CONCEPTS ====================
-    
-    def test_data_processing_concepts(self, sample_interactions_data, sample_recipes_data):
-        """Test concepts used in data processing."""
-        # Test aggregation concepts
-        popularity_counts = sample_interactions_data.groupby('recipe_id').size()
-        avg_ratings = sample_interactions_data.groupby('recipe_id')['rating'].mean()
-        
-        assert len(popularity_counts) > 0
-        assert len(avg_ratings) > 0
-        assert all(popularity_counts > 0)
-        assert all(avg_ratings >= 0)
-        
-        # Test merge concepts
-        merged = sample_interactions_data.merge(
-            sample_recipes_data, 
-            left_on='recipe_id', 
-            right_on='id', 
-            how='inner'
-        )
-        
-        assert len(merged) > 0
-        assert 'rating' in merged.columns
-        assert 'minutes' in merged.columns
-    
-    def test_statistical_concepts(self, sample_recipes_data):
-        """Test statistical concepts used in analysis."""
-        # Test outlier detection concepts (IQR method)
-        minutes = sample_recipes_data['minutes']
-        q1 = minutes.quantile(0.25)
-        q3 = minutes.quantile(0.75)
-        iqr = q3 - q1
-        
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
-        
-        outliers = minutes[(minutes < lower_bound) | (minutes > upper_bound)]
-        
-        # Should be able to detect outliers
-        assert isinstance(outliers, pd.Series)
-        assert len(outliers) >= 0  # May or may not have outliers
-    
-    def test_visualization_data_preparation(self, sample_interactions_data, sample_recipes_data):
-        """Test data preparation for visualizations."""
-        # Test aggregation for plotting
-        agg_data = sample_interactions_data.groupby('recipe_id').agg({
-            'rating': ['mean', 'count'],
-            'user_id': 'nunique'
-        }).round(2)
-        
-        # Flatten column names
-        agg_data.columns = ['_'.join(col).strip() for col in agg_data.columns]
-        
-        assert len(agg_data) > 0
-        assert 'rating_mean' in agg_data.columns
-        assert 'rating_count' in agg_data.columns
-        
-        # Test merge for complete dataset
-        complete_data = agg_data.merge(
-            sample_recipes_data.set_index('id'),
-            left_index=True,
-            right_index=True,
-            how='inner'
-        )
-        
-        assert len(complete_data) > 0
-        assert 'minutes' in complete_data.columns

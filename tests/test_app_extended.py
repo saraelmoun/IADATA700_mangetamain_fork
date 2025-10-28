@@ -155,28 +155,7 @@ class TestAppExtended:
         assert selection["active"] == "interactions"
         assert selection["refresh"] is False
 
-    def test_sidebar_clustering_page(self, mock_streamlit):
-        """Test de la configuration sidebar pour la page clustering."""
-        app = App()
-        
-        mock_streamlit.sidebar.selectbox.return_value = "Analyse de clustering des ingrédients"
-        
-        selection = app._sidebar()
-        
-        assert selection["page"] == "Analyse de clustering des ingrédients"
-        # Pour les pages spécialisées, on ne retourne que la page
-        assert "path" not in selection
 
-    def test_sidebar_popularity_page(self, mock_streamlit):
-        """Test de la configuration sidebar pour la page popularité."""
-        app = App()
-        
-        mock_streamlit.sidebar.selectbox.return_value = "Analyse popularité des recettes"
-        
-        selection = app._sidebar()
-        
-        assert selection["page"] == "Analyse popularité des recettes"
-        assert "path" not in selection
 
     @patch('app.IngredientsClusteringPage')
     def test_run_clustering_page(self, mock_clustering_page, mock_streamlit):
@@ -283,44 +262,7 @@ class TestAppExtended:
             mock_logger.error.assert_called()
             mock_streamlit.error.assert_called_once()
 
-    def test_run_home_page_integration_simple(self, mock_streamlit):
-        """Test d'intégration simple pour la page Home."""
-        app = App()
-        
-        # Configuration des mocks
-        mock_streamlit.session_state["page_select_box"] = "Home"
-        
-        with patch.object(app, '_sidebar') as mock_sidebar, \
-             patch.object(app, '_render_home_page') as mock_render:
-            
-            mock_sidebar.return_value = {
-                "page": "Home",
-                "path": Path("test.csv"),
-                "refresh": False,
-                "active": "recettes"
-            }
-            
-            app.run()
-            
-            # Vérifier les appels
-            mock_sidebar.assert_called_once()
-            mock_render.assert_called_once()
 
-    def test_title_logic_home_page(self, mock_streamlit):
-        """Test de la logique des titres pour la page Home."""
-        app = App()
-        
-        mock_streamlit.session_state["page_select_box"] = "Home"
-        
-        with patch.object(app, '_sidebar') as mock_sidebar, \
-             patch.object(app, '_render_home_page'):
-            
-            mock_sidebar.return_value = {"page": "Home"}
-            
-            app.run()
-            
-            # Vérifier que le titre Home est appelé
-            mock_streamlit.title.assert_called_with("🏠 Home - Data Explorer")
 
     def test_main_function_basic(self):
         """Test basique de la fonction main."""

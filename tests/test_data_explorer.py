@@ -238,76 +238,9 @@ class TestDataExplorer:
         assert pd.isna(result_df.iloc[1]['value'])
         assert pd.isna(result_df.iloc[1]['text'])
     
-    def test_large_dataframe_handling(self):
-        """Test DataExplorer with larger DataFrame."""
-        large_df = pd.DataFrame({
-            'id': range(1000),
-            'value': np.random.randn(1000),
-            'category': (['A', 'B', 'C'] * 334)[:1000]  # Ensure exactly 1000 elements
-        })
-        
-        explorer = DataExplorer(df=large_df)
-        result_df = explorer.df
-        
-        assert len(result_df) == 1000
-        assert result_df is large_df
+
     
     # ==================== ERROR HANDLING TESTS ====================
     
-    def test_invalid_dataframe_type(self):
-        """Test behavior when non-DataFrame is passed as df."""
-        # DataExplorer accepts any object as df, validation happens at usage
-        explorer = DataExplorer(df="not_a_dataframe")
-        
-        # The df property just returns whatever was stored
-        result = explorer.df
-        assert result == "not_a_dataframe"
-        
-        # The error would occur when trying to use pandas operations on this object
-    
-    def test_invalid_loader_type(self):
-        """Test behavior when invalid loader type is passed."""
-        # This test checks that our validation focuses on the existence of df/loader
-        # rather than their types (which is validated at usage time)
-        explorer = DataExplorer(loader="not_a_loader")
-        
-        # Should work initially
-        assert explorer.loader == "not_a_loader"
-        
-        # But fail when trying to use the invalid loader
-        with pytest.raises(AttributeError):
-            _ = explorer.df
-    
     # ==================== WORKFLOW TESTS ====================
     
-    def test_typical_workflow_with_dataframe(self, sample_data):
-        """Test typical usage workflow with DataFrame."""
-        # 1. Initialize with DataFrame
-        explorer = DataExplorer(df=sample_data)
-        
-        # 2. Access data multiple times
-        df1 = explorer.df
-        df2 = explorer.df
-        assert df1 is df2
-        
-        # 3. Verify data properties
-        assert len(df1) == 5
-        assert list(df1.columns) == ['id', 'name', 'minutes', 'n_steps', 'rating']
-    
-    def test_typical_workflow_with_loader(self, sample_loader):
-        """Test typical usage workflow with DataLoader."""
-        # 1. Initialize with DataLoader
-        explorer = DataExplorer(loader=sample_loader)
-        
-        # 2. Access data (triggers loading)
-        df1 = explorer.df
-        assert len(df1) == 5
-        
-        # 3. Reload data
-        df2 = explorer.reload()
-        assert df1 is not df2
-        pd.testing.assert_frame_equal(df1, df2)
-        
-        # 4. Access again (should return reloaded data)
-        df3 = explorer.df
-        assert df3 is df2

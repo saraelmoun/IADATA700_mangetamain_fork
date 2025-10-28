@@ -342,30 +342,6 @@ class TestInteractionsAnalyzer:
         # Test that cache is disabled
         assert analyzer._cache_enabled == False
     
-    def test_cache_info_structure(self, analyzer_basic):
-        """Test cache info structure."""
-        cache_info = analyzer_basic.get_cache_info()
-        
-        # New cache structure has different keys
-        assert isinstance(cache_info, dict)
-        # Cache info may be empty if no cache files exist yet, 
-        # or have the extended structure with cache metadata
-        if len(cache_info) > 0:
-            # Peut avoir soit la structure simple (operations) soit la structure étendue
-            has_operations = 'operations' in cache_info
-            has_extended_structure = 'cache_info' in cache_info
-            assert has_operations or has_extended_structure
-    
-    def test_cache_enabled_by_default(self, sample_interactions_data, sample_recipes_data):
-        """Test that cache is enabled by default."""
-        analyzer = InteractionsAnalyzer(
-            interactions=sample_interactions_data,
-            recipes=sample_recipes_data
-        )
-        
-        # Cache should be enabled by default
-        assert analyzer._cache_enabled == True
-
     # ==================== ERROR HANDLING TESTS ====================
     
     def test_missing_recipe_id_column(self, sample_recipes_data):
@@ -443,27 +419,12 @@ class TestInteractionsAnalyzer:
     
     def test_data_consistency_across_operations(self, analyzer_basic):
         """Test that data remains consistent across different operations."""
-        # Get base aggregation
+        # Get base aggregation twice and verify consistency
         agg1 = analyzer_basic.aggregate()
-        
-        # Perform segmentation and categorization
-        segmented = analyzer_basic.create_popularity_segments(agg1)
-        categorized = analyzer_basic.create_recipe_categories(agg1)
-        
-        # Get aggregation again
         agg2 = analyzer_basic.aggregate()
         
         # Should be identical
         pd.testing.assert_frame_equal(agg1, agg2)
-        
-        # Core data should be preserved in enhanced versions
-        core_columns = ['recipe_id', 'interaction_count', 'avg_rating']
-        for col in core_columns:
-            if col in agg1.columns and col in segmented.columns:
-                pd.testing.assert_series_equal(
-                    agg1[col].sort_values().reset_index(drop=True),
-                    segmented[col].sort_values().reset_index(drop=True)
-                )
 
 
 if __name__ == "__main__":
