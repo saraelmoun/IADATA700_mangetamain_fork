@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
+
 import streamlit as st
 
-from core.data_loader import DataLoader
-from core.data_explorer import DataExplorer
-from core.logger import setup_logging, get_logger
 from components.ingredients_clustering_page import IngredientsClusteringPage
 from components.popularity_analysis_page import PopularityAnalysisPage
-
+from core.data_explorer import DataExplorer
+from core.data_loader import DataLoader
+from core.logger import get_logger, setup_logging
 
 DEFAULT_RECIPES = Path("data/RAW_recipes.csv")
 DEFAULT_INTERACTIONS = Path("data/RAW_interactions.csv")
@@ -28,7 +28,7 @@ class App:
 
     def __init__(self, config: AppConfig | None = None):
         self.config = config or AppConfig()
-        
+
         # Setup logging for the application with performance focus
         setup_logging(level="WARNING")  # Less verbose for better performance
         self.logger = get_logger()
@@ -37,11 +37,15 @@ class App:
     def _sidebar(self) -> dict:
         """Configuration de la sidebar avec sélection des pages et datasets."""
         st.sidebar.header("Navigation")
-        
+
         # Sélection de la page
         page = st.sidebar.selectbox(
             "Page",
-            ["Home", "Analyse de clustering des ingrédients", "Analyse popularité des recettes"],
+            [
+                "Home",
+                "Analyse de clustering des ingrédients",
+                "Analyse popularité des recettes",
+            ],
             key="page_select_box",
         )
 
@@ -56,7 +60,7 @@ class App:
 
         # Configuration pour la page Home
         st.sidebar.markdown("### Configuration des données")
-        
+
         # Sélection du dataset
         dataset_type = st.sidebar.radio(
             "Type de dataset",
@@ -74,9 +78,7 @@ class App:
 
         # Options de rechargement
         refresh = st.sidebar.checkbox(
-            "Forcer le rechargement", 
-            value=False, 
-            key="force_refresh"
+            "Forcer le rechargement", value=False, key="force_refresh"
         )
 
         return {
@@ -92,10 +94,10 @@ class App:
             page_title=self.config.page_title,
             layout=self.config.layout,
         )
-        
+
         # Gestion du titre dynamique
         page = st.session_state.get("page_select_box", "Home")
-        
+
         if page == "Analyse de clustering des ingrédients":
             st.title("🍳 Analyse de clustering des ingrédients")
         elif page == "Analyse popularité des recettes":
@@ -131,22 +133,30 @@ class App:
         dataset_type = selection["active"]
 
         loader = DataLoader(data_path)
-        uploaded_df = None
-        
+
         try:
-            self.logger.debug(f"Attempting to load {dataset_type} data from {data_path}")
+            self.logger.debug(
+                f"Attempting to load {dataset_type} data from {data_path}"
+            )
             loader.load_data(force=refresh)
             self.logger.info(f"Successfully loaded {dataset_type} data")
         except FileNotFoundError:
             self.logger.warning(f"File not found: {data_path}")
-            st.warning(f"Fichier introuvable: {data_path}. Vous pouvez en téléverser un ci-dessous.")
-            uploaded = st.file_uploader("Déposer un fichier CSV", type=["csv"], key="uploader")
+            st.warning(
+                f"Fichier introuvable: {data_path}. Vous pouvez en téléverser un ci-dessous."
+            )
+            uploaded = st.file_uploader(
+                "Déposer un fichier CSV", type=["csv"], key="uploader"
+            )
             if uploaded is not None:
                 import pandas as pd
+
                 try:
                     tmp_df = pd.read_csv(uploaded)
-                    uploaded_df = tmp_df
-                    self.logger.info(f"Successfully loaded {dataset_type} from upload: {tmp_df.shape}")
+                    self.logger.info(
+                        f"Successfully loaded {dataset_type} from upload: {
+                            tmp_df.shape}"
+                    )
                 except Exception as e:
                     self.logger.error(f"Error reading uploaded file: {e}")
                     st.error(f"Erreur lors de la lecture: {e}")
@@ -159,7 +169,13 @@ class App:
         # Explorer de base pour tous les types de données
         self.logger.debug("Initializing DataExplorer")
         explorer = DataExplorer(loader=loader)
-        self.logger.info(f"Data overview: {explorer.df.shape} rows/cols, {explorer.df.memory_usage(deep=True).sum() / 1024**2:.1f} MB")
+        self.logger.info(
+            f"Data overview: {
+                explorer.df.shape} rows/cols, {
+                explorer.df.memory_usage(
+                    deep=True).sum() /
+                1024**2:.1f} MB"
+        )
 
         st.subheader("📋 Aperçu des données (10 premières lignes)")
         st.dataframe(explorer.df.head(10))
@@ -170,9 +186,11 @@ class App:
             df = explorer.df
             missing_values = df.isnull().sum().sum()
             memory_mb = df.memory_usage(deep=True).sum() / 1024**2
-            
-            self.logger.debug(f"Dataset analysis: {len(df)} rows, {len(df.columns)} cols, {missing_values} missing values")
-            
+
+            self.logger.debug(
+                f"Dataset analysis: {len(df)} rows, {len(df.columns)} cols, {missing_values} missing values"
+            )
+
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Nombre de lignes", f"{len(df):,}")
@@ -180,35 +198,35 @@ class App:
             with col2:
                 st.metric("Taille mémoire", f"{memory_mb:.1f} MB")
                 st.metric("Valeurs manquantes", f"{missing_values:,}")
-                
+
         with st.expander("Types de données"):
             # Certains objets dtype (extension / objets Python) provoquent une erreur
             # ArrowInvalid lors de la conversion interne Streamlit -> Arrow
             # (ex: numpy.dtype objects non sérialisables). On convertit donc en str.
             dtypes_df = df.dtypes.apply(lambda x: str(x)).to_frame("Type")
             st.dataframe(dtypes_df)
-            
+
         with st.expander("Analyse des colonnes clés"):
             # Analyse spécifique aux recettes si les colonnes existent
-            if 'ingredients' in df.columns:
+            if "ingredients" in df.columns:
                 st.write("🥘 **Ingrédients** :")
                 # Compter les recettes avec ingrédients valides
-                valid_ingredients = df['ingredients'].notna().sum()
+                valid_ingredients = df["ingredients"].notna().sum()
                 st.write(f"- Recettes avec ingrédients : {valid_ingredients:,}")
-                
-            if 'name' in df.columns:
+
+            if "name" in df.columns:
                 st.write("📝 **Noms de recettes** :")
-                unique_names = df['name'].nunique()
+                unique_names = df["name"].nunique()
                 st.write(f"- Recettes uniques : {unique_names:,}")
-                
-            if 'minutes' in df.columns:
+
+            if "minutes" in df.columns:
                 st.write("⏱️ **Temps de préparation** :")
-                avg_minutes = df['minutes'].mean()
+                avg_minutes = df["minutes"].mean()
                 st.write(f"- Temps moyen : {avg_minutes:.1f} minutes")
-                
-            if 'n_steps' in df.columns:
+
+            if "n_steps" in df.columns:
                 st.write("📋 **Étapes de préparation** :")
-                avg_steps = df['n_steps'].mean()
+                avg_steps = df["n_steps"].mean()
                 st.write(f"- Nombre moyen d'étapes : {avg_steps:.1f}")
 
 
