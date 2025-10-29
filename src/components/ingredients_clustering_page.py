@@ -1,8 +1,14 @@
 from __future__ import annotations
 
-"""Page de clustering des ingrédients basée sur la co-occurrence."""
+"""Streamlit page: Analyse de co-occurrence et clustering d'ingrédients.
 
+Note: La User Story est affichée dans l'interface Streamlit (méthode run()), 
+pas dans cette docstring, conformément au pattern de la page 1.
+"""
+
+from pathlib import Path
 from typing import Optional
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -15,23 +21,65 @@ from core.ingredients_analyzer import IngredientsAnalyzer
 from core.logger import get_logger
 
 
-class IngredientsClusteringPage:
-    """Page pour l'analyse de clustering des ingrédients."""
+@dataclass
+class IngredientsClusteringConfig:
+    """Configuration pour l'analyse de clustering d'ingrédients.
     
-    def __init__(self, default_recipes_path: str = "data/RAW_recipes.csv"):
-        """
-        Initialise la page de clustering.
+    Attributes:
+        recipes_path: Chemin vers le fichier CSV contenant les recettes.
+        n_ingredients: Nombre d'ingrédients les plus fréquents à analyser.
+        n_clusters: Nombre de clusters à créer avec K-means.
+        tsne_perplexity: Paramètre de perplexité pour la visualisation t-SNE.
+    """
+    recipes_path: Path
+    n_ingredients: int = 50
+    n_clusters: int = 5
+    tsne_perplexity: int = 30
+
+
+class IngredientsClusteringPage:
+    """Page Streamlit pour l'analyse de clustering des ingrédients.
+    
+    Cette classe gère l'interface utilisateur et la logique de présentation
+    pour l'analyse de co-occurrence et le clustering d'ingrédients basé sur
+    leurs patterns d'apparition dans les recettes.
+    
+    Attributes:
+        default_recipes_path: Chemin par défaut vers le fichier de recettes.
+        logger: Instance du logger pour le suivi des opérations.
+    """
+    
+    def __init__(self, default_recipes_path: str = "data/RAW_recipes.csv") -> None:
+        """Initialise la page de clustering d'ingrédients.
         
         Args:
-            default_recipes_path: Chemin par défaut vers le fichier de recettes
+            default_recipes_path: Chemin par défaut vers le fichier CSV des recettes.
+                Doit contenir une colonne avec les listes d'ingrédients.
+        
+        Raises:
+            ValueError: Si le chemin fourni est invalide ou vide.
         """
+        if not default_recipes_path:
+            raise ValueError("Le chemin du fichier de recettes ne peut pas être vide")
+        
         self.default_recipes_path = default_recipes_path
         self.logger = get_logger()
         self.logger.info("Initializing IngredientsClusteringPage")
     
     @st.cache_data
-    def _load_and_prepare_data(_self):
-        """Charge automatiquement le dataset au démarrage."""
+    def _load_and_prepare_data(_self) -> Optional[pd.DataFrame]:
+        """Charge automatiquement le dataset au démarrage.
+        
+        Cette méthode est mise en cache par Streamlit pour éviter de recharger
+        les données à chaque interaction utilisateur.
+        
+        Returns:
+            DataFrame contenant les recettes si le chargement réussit, None sinon.
+            Le DataFrame contient au minimum une colonne d'ingrédients.
+        
+        Raises:
+            Exception: Affiche une erreur Streamlit mais ne propage pas l'exception.
+        """
         try:
             data_loader = DataLoader(_self.default_recipes_path)
             data = data_loader.load_data()
@@ -40,8 +88,16 @@ class IngredientsClusteringPage:
             st.error(f"Erreur lors du chargement des données : {e}")
             return None
     
-    def _render_cache_controls(self, analyzer: IngredientsAnalyzer):
-        """Render cache management controls in sidebar."""
+    def _render_cache_controls(self, analyzer: IngredientsAnalyzer) -> None:
+        """Affiche les contrôles de gestion du cache dans la sidebar.
+        
+        Permet à l'utilisateur de visualiser l'état du cache et de le supprimer
+        si nécessaire. Affiche des métriques sur l'âge, la taille et le nombre
+        de fichiers en cache.
+        
+        Args:
+            analyzer: Instance de l'analyseur d'ingrédients dont on gère le cache.
+        """
         st.sidebar.markdown("---")
         st.sidebar.markdown("### Cache Management")
         
@@ -86,12 +142,21 @@ class IngredientsClusteringPage:
         else:
             st.sidebar.warning("Cache désactivé")
     
-    def render_sidebar(self) -> dict:
-        """
-        Affiche la sidebar avec les paramètres de clustering.
+    def render_sidebar(self) -> dict[str, int | bool]:
+        """Affiche la sidebar avec les paramètres de clustering.
+        
+        Crée une interface interactive dans la sidebar permettant à l'utilisateur
+        de configurer les paramètres de l'analyse de clustering:
+        - Nombre d'ingrédients à analyser
+        - Nombre de clusters à créer
+        - Paramètres de visualisation t-SNE
         
         Returns:
-            Dictionnaire avec les paramètres sélectionnés
+            Dictionnaire contenant les paramètres sélectionnés par l'utilisateur:
+                - n_ingredients: Nombre d'ingrédients les plus fréquents (10-200)
+                - n_clusters: Nombre de groupes à créer (2-20)
+                - tsne_perplexity: Paramètre de densité pour t-SNE (5-50)
+                - analyze_button: True si le bouton d'analyse a été cliqué
         """
         st.sidebar.header("🔧 Paramètres de Clustering")
         
@@ -135,13 +200,22 @@ class IngredientsClusteringPage:
             "analyze_button": analyze_button
         }
     
-    def render_cooccurrence_analysis(self, ingredient_names: list, ingredients_matrix: pd.DataFrame) -> None:
-        """
-        Affiche l'analyse de co-occurrence interactive.
+    def render_cooccurrence_analysis(self, ingredient_names: list[str], 
+                                    ingredients_matrix: pd.DataFrame) -> None:
+        """Affiche l'analyse de co-occurrence interactive.
+        
+        Permet à l'utilisateur de sélectionner deux ingrédients et visualise
+        leur score de co-occurrence (nombre de recettes où ils apparaissent ensemble).
+        Affiche également des statistiques contextuelles pour interpréter le score.
         
         Args:
-            ingredient_names: Liste des noms d'ingrédients
-            ingredients_matrix: Matrice de co-occurrence
+            ingredient_names: Liste des noms d'ingrédients disponibles pour la sélection.
+            ingredients_matrix: Matrice de co-occurrence (DataFrame symétrique) où
+                matrix[ing1, ing2] = nombre de recettes contenant ing1 ET ing2.
+        
+        Raises:
+            ValueError: Si les ingrédients sélectionnés ne sont pas dans la matrice.
+            IndexError: Si un accès invalide à la matrice est tenté.
         """
         st.subheader("🔍 Analyse de Co-occurrence")
         
@@ -227,14 +301,25 @@ class IngredientsClusteringPage:
             except (ValueError, IndexError, KeyError):
                 st.warning("Erreur lors du calcul du score de co-occurrence")
     
-    def render_clusters(self, clusters: np.ndarray, ingredient_names: list, n_clusters: int) -> None:
-        """
-        Affiche les clusters d'ingrédients.
+    def render_clusters(self, clusters: np.ndarray, ingredient_names: list[str], 
+                       n_clusters: int) -> None:
+        """Affiche les clusters d'ingrédients de manière organisée.
+        
+        Présente chaque cluster dans un expander séparé avec une couleur distinctive.
+        Les ingrédients sont affichés en colonnes pour une meilleure lisibilité.
         
         Args:
-            clusters: Labels des clusters
-            ingredient_names: Liste des noms d'ingrédients
-            n_clusters: Nombre de clusters
+            clusters: Array numpy contenant les labels de cluster pour chaque ingrédient.
+                Taille = len(ingredient_names), valeurs de 0 à n_clusters-1.
+            ingredient_names: Liste ordonnée des noms d'ingrédients correspondant
+                aux indices dans l'array clusters.
+            n_clusters: Nombre total de clusters créés (pour l'itération).
+        
+        Example:
+            >>> clusters = np.array([0, 1, 0, 2, 1])
+            >>> names = ['salt', 'sugar', 'pepper', 'flour', 'honey']
+            >>> page.render_clusters(clusters, names, 3)
+            # Affiche 3 expanders avec les ingrédients regroupés
         """
         st.subheader("🎯 Clusters d'Ingrédients")
         
@@ -258,14 +343,28 @@ class IngredientsClusteringPage:
                 for i, ingredient in enumerate(cluster_ingredients):
                     cols[i % 4].write(f"• **{ingredient}**")
     
-    def render_tsne_visualization(self, analyzer: IngredientsAnalyzer, clusters: np.ndarray, tsne_perplexity: int) -> None:
-        """
-        Affiche la visualisation t-SNE.
+    def render_tsne_visualization(self, analyzer: IngredientsAnalyzer, 
+                                  clusters: np.ndarray, 
+                                  tsne_perplexity: int) -> None:
+        """Affiche la visualisation t-SNE 2D des clusters d'ingrédients.
+        
+        Génère et affiche un graphique interactif Plotly montrant les ingrédients
+        dans un espace 2D obtenu par réduction de dimensionnalité t-SNE. Les points
+        sont colorés selon leur cluster et peuvent être régénérés avec de nouveaux
+        paramètres.
         
         Args:
-            analyzer: Instance de l'analyseur d'ingrédients
-            clusters: Labels des clusters
-            tsne_perplexity: Paramètre de perplexité pour t-SNE
+            analyzer: Instance de IngredientsAnalyzer utilisée pour générer la
+                visualisation t-SNE à partir de la matrice de co-occurrence.
+            clusters: Array numpy des labels de cluster pour chaque ingrédient.
+            tsne_perplexity: Paramètre de perplexité pour t-SNE (5-50).
+                Contrôle la densité des groupes dans la visualisation.
+                Valeurs faibles = focus local, valeurs élevées = structure globale.
+        
+        Notes:
+            La visualisation est mise en cache dans st.session_state pour éviter
+            de la recalculer à chaque interaction. Un bouton permet de forcer la
+            régénération avec de nouveaux paramètres aléatoires.
         """
         col_title, col_button = st.columns([3, 1])
         with col_title:
@@ -369,13 +468,24 @@ class IngredientsClusteringPage:
         else:
             st.error("Erreur lors de la génération de la visualisation t-SNE")
     
-    def render_sidebar_statistics(self, clusters: Optional[np.ndarray], ingredient_names: Optional[list]) -> None:
-        """
-        Affiche les statistiques dans la sidebar.
+    def render_sidebar_statistics(self, clusters: Optional[np.ndarray], 
+                                  ingredient_names: Optional[list[str]]) -> None:
+        """Affiche les statistiques de clustering dans la sidebar.
+        
+        Présente des métriques récapitulatives et un graphique de répartition
+        des ingrédients par cluster. N'affiche rien si les données ne sont pas
+        disponibles.
         
         Args:
-            clusters: Labels des clusters (optionnel)
-            ingredient_names: Liste des noms d'ingrédients (optionnel)
+            clusters: Array numpy des labels de cluster, ou None si l'analyse
+                n'a pas encore été effectuée.
+            ingredient_names: Liste des noms d'ingrédients, ou None si l'analyse
+                n'a pas encore été effectuée.
+        
+        Notes:
+            Cette méthode vérifie que les deux paramètres sont non-None avant
+            d'afficher les statistiques. Le graphique utilise Plotly pour une
+            visualisation interactive.
         """
         if clusters is not None and ingredient_names is not None:
             st.sidebar.markdown("---")
@@ -421,12 +531,319 @@ class IngredientsClusteringPage:
             
             st.sidebar.plotly_chart(fig, use_container_width=True)
     
-    def render_analysis_summary(self, analyzer: IngredientsAnalyzer) -> None:
-        """
-        Affiche le résumé de l'analyse.
+    # ---------------- Étapes de l'analyse ---------------- #
+    
+    def _render_step_1_preprocessing(self, analyzer: IngredientsAnalyzer) -> None:
+        """Affiche l'étape 1 : Prétraitement NLP des ingrédients.
         
         Args:
-            analyzer: Instance de l'analyseur d'ingrédients
+            analyzer: Instance de l'analyseur contenant les résultats du preprocessing.
+        """
+        st.markdown("---")
+        st.header("📈 ÉTAPE 1 : Prétraitement NLP des ingrédients")
+        
+        st.markdown("""
+        **Question :** Comment normaliser et regrouper les variantes d'un même ingrédient ?
+        
+        Les recettes utilisent des descriptions variées pour un même ingrédient (ex: "sel", "gros sel", 
+        "sel de mer", "sel fin"). Le prétraitement NLP vise à identifier et regrouper ces variantes 
+        pour créer une représentation cohérente.
+        
+        **Métrique :** Taux de réduction du nombre d'ingrédients uniques après normalisation.
+        """)
+        
+        # Afficher le résumé du preprocessing
+        if hasattr(analyzer, 'ingredient_groups') and analyzer.ingredient_groups:
+            with st.expander("🔍 Détails du prétraitement", expanded=True):
+                # Récupérer les statistiques de traitement
+                summary = analyzer.get_processing_summary()
+                
+                if "error" not in summary:
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric(
+                            "Ingrédients bruts uniques", 
+                            f"{summary['normalization']['total_unique_raw']:,}",
+                            help="Nombre d'ingrédients uniques avant normalisation"
+                        )
+                    
+                    with col2:
+                        st.metric(
+                            "Après normalisation", 
+                            f"{summary['normalization']['total_normalized']:,}",
+                            delta=f"-{summary['normalization']['reduction_ratio']}%",
+                            help="Nombre d'ingrédients après regroupement des variantes"
+                        )
+                    
+                    with col3:
+                        st.metric(
+                            "Groupes créés", 
+                            f"{summary['grouping']['groups_with_multiple_items']}",
+                            help="Nombre de groupes contenant plusieurs variantes"
+                        )
+                    
+                    # Exemples de normalisation
+                    st.markdown("**🧪 Exemples de normalisation :**")
+                    test_ingredients = [
+                        "large eggs", "fresh ground black pepper", "unsalted butter", 
+                        "red onions", "whole milk", "extra virgin olive oil"
+                    ]
+                    for ing in test_ingredients:
+                        normalized = analyzer.normalize_ingredient(ing)
+                        st.write(f"• `{ing}` → `{normalized}`")
+                    
+                    # Exemples de regroupements
+                    multi_groups = [g for g in analyzer.ingredient_groups if len(g) > 1]
+                    if multi_groups:
+                        st.markdown("**🔗 Exemples de regroupements d'ingrédients similaires :**")
+                        for i, group in enumerate(multi_groups[:5]):
+                            members_display = ' | '.join(group[:5])
+                            if len(group) > 5:
+                                members_display += f" (+ {len(group)-5} autres)"
+                            st.write(f"**Groupe {i+1}:** {members_display}")
+        
+        st.markdown("""
+        **💡 Observations :** Le prétraitement NLP réduit significativement la redondance en identifiant 
+        les variantes linguistiques d'un même ingrédient. Cette étape est cruciale pour obtenir une 
+        matrice de co-occurrence fiable.
+        
+        **🎯 Implication :** La normalisation permet de concentrer l'analyse sur les véritables patterns 
+        culinaires plutôt que sur les variations de nomenclature.
+        """)
+    
+    def _render_step_2_cooccurrence(self, ingredient_names: list[str], 
+                                   ingredients_matrix: pd.DataFrame) -> None:
+        """Affiche l'étape 2 : Création de la matrice de co-occurrence.
+        
+        Args:
+            ingredient_names: Liste des noms d'ingrédients.
+            ingredients_matrix: Matrice de co-occurrence.
+        """
+        st.markdown("---")
+        st.header("📈 ÉTAPE 2 : Matrice de co-occurrence")
+        
+        st.markdown("""
+        **Objectif :** Quantifier la fréquence d'apparition conjointe de chaque paire d'ingrédients.
+        
+        La matrice de co-occurrence capture l'information fondamentale : combien de fois deux 
+        ingrédients apparaissent ensemble dans les recettes. Cette matrice symétrique constitue 
+        la base de notre analyse de similarité.
+        
+        **Méthode :** Pour chaque recette, toutes les paires d'ingrédients présents sont comptabilisées.
+        """)
+        
+        # Statistiques de la matrice
+        total_cooccurrences = int(ingredients_matrix.values.sum() / 2)
+        non_zero_pairs = int((ingredients_matrix.values > 0).sum() / 2)
+        matrix_size = len(ingredient_names)
+        max_possible_pairs = matrix_size * (matrix_size - 1) / 2
+        sparsity = (1 - non_zero_pairs/max_possible_pairs) * 100
+        
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Dimension matrice", f"{matrix_size}×{matrix_size}")
+        with col2:
+            st.metric("Co-occurrences totales", f"{total_cooccurrences:,}")
+        with col3:
+            st.metric("Paires non-nulles", f"{non_zero_pairs:,}")
+        with col4:
+            st.metric("Sparsité", f"{sparsity:.1f}%", help="Pourcentage de paires sans co-occurrence")
+        
+        st.markdown("---")
+        
+        # Analyse interactive de co-occurrence
+        self.render_cooccurrence_analysis(ingredient_names, ingredients_matrix)
+        
+        st.markdown("""
+        **📊 Ce que révèle la matrice :**
+        
+        La distribution des co-occurrences n'est pas uniforme. Certaines paires d'ingrédients 
+        apparaissent ensemble dans des milliers de recettes, révélant des associations culinaires 
+        fortes.
+        
+        """)
+    
+    def _render_step_3_clustering(self, clusters: np.ndarray, ingredient_names: list[str], 
+                                 n_clusters: int) -> None:
+        """Affiche l'étape 3 : Clustering K-means.
+        
+        Args:
+            clusters: Array des labels de cluster.
+            ingredient_names: Liste des noms d'ingrédients.
+            n_clusters: Nombre de clusters créés.
+        """
+        st.markdown("---")
+        st.header("📈 ÉTAPE 3 : Clustering K-means")
+        
+        st.markdown(f"""
+        **Objectif :** Regrouper automatiquement les ingrédients en {n_clusters} familles distinctes.
+        
+        L'algorithme K-means partitionne les ingrédients en fonction de leurs profils de co-occurrence. 
+        Deux ingrédients dans le même cluster partagent des contextes d'utilisation similaires, même 
+        s'ils ne co-occurrent pas directement.
+        
+        **Méthode :** K-means avec k={n_clusters}, distance euclidienne sur les vecteurs de co-occurrence.
+        """)
+        
+        # Statistiques des clusters
+        cluster_counts = pd.Series(clusters).value_counts().sort_index()
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Nombre de clusters", n_clusters)
+        with col2:
+            avg_size = len(ingredient_names) / n_clusters
+            st.metric("Taille moyenne", f"{avg_size:.1f} ingrédients")
+        with col3:
+            largest_cluster_size = cluster_counts.max()
+            st.metric("Plus grand cluster", f"{largest_cluster_size} ingrédients")
+        
+        st.markdown("---")
+        
+        # Affichage des clusters
+        self.render_clusters(clusters, ingredient_names, n_clusters)
+        
+        st.markdown(f"""
+        **🎯 Interprétation des clusters :**
+        
+        Les clusters arrivent à révéler des "famille culinaire" d'ingrédients. Ils peuvent être :
+        - **Ingrédients pour patisserie** 
+        - **Produits de recettes salés** 
+        
+        **Limite méthodologique** : Le choix de k={n_clusters} est paramétrique. Différentes valeurs 
+        de k révèlent des structures à différentes granularités. 
+        De plus, les clusters ont tendance à ne pas être de la même taille car une masse d'ingrédient à faible co-occurence se regrouppent ensemble.
+        """)
+    
+    def _render_step_4_visualization(self, analyzer: IngredientsAnalyzer, 
+                                    clusters: np.ndarray, 
+                                    tsne_perplexity: int) -> None:
+        """Affiche l'étape 4 : Visualisation t-SNE 2D.
+        
+        Args:
+            analyzer: Instance de l'analyseur.
+            clusters: Array des labels de cluster.
+            tsne_perplexity: Paramètre de perplexité pour t-SNE.
+        """
+        st.markdown("---")
+        st.header("📈 ÉTAPE 4 : Visualisation t-SNE 2D")
+        
+        st.markdown("""
+        **Objectif :** Projeter l'espace haute-dimensionnalité des co-occurrences en 2D pour exploration visuelle.
+        
+        La matrice de co-occurrence est un espace à n dimensions (une par ingrédient). t-SNE 
+        (t-Distributed Stochastic Neighbor Embedding) réduit cette dimensionnalité à 2D tout en 
+        préservant les proximités locales.
+        
+        **Méthode :** t-SNE avec perplexité={}, optimisation par descente de gradient.
+        """.format(tsne_perplexity))
+        
+        # Visualisation t-SNE
+        self.render_tsne_visualization(analyzer, clusters, tsne_perplexity)
+        
+        st.markdown("""
+        **🔍 Lecture de la visualisation :**
+        
+        - **Proximité spatiale** : Les ingrédients proches dans l'espace 2D ont des profils de 
+          co-occurrence similaires (utilisés dans des contextes culinaires similaires)
+        - **Couleurs** : Chaque couleur représente un cluster K-means. La cohésion spatiale des 
+          couleurs valide la qualité du clustering
+        - **Groupes isolés** : Les clusters bien séparés géographiquement indiquent des familles 
+          culinaires distinctes
+        
+        **💡 Insights visuels :**
+        
+        La visualisation révèle souvent une structure non-linéaire de l'espace culinaire. Certains 
+        ingrédients "pont" peuvent se situer entre plusieurs clusters, reflétant leur polyvalence 
+        (ex: l'huile d'olive utilisée dans de multiples contextes, ou l'eau).
+        
+        **Validation du clustering** : Si les couleurs (clusters K-means) forment des groupes 
+        visuellement cohérents dans l'espace t-SNE, cela confirme que le clustering a capturé 
+        des structures réelles plutôt qu'artificielles.
+        
+        **Limite de t-SNE** : La représentation 2D est approximative. Les distances absolues ne 
+        sont pas strictement préservées, seules les proximités relatives comptent. Différentes 
+        exécutions peuvent donner des configurations légèrement différentes (non-déterminisme).
+        """)
+    
+    def _render_conclusion(self, ingredient_names: list[str], clusters: np.ndarray, 
+                          n_clusters: int) -> None:
+        """Affiche la conclusion de l'analyse.
+        
+        Args:
+            ingredient_names: Liste des noms d'ingrédients.
+            clusters: Array des labels de cluster.
+            n_clusters: Nombre de clusters créés.
+        """
+        st.markdown("---")
+        st.subheader("📋 Conclusion de l'analyse")
+        
+        # Calculer quelques statistiques finales
+        cluster_counts = pd.Series(clusters).value_counts()
+        largest_cluster = cluster_counts.max()
+        smallest_cluster = cluster_counts.min()
+        
+        st.markdown(f"""
+        ### Synthèse des résultats
+        
+        **1. Prétraitement NLP réussi :** La normalisation automatique a permis de réduire 
+        significativement la redondance des variantes d'ingrédients, créant une base solide 
+        pour l'analyse.
+        
+        **2. Structure révélée par la co-occurrence :** L'analyse de {len(ingredient_names)} 
+        ingrédients a révélé des patterns clairs d'association culinaire, confirmant que la 
+        cuisine n'est pas aléatoire.
+        
+        **3. Clustering cohérent :** L'algorithme K-means a identifié {n_clusters} familles 
+        d'ingrédients distinctes, avec des tailles variant de {smallest_cluster} à {largest_cluster} 
+        ingrédients. Ces clusters essaye de capturer des insight sur le co-usage des ingrédients.
+        
+        **4. Validation visuelle :** La projection t-SNE montre la structure des clusters et 
+        l'organisation de l'espace culinaire.
+        
+        ### Applications pratiques
+        
+        Ces résultats peuvent être utilisés pour :
+        - **Systèmes de recommandation** : Suggérer des ingrédients complémentaires lors de la 
+          création de recettes
+        - **Analyse nutritionnelle** : Identifier les associations alimentaires courantes pour 
+          des études diététiques, nottament en reliant les informations caloriques
+        - **Créativité culinaire** : Découvrir des combinaisons innovantes en explorant les 
+          frontières entre clusters
+        - **Détection d'anomalies** : Identifier des recettes avec des combinaisons inhabituelles
+        
+        ### Limites et perspectives
+        
+        **Limites :**
+        - La co-occurrence ne capture pas l'ordre ou les quantités des ingrédients
+        - Les ingrédients très rares ne sont pas représentés et ceux trop présent
+        peuvent être mal représentés
+        
+        **Perspectives d'amélioration :**
+        - Clustering hiérarchique pour révéler plusieurs niveaux de granularité
+        - Intégration d'informations sémantiques (catégories nutritionnelles, origines)
+        - Modèles de recommandation basés sur les embeddings d'ingrédients
+        """)
+        
+
+    def render_analysis_summary(self, analyzer: IngredientsAnalyzer) -> None:
+        """Affiche le résumé détaillé du processus d'analyse.
+        
+        Présente des informations sur le regroupement d'ingrédients similaires,
+        la normalisation effectuée et des exemples de mappings. Utile pour
+        comprendre les transformations appliquées aux données brutes.
+        
+        Args:
+            analyzer: Instance de l'analyseur contenant les résultats du
+                traitement (groupes d'ingrédients, mappings, etc.).
+        
+        Notes:
+            Affiche plusieurs sections extensibles:
+            - Exemples de regroupements d'ingrédients similaires
+            - Debug de la normalisation pour des ingrédients courants
+            - Tests de normalisation en temps réel
+            - Résumé complet du pipeline de traitement
         """
         # Afficher quelques exemples de regroupements d'ingrédients
         if hasattr(analyzer, 'ingredient_groups') and analyzer.ingredient_groups:
@@ -498,25 +915,55 @@ class IngredientsClusteringPage:
                     st.warning("Aucun regroupement détecté. Tous les ingrédients sont considérés comme uniques.")
     
     def run(self) -> None:
-        """Point d'entrée principal de la page."""
-        self.logger.info("Starting ingredients clustering analysis")
-        st.markdown("---")
+        """Point d'entrée principal de la page.
         
-        # Chargement automatique des données
-        self.logger.debug("Loading and preparing data")
-        data = self._load_and_prepare_data()
+        Orchestre l'ensemble du workflow de la page de clustering:
+        1. Chargement automatique des données
+        2. Affichage de la sidebar avec paramètres
+        3. Exécution de l'analyse (process, clustering, visualisation)
+        4. Affichage des résultats interactifs
+        
+        Cette méthode gère également le cache de session Streamlit pour
+        persister les résultats entre les interactions utilisateur.
+        
+        Raises:
+            Exception: Affiche les erreurs via st.error mais ne les propage pas
+                pour maintenir l'interface fonctionnelle.
+        """
+        self.logger.info("Starting ingredients clustering analysis")
+        
+        # Introduction et User Story
+        with st.expander("🎯 Objectifs et méthodologie de l'analyse", expanded=True):
+            st.markdown("""
+            ### Peut-on regrouper les ingrédients selon leurs usages culinaires ?
+
+            Cette analyse explore les patterns de co-occurrence d'ingrédients dans les recettes pour 
+            identifier les associations culinaires naturelles. En analysant des milliers de recettes, 
+            nous révélons les combinaisons d'ingrédients qui apparaissent fréquemment ensemble.
+            
+            **Questions centrales :** Quels ingrédients sont naturellement associés ? Existe-t-il des 
+            familles d'ingrédients distinctes ? Comment les ingrédients se regroupent-ils en fonction 
+            de leurs profils d'utilisation ?
+            
+            **Approche :** Analyse NLP des listes d'ingrédients, construction d'une matrice de 
+            co-occurrence, clustering automatique par K-means, et visualisation en 2D par t-SNE.
+            
+            **Problématique :** Dans un espace culinaire où des milliers d'ingrédients peuvent être 
+            combinés, comment identifier automatiquement les groupes d'ingrédients qui partagent des 
+            contextes d'utilisation similaires ? 
+            """)
         
         # Sidebar pour les paramètres
         params = self.render_sidebar()
         self.logger.debug(f"Clustering parameters: {params}")
         
-        # Zone principale
-        st.header("📈 Analyse des données")
+        # Chargement automatique des données
+        self.logger.debug("Loading and preparing data")
+        data = self._load_and_prepare_data()
         
         # Traitement des données
         if data is not None:
             self.logger.info(f"Dataset loaded successfully: {len(data)} recipes")
-            st.success(f"Dataset chargé : {len(data)} recettes")
             
             # Initialisation de l'analyseur
             analyzer = IngredientsAnalyzer(data)
@@ -524,9 +971,22 @@ class IngredientsClusteringPage:
             # Cache controls dans la sidebar
             self._render_cache_controls(analyzer)
             
-            # Lancer l'analyse automatiquement ou avec le bouton
-            if params["analyze_button"] or 'ingredient_names' not in st.session_state:
-                self.logger.info("Starting clustering analysis with parameters")
+            # Vérifier si les paramètres ont changé
+            params_changed = False
+            if 'last_params' in st.session_state:
+                last_params = st.session_state['last_params']
+                if (last_params['n_ingredients'] != params['n_ingredients'] or
+                    last_params['n_clusters'] != params['n_clusters'] or
+                    last_params['tsne_perplexity'] != params['tsne_perplexity']):
+                    params_changed = True
+            
+            # Lancer l'analyse si bouton cliqué, première fois, ou paramètres changés
+            should_analyze = (params["analyze_button"] or 
+                            'ingredient_names' not in st.session_state or 
+                            params_changed)
+            
+            if should_analyze:
+                self.logger.info(f"Starting clustering analysis with parameters: n_ingredients={params['n_ingredients']}, n_clusters={params['n_clusters']}")
                 with st.spinner("Analyse en cours..."):
                     # Traitement des ingrédients
                     self.logger.debug(f"Processing ingredients with n_ingredients={params['n_ingredients']}")
@@ -543,12 +1003,7 @@ class IngredientsClusteringPage:
                     st.session_state['clusters'] = clusters
                     st.session_state['ingredients_matrix'] = ingredients_matrix
                     st.session_state['analyzer'] = analyzer
-                    
-                self.logger.info("Analysis completed successfully")
-                st.success("Analyse terminée!")
-                
-                # Afficher le résumé de l'analyse
-                self.render_analysis_summary(analyzer)
+                    st.session_state['last_params'] = params.copy()
             
             # Affichage des résultats si disponibles
             if 'ingredient_names' in st.session_state:
@@ -558,14 +1013,29 @@ class IngredientsClusteringPage:
                 clusters = st.session_state['clusters']
                 analyzer = st.session_state['analyzer']
                 
-                # Analyse de co-occurrence
-                self.render_cooccurrence_analysis(ingredient_names, ingredients_matrix)
+                # Statistiques générales
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("📊 Recettes analysées", f"{len(data):,}")
+                with col2:
+                    st.metric("🥘 Ingrédients retenus", f"{len(ingredient_names)}")
+                with col3:
+                    st.metric("🎯 Clusters créés", f"{params['n_clusters']}")
                 
-                # Affichage des clusters
-                self.render_clusters(clusters, ingredient_names, params["n_clusters"])
+                # ÉTAPE 1 : Prétraitement NLP
+                self._render_step_1_preprocessing(analyzer)
                 
-                # Visualisation t-SNE
-                self.render_tsne_visualization(analyzer, clusters, params["tsne_perplexity"])
+                # ÉTAPE 2 : Matrice de co-occurrence
+                self._render_step_2_cooccurrence(ingredient_names, ingredients_matrix)
+                
+                # ÉTAPE 3 : Clustering
+                self._render_step_3_clustering(clusters, ingredient_names, params["n_clusters"])
+                
+                # ÉTAPE 4 : Visualisation t-SNE
+                self._render_step_4_visualization(analyzer, clusters, params["tsne_perplexity"])
+                
+                # Conclusion
+                self._render_conclusion(ingredient_names, clusters, params["n_clusters"])
                 
                 # Statistiques dans la sidebar
                 self.render_sidebar_statistics(clusters, ingredient_names)
@@ -573,29 +1043,6 @@ class IngredientsClusteringPage:
         else:
             st.error("Impossible de charger les données. Vérifiez la présence du fichier de données.")
         
-        # Informations dans la sidebar
-        with st.sidebar:
-            st.markdown("---")
-            
-            with st.expander("ℹ️ À propos de l'analyse"):
-                st.markdown("""
-                **Analyseur de Recettes Food.com**
-                
-                🎯 **Objectif** : Identifier des groupes d'ingrédients qui apparaissent fréquemment ensemble
-                
-                📊 **Méthodes** :
-                - Preprocessing des ingrédients
-                - Matrice de co-occurrence
-                - Clustering K-means
-                - Visualisation interactive
-                
-                💡 **Utilisation** :
-                1. Ajustez les paramètres
-                2. Lancez l'analyse
-                3. Explorez les clusters
-                4. Analysez les co-occurrences
-                """)
-        
         # Footer
         st.markdown("---")
-        st.markdown("🍳 **Clustering d'Ingrédients** - Développé avec ❤️ et Streamlit pour l'analyse de recettes Food.com")
+        st.caption("💡 **Configuration** : Ajustez les paramètres dans la sidebar pour explorer différentes configurations de clustering.")

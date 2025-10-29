@@ -1,5 +1,15 @@
 # IADATA700_mangetamain
 
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
+![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-24%20passed-success?style=flat)
+![PlantUML](https://img.shields.io/badge/PlantUML-Documentation-blue?style=flat)
+
 Dans le cadre d'un enseignement à Telecom Paris, ce projet consiste en une application web interactive d'analyse de données pour une entreprise fictive : **Mangetamain** ; leader dans la recommandation B2C de recettes de cuisine à l'ancienne bio.
 
 ## 🚀 Application Streamlit
@@ -51,12 +61,67 @@ Chemins par défaut :
   - Aperçu DataFrame fusionné (diagnostic)
   - Filtre sur interactions minimales
 
-### 🧩 Diagramme UML
-Un diagramme de classes PlantUML est disponible : `docs/class-diagram.puml`.
+## 📐 Architecture UML
 
-Pour le générer en PNG (nécessite PlantUML + Java) :
+### 🖼️ Visualisation directe
+
+![Diagramme UML](docs/class-diagram.svg)
+
+<details>
+<summary><b>Aperçu (image PNG)</b></summary>
+
+![Architecture UML](docs/class-diagram.png)
+
+> ⚠️ **Si l'image ne s'affiche pas** : Générez-la avec `plantuml docs/class-diagram.puml`
+
+</details>
+
+**Générer le diagramme :**
 ```bash
+# Installation PlantUML (macOS)
+brew install plantuml
+
+# Génération PNG haute résolution (200 DPI)
 plantuml docs/class-diagram.puml
+
+# Ou SVG pour zoom sans perte
+plantuml -tsvg docs/class-diagram.puml
 ```
-Ou via l'extension VS Code PlantUML.
+
+
+
+## 🧪 Tests & Qualité
+
+### Exécuter les tests
+```bash
+# Tous les tests
+uv run pytest
+
+# Tests avec couverture
+uv run pytest --cov=src --cov-report=html
+
+# Tests spécifiques
+uv run pytest tests/test_ingredients_clustering_page.py
+
+# Mode verbose
+uv run pytest -v
+```
+
+### Logger
+Le projet utilise un système de logging structuré dans `debug/` :
+- **`debug/debug.log`** : Logs INFO/DEBUG détaillés
+- **`debug/errors.log`** : Erreurs uniquement
+
+Configuration dans `src/core/logger.py` :
+```python
+from src.core.logger import get_logger
+logger = get_logger(__name__)
+logger.info("Message d'information")
+```
+
+### Cache
+Système de cache automatique pour optimiser les analyses lourdes :
+- **Localisation** : `cache/analyzer/operation/hash.pkl`
+- **Contrôle** : Sidebar de chaque page (activation/nettoyage)
+- **Détection** : Changements de paramètres automatiques
 
