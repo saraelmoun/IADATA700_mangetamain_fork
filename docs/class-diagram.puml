@@ -1,186 +1,247 @@
 @startuml class-diagram
-hide empty methods
+' Configuration pour un affichage horizontal et aéré
+left to right direction
+skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
 skinparam shadowing false
-skinparam defaultFontName JetBrains Mono, Consolas, monospace
-skinparam dpi 150
-skinparam linetype ortho
+skinparam defaultFontName Arial, Helvetica, sans-serif
+skinparam dpi 200
+skinparam linetype polyline
+skinparam nodesep 100
+skinparam ranksep 120
+skinparam padding 10
 
-title Architecture logique (core / components / app) - Avec Cache Centralisé
-
-package "app" {
-    class App {
-        -AppConfig config
-        +run()
-    }
-    class AppConfig {
-        +Path default_recipes_path
-        +Path default_interactions_path
-        +str page_title
-        +str layout
-    }
+' Couleurs pour une meilleure lisibilité
+skinparam class {
+    BackgroundColor<<config>> LightYellow
+    BackgroundColor<<analyzer>> LightBlue
+    BackgroundColor<<page>> LightGreen
+    BackgroundColor<<cache>> LightCoral
+    BorderColor Black
+    ArrowColor DarkGray
 }
 
-package "core" {
-    class DataLoader {
-        -Path data_path
-        -bool cache
-        -DataFrame _df
-        +load_data(): DataFrame
-        +get_data(): DataFrame
-    }
+title Architecture IADATA700 MangetaMain - Vue Horizontale Simplifiée
 
-    class DataExplorer {
-        -DataLoader loader
-        +df : DataFrame <<property>>
+package "🎯 APPLICATION" #TECHNOLOGY {
+    class App {
+        -config: AppConfig
+        --
+        +run(): void
     }
-
-    class CacheManager {
-        -Path base_cache_dir
-        -Logger logger
-        +get(analyzer_name, operation, params): Optional[T]
-        +set(analyzer_name, operation, params, data): bool
-        +clear(analyzer_name?, operation?): int
-        +get_info(): Dict[str, Any]
-        -_generate_key(): str
-        -_get_cache_path(): Path
+    
+    class "AppConfig" as AppConfig <<config>> {
+        +default_recipes_path: Path
+        +default_interactions_path: Path
+        +page_title: str
+        +layout: str
     }
+    
+    App -right-> AppConfig : configure
+}
 
-    abstract class CacheableMixin {
-        -bool _cache_enabled
-        -CacheManager _cache_manager
-        -str _analyzer_name
-        +enable_cache(enabled: bool)
-        +cached_operation(operation_name, operation_func, cache_params): T
-        #{abstract} _get_default_cache_params(): dict
+package "📦 CORE (Logique Métier)" #BUSINESS {
+    
+    together {
+        class DataLoader {
+            -data_path: Path
+            --
+            +load_data(): DataFrame
+            +get_data(): DataFrame
+        }
+        
+        class DataExplorer {
+            -loader: DataLoader
+            --
+            +df: DataFrame
+        }
     }
-
-    class PreprocessingConfig <<dataclass>> {
-        +bool enable_preprocessing
-        +str outlier_method
-        +float outlier_threshold
+    
+    class "CacheManager" as CacheManager <<cache>> {
+        -base_cache_dir: Path
+        -logger: Logger
+        --
+        +get(): Optional[T]
+        +set(): bool
+        +clear(): int
+        +get_info(): dict
+    }
+    
+    abstract class "CacheableMixin" as CacheableMixin <<cache>> {
+        {abstract}
+        --
+        +cached_operation(): T
+        +enable_cache(): void
+    }
+    
+    class "PreprocessingConfig" as PreprocessingConfig <<config>> {
+        +enable_preprocessing: bool
+        +outlier_method: str
+        +outlier_threshold: float
+        --
         +get_hash(): str
     }
-
-    class InteractionsAnalyzer <<dataclass>> {
-        +DataFrame? interactions
-        +DataFrame? recipes
-        +PreprocessingConfig? preprocessing
-        -DataFrame _df
-        -dict _popularity_segments_info
+    
+    class "InteractionsAnalyzer" as InteractionsAnalyzer <<analyzer>> {
+        +interactions: DataFrame
+        +recipes: DataFrame
+        +preprocessing: PreprocessingConfig
+        --
         +aggregate(): DataFrame
         +popularity_vs_rating(): DataFrame
-        +create_popularity_segments(): DataFrame
         +get_cache_info(): dict
-        +_compute_preprocessed_data(): DataFrame
-        +_compute_aggregate(): DataFrame
     }
-
-    class IngredientsAnalyzer {
-        -DataFrame data
-        -list ingredient_names
-        -DataFrame ingredients_matrix
-        +process_ingredients(n_ingredients): (DataFrame, list)
-        +perform_clustering(co_occurrence_df, n_clusters): ndarray
-        +generate_tsne_visualization(cluster_labels, perplexity, random_state): dict
+    
+    class "IngredientsAnalyzer" as IngredientsAnalyzer <<analyzer>> {
+        -data: DataFrame
+        --
+        +process_ingredients(): tuple
+        +perform_clustering(): ndarray
+        +generate_tsne_visualization(): dict
         +get_cache_info(): dict
-        +_compute_process_ingredients(): (DataFrame, list)
-        +_compute_clustering(): ndarray
-        +_compute_tsne_visualization(): dict
     }
+    
+    ' Relations internes au package core
+    DataExplorer -right-> DataLoader : utilise
+    CacheableMixin -up-> CacheManager : utilise
+    InteractionsAnalyzer -up-|> CacheableMixin : hérite
+    IngredientsAnalyzer -up-|> CacheableMixin : hérite
+    InteractionsAnalyzer .right.> PreprocessingConfig : utilise
 }
 
-package "components" {
-    class IngredientsClusteringPage {
-        -str default_recipes_path
-        +render_sidebar(): dict
-        +_render_cache_controls(analyzer): void
+package "🖥️ COMPONENTS (Interface UI)" #APPLICATION {
+    
+    together {
+        class "PopularityAnalysisPage\n(Page 1)" as PopularityAnalysisPage <<page>> {
+            -interactions_analyzer: InteractionsAnalyzer
+            -config, logger
+            --
+            +run(), render_sidebar()
+            +_render_step_1_preprocessing()
+            +_render_step_2_aggregation()
+            +_render_step_3_scatter()
+            +_render_step_4_characteristics()
+        }
+        
+        class PopularityAnalysisConfig <<config>> {
+            +interactions_path: Path
+            +recipes_path: Path
+        }
     }
-
-    class PopularityAnalysisPage {
-        -PopularityAnalysisConfig config
-        +run()
-        +_render_cache_controls(analyzer): void
+    
+    together {
+        class "IngredientsClusteringPage\n(Page 2)" as IngredientsClusteringPage <<page>> {
+            -ingredients_analyzer: IngredientsAnalyzer
+            -config, logger
+            --
+            +run(), render_sidebar()
+            +_render_step_1_preprocessing()
+            +_render_step_2_cooccurrence()
+            +_render_step_3_clustering()
+            +_render_step_4_visualization()
+            --
+            +render_cooccurrence_analysis()
+            +render_clusters()
+            +render_tsne_visualization()
+            +render_analysis_summary()
+        }
+        
+        class IngredientsClusteringConfig <<config>> {
+            +recipes_path: Path
+            +n_ingredients: int = 50
+            +n_clusters: int = 5
+            +tsne_perplexity: int = 30
+        }
     }
-
-    class PopularityAnalysisConfig {
-        +Path interactions_path
-        +Path recipes_path
-    }
+    
+    ' Relations internes composants
+    PopularityAnalysisPage -right-> PopularityAnalysisConfig
+    IngredientsClusteringPage -right-> IngredientsClusteringConfig
 }
 
-' ================= Relationships =================
-App --> AppConfig : configure
-App --> DataLoader : utilise
-App --> DataExplorer : instancie
-App --> IngredientsClusteringPage : page
-App --> PopularityAnalysisPage : page
+' ═══════════════════════════════════════════════════════════════
+' RELATIONS PRINCIPALES
+' ═══════════════════════════════════════════════════════════════
 
-DataExplorer --> DataLoader : charge
-InteractionsAnalyzer --> DataLoader : (données brutes)
-InteractionsAnalyzer --> PreprocessingConfig : configure
-IngredientsAnalyzer --> DataLoader : (données recettes)
+' Application vers Pages (utilisation)
+App --> PopularityAnalysisPage : <<Page 1>>
+App --> IngredientsClusteringPage : <<Page 2>>
+App --> DataExplorer : <<Home>>
 
+' Pages vers Analyseurs (composition forte)
 PopularityAnalysisPage --> InteractionsAnalyzer : analyse
-PopularityAnalysisPage --> PopularityAnalysisConfig : configure
 IngredientsClusteringPage --> IngredientsAnalyzer : analyse
 
-' Cache System Relationships
-CacheableMixin --> CacheManager : utilise
-InteractionsAnalyzer --|> CacheableMixin : hérite
-IngredientsAnalyzer --|> CacheableMixin : hérite
-CacheManager --> "global instance" : _cache_manager
+' Analyseurs vers DataLoader (dépendance)
+InteractionsAnalyzer ..> DataLoader : charge
+IngredientsAnalyzer ..> DataLoader : charge
 
-' Cache Controls in UI
-PopularityAnalysisPage --> CacheManager : gestion cache (via analyzer)
-IngredientsClusteringPage --> CacheManager : gestion cache (via analyzer)
+' Mixins et héritages
+InteractionsAnalyzer -up-|> CacheableMixin : hérite
+IngredientsAnalyzer -up-|> CacheableMixin : hérite
 
-note right of CacheManager
-    Cache Centralisé:
-    - Structure hiérarchique: cache/analyzer/operation/hash.pkl
-    - Métadonnées: timestamp, params, analyzer
-    - Support multi-analyseurs
-    - Nettoyage granulaire
+' Cache management
+CacheableMixin ..> CacheManager : utilise
+PopularityAnalysisPage ..> CacheManager : contrôle
+IngredientsClusteringPage ..> CacheManager : contrôle
+
+' ═══════════════════════════════════════════════════════════════
+' NOTES EXPLICATIVES
+' ═══════════════════════════════════════════════════════════════
+
+note top of App
+  **Application Streamlit Multi-Pages**
+  • 🏠 Home (exploration générale)
+  • 🔥 Page 1: Analyse popularité
+  • 🍳 Page 2: Clustering ingrédients
+  --
+  • Logger structuré
+  • Tests: 24 tests (Page 2)
 end note
 
-note right of CacheableMixin
-    Mixin pour Cache:
-    - cached_operation() wrapper
-    - Cache params personnalisables
-    - Activation/désactivation
-    - Compatible avec tout analyzer
+note bottom of CacheManager
+  **Cache Centralisé**
+  • Structure: cache/analyzer/operation/hash.pkl
+  • Métadonnées: timestamp, params
+  • Support multi-analyseurs
+  • Nettoyage granulaire
 end note
 
-note right of InteractionsAnalyzer
-    Analyse avancée avec Cache:
-    - preprocess_data() mise en cache
-    - aggregate() mise en cache
-    - Popularité / notes avec preprocessing
-    - Segmentation automatique (4 niveaux)
+note bottom of PopularityAnalysisPage
+  **Page 1 - Structure 4 Étapes**
+  ① Preprocessing outliers
+  ② Agrégation par recette
+  ③ Scatter popularité/notes
+  ④ Features vs popularité
+  --
+  • User Story dans UI
+  • Contrôles cache sidebar
 end note
 
-note right of IngredientsAnalyzer
-    Clustering avec Cache:
-    - process_ingredients() mise en cache
-    - perform_clustering() mise en cache
-    - generate_tsne_visualization() mise en cache
-    - Accélération significative des analyses
+note bottom of IngredientsClusteringPage
+  **Page 2 - Structure 4 Étapes**
+  ① Prétraitement NLP
+  ② Matrice co-occurrence
+  ③ Clustering K-means
+  ④ Visualisation t-SNE 2D
+  --
+  • User Story dans UI
+  • 15 méthodes publiques
+  • Typage strict + Doc complète
+  • Détection changements params
 end note
 
-note right of PopularityAnalysisPage
-    Interface complète avec Cache:
-    - Contrôles cache dans sidebar
-    - Clear/Info cache
-    - Statut cache en temps réel
-    - 4 étapes d'analyse optimisées
-end note
-
-note right of App
-    Application Streamlit Optimisée:
-    - Home (exploration générale)
-    - Clustering ingrédients (avec cache)
-    - Popularité recettes (avec cache)
-    - Performance améliorée
-end note
+legend bottom right
+  **Légende**
+  <<config>> = Configuration (dataclass)
+  <<analyzer>> = Analyseur métier
+  <<page>> = Page Streamlit
+  <<cache>> = Système de cache
+  --
+  Flèches:
+  → Relation forte (composition)
+  ⇢ Relation faible (dépendance)
+  ──|> Héritage
+endlegend
 
 @enduml
