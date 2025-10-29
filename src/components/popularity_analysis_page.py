@@ -359,9 +359,8 @@ class PopularityAnalysisPage:
                         """
                     #### ⏱️ Impact du temps de préparation
 
-                    **Hypothèse :** Les recettes rapides sont plus populaires dans une société pressée.
-                    **Variable :** Temps de préparation en minutes vs nombre d'interactions.
-                    **Indicateur qualité :** Taille des points = note moyenne.
+                    **Hypothèse :** Les recettes rapides sont plus populaires dans une société pressée.  
+                    **Variable :** Temps de préparation en minutes vs nombre d'interactions.  
                     """
                     )
                 elif feat == "n_steps":
@@ -369,8 +368,8 @@ class PopularityAnalysisPage:
                         """
                     #### � Influence de la complexité procédurale
 
-                    **Hypothèse :** La complexité (nombre d'étapes) peut freiner l'adoption mais améliorer la satisfaction.
-                    **Variable :** Nombre d'étapes vs nombre d'interactions.
+                    **Hypothèse :** La complexité (nombre d'étapes) peut freiner l'adoption mais améliorer la satisfaction.  
+                    **Variable :** Nombre d'étapes vs nombre d'interactions.  
                     **Observation :** Équilibre entre accessibilité et sophistication.
                     """
                     )
@@ -379,8 +378,8 @@ class PopularityAnalysisPage:
                         """
                     #### 🥘 Effet de la diversité des ingrédients
 
-                    **Hypothèse :** Plus d'ingrédients = recette plus complexe et potentiellement dissuasive.
-                    **Variable :** Nombre d'ingrédients vs nombre d'interactions.
+                    **Hypothèse :** Plus d'ingrédients = recette plus complexe et potentiellement dissuasive.  
+                    **Variable :** Nombre d'ingrédients vs nombre d'interactions.  
                     **Analyse :** Impact de la richesse compositionnelle sur l'engagement.
                     """
                     )
@@ -448,12 +447,12 @@ class PopularityAnalysisPage:
                         **� Ce que révèle le graphique du temps :**
 
                         L'analyse de la distribution révèle une concentration
-                        de recettes bien notées (gros points) dans certaines zones de temps, indiquant les "sweet spots"
+                        de recettes bien notées dans certaines zones de temps, indiquant les "sweet spots"
                         temporels. Les recettes ultra-rapides (moins de 15 minutes) peuvent manquer de sophistication,
-                        tandis que les préparations longues (plus de 2 heures) peuvent décourager les utilisateurs.
-
-                        **Équilibre optimal** : Les données suggèrent un équilibre entre temps suffisant pour créer
-                        de la valeur et durée raisonnable pour maintenir l'engagement.
+                        tandis que les préparations longues (plus de 2 heures) peuvent décourager les utilisateurs.  
+                        Les données suggèrent un équilibre entre temps suffisant pour créer de la valeur et durée raisonnable pour maintenir l'engagement.  
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        sont les recettes prenant moins d'une heure.
                         """
                         )
                     elif feat == "n_steps":
@@ -463,11 +462,12 @@ class PopularityAnalysisPage:
 
                         L'analyse révèle l'un des paradoxes les plus significatifs de la cuisine.
                         Une concentration de recettes bien notées (gros points) autour de 5-8 étapes
-                        confirme l'existence d'un "niveau de défi optimal".
-
-                        **Insight psychologique** : L'engagement utilisateur optimal se situe entre
+                        confirme l'existence d'un "niveau de défi optimal".  
+                        L'engagement utilisateur optimal se situe entre
                         accomplissement satisfaisant et complexité gérable. Cette zone représente l'équilibre
-                        entre "trop simple = ennuyeux" et "trop complexe = décourageant".
+                        entre "trop simple", "ennuyeux" et "trop complexe","décourageant".  
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        sont les recettes ayant moins de 15 étapes environ.
                         """
                         )
                     elif feat == "n_ingredients":
@@ -477,13 +477,14 @@ class PopularityAnalysisPage:
 
                         L'analyse révèle la relation entre nombre d'ingrédients et satisfaction utilisateur.
                         Cette distribution montre comment la perception de "richesse" d'une recette influence
-                        son succès.
-
-                        **Équilibre psychologique** : Les données révèlent un optimum entre richesse perçue
+                        son succès.  
+                        Les données révèlent un optimum entre richesse perçue
                         et accessibilité pratique. Un nombre trop faible d'ingrédients peut sembler "basique",
                         tandis qu'un nombre excessif peut paraître "intimidant" ou "coûteux".
                         La concentration des meilleures notes révèle le nombre optimal
-                        qui équilibre richesse et accessibilité.
+                        qui équilibre richesse et accessibilité.  
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        sont les recettes demandant moins de 15 ingrédients environ.
                         """
                         )
 
