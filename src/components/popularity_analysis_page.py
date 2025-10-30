@@ -138,11 +138,9 @@ class PopularityAnalysisPage:
                     if segment == "Low":
                         interval = f"1 à {int(thresholds['low_max'])} fois"
                     elif segment == "Medium":
-                        interval = f"{int(thresholds['low_max'])
-                                      + 1} à {int(thresholds['medium_max'])} fois"
+                        interval = f"{int(thresholds['low_max']) + 1} à {int(thresholds['medium_max'])} fois"
                     elif segment == "High":
-                        interval = f"{int(thresholds['medium_max'])
-                                      + 1} à {int(thresholds['high_max'])} fois"
+                        interval = f"{int(thresholds['medium_max']) + 1} à {int(thresholds['high_max'])} fois"
                     else:  # Viral
                         interval = f"Plus de {int(thresholds['high_max'])} fois"
 

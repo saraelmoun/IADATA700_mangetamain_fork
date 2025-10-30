@@ -144,8 +144,7 @@ class App:
                 try:
                     tmp_df = pd.read_csv(uploaded)
                     self.logger.info(
-                        f"Successfully loaded {dataset_type} from upload: {
-                            tmp_df.shape}"
+                        f"Successfully loaded {dataset_type} from upload: {tmp_df.shape}"
                     )
                 except Exception as e:
                     self.logger.error(f"Error reading uploaded file: {e}")

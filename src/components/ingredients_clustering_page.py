@@ -32,9 +32,11 @@ class IngredientsClusteringConfig:
     """
 
     recipes_path: Path
-    n_ingredients: int = 30  # Réduit de 50 à 30 pour plus de rapidité
-    n_clusters: int = 4      # Réduit de 5 à 4 
-    tsne_perplexity: int = 15  # Réduit de 30 à 15 pour t-SNE plus rapide
+    n_ingredients: int = 50
+    n_clusters: int = 5
+    tsne_perplexity: int = 30
+
+
 class IngredientsClusteringPage:
     """Page Streamlit pour l'analyse de clustering des ingrédients.
 
@@ -170,18 +172,18 @@ class IngredientsClusteringPage:
         # Paramètres de clustering
         n_ingredients = st.sidebar.slider(
             "Nombre d'ingrédients à analyser",
-            min_value=15,
-            max_value=100,  # Réduit de 200 à 100
-            value=30,       # Réduit de 50 à 30
-            step=5,         # Réduit de 10 à 5 pour plus de granularité
-            help="⚡ Performance: 15-40 = Rapide, 40-70 = Moyen, 70+ = Lent",
+            min_value=10,
+            max_value=200,
+            value=50,
+            step=10,
+            help="Nombre d'ingrédients les plus fréquents à inclure dans l'analyse",
         )
 
         n_clusters = st.sidebar.slider(
             "Nombre de clusters",
             min_value=2,
-            max_value=15,   # Réduit de 20 à 15
-            value=4,        # Réduit de 5 à 4
+            max_value=20,
+            value=5,
             step=1,
             help="Nombre de groupes d'ingrédients à créer",
         )
@@ -191,20 +193,11 @@ class IngredientsClusteringPage:
         tsne_perplexity = st.sidebar.slider(
             "Perplexité t-SNE",
             min_value=5,
-            max_value=30,   # Réduit de 50 à 30
-            value=15,       # Réduit de 30 à 15
+            max_value=50,
+            value=30,
             step=5,
-            help="⚡ Performance: 5-15 = Rapide, 15-25 = Moyen, 25+ = Lent",
+            help="Contrôle la densité des groupes dans la visualisation",
         )
-
-        # Indicateur de performance
-        total_params = n_ingredients * tsne_perplexity
-        if total_params > 600:
-            st.sidebar.error("🐌 Configuration lente (>1 min)")
-        elif total_params > 300:
-            st.sidebar.warning("⚠️ Configuration moyenne (~30s)")
-        else:
-            st.sidebar.success("⚡ Configuration rapide (<15s)")
 
         # Bouton d'analyse dans la sidebar
         analyze_button = st.sidebar.button("🚀 Lancer l'analyse", type="primary")
@@ -276,8 +269,7 @@ class IngredientsClusteringPage:
                 with col_metric1:
                     st.metric(
                         label="Score de co-occurrence",
-                        value=f"{
-                            cooccurrence_score:.0f}",
+                        value=f"{cooccurrence_score:.0f}",
                         help=f"Nombre de recettes contenant '{ingredient1}' ET '{ingredient2}'",
                     )
 
@@ -391,15 +383,7 @@ class IngredientsClusteringPage:
         should_generate_tsne = "tsne_data" not in st.session_state or regenerate_tsne
 
         if should_generate_tsne:
-            # Information sur les performances
-            if tsne_perplexity > 20 or len(clusters) > 40:
-                st.warning(
-                    "⚠️ **Attention :** Les paramètres sélectionnés peuvent ralentir l'analyse. "
-                    "Pour une première exploration, essayez avec moins d'ingrédients (< 40) "
-                    "et une perplexité plus faible (< 20)."
-                )
-
-            with st.spinner("Génération de la visualisation t-SNE (peut prendre 30-60 secondes)..."):
+            with st.spinner("Génération de la visualisation t-SNE..."):
                 tsne_data = analyzer.generate_tsne_visualization(clusters, perplexity=tsne_perplexity)
                 st.session_state["tsne_data"] = tsne_data
         else:

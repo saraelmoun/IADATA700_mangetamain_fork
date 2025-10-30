@@ -43,10 +43,7 @@ class PreprocessingConfig:
 
     def get_hash(self) -> str:
         """Generate hash for cache validation."""
-        config_str = f"{
-            self.enable_preprocessing}_{
-            self.outlier_method}_{
-            self.outlier_threshold}"
+        config_str = f"{self.enable_preprocessing}_{self.outlier_method}_{self.outlier_threshold}"
         return hashlib.md5(config_str.encode()).hexdigest()[:8]
 
 
