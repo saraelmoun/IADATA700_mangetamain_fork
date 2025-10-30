@@ -12,8 +12,6 @@ __pycache__/
 data/raw/
 data/
 
-#flake8
-.flake8
 
 # Build utilitaire
 Makefile
@@ -44,3 +42,6 @@ run_tests.py
 htmlcov/
 
 CACHE_ MIGRATION_PLAN.md
+
+# sphinx
+.github/workflows/docs.yml

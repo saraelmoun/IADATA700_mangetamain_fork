@@ -1,0 +1,220 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core.cacheable_mixin &mdash; Documentation MangetamainTESTWR 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a28dfa3"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MangetamainTESTWR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">IADATA700_mangetamain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">src</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ClassDiagram.html">Diagramme de classes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MangetamainTESTWR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">src.core.cacheable_mixin</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de src.core.cacheable_mixin</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Mixin pour ajouter des capacités de cache aux analyseurs.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cache_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_cache_manager</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CacheableMixin">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cacheable_mixin.CacheableMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CacheableMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin qui ajoute des capacités de cache à une classe.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span> <span class="o">=</span> <span class="n">get_cache_manager</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_enabled</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;analyzer&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CacheableMixin.enable_cache">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cacheable_mixin.CacheableMixin.enable_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">enable_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Active ou désactive le cache pour cet analyseur.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+
+        <span class="c1"># Initialiser les attributs s&#39;ils n&#39;existent pas encore</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_cache_manager&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span> <span class="o">=</span> <span class="n">get_cache_manager</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_analyzer_name&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;analyzer&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CacheableMixin.cached_operation">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cacheable_mixin.CacheableMixin.cached_operation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cached_operation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">operation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">operation_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">T</span><span class="p">],</span>
+        <span class="n">cache_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exécute une opération avec mise en cache automatique.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_name: Nom de l&#39;opération (pour la clé de cache)</span>
+<span class="sd">            operation_func: Fonction à exécuter si pas en cache</span>
+<span class="sd">            cache_params: Paramètres pour générer la clé de cache</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Résultat de l&#39;opération (depuis le cache ou calculé)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_enabled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">operation_func</span><span class="p">()</span>
+
+        <span class="c1"># Utiliser les paramètres fournis ou ceux par défaut</span>
+        <span class="k">if</span> <span class="n">cache_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cache_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_default_cache_params</span><span class="p">()</span>
+
+        <span class="c1"># Essayer de charger depuis le cache</span>
+        <span class="n">cached_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">analyzer_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="n">operation_name</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">cache_params</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cached_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cached_result</span>
+
+        <span class="c1"># Exécuter l&#39;opération et sauvegarder en cache</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">operation_func</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">analyzer_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span><span class="p">,</span>
+            <span class="n">operation</span><span class="o">=</span><span class="n">operation_name</span><span class="p">,</span>
+            <span class="n">params</span><span class="o">=</span><span class="n">cache_params</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_cache_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retourne les paramètres par défaut pour le cache.</span>
+<span class="sd">        À override dans les classes dérivées.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="CacheableMixin.clear_cache">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cacheable_mixin.CacheableMixin.clear_cache">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Nettoie le cache pour cet analyseur.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation: Si spécifié, nettoie seulement cette opération</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Nombre de fichiers supprimés</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">analyzer_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span><span class="p">,</span> <span class="n">operation</span><span class="o">=</span><span class="n">operation</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CacheableMixin.get_cache_info">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cacheable_mixin.CacheableMixin.get_cache_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retourne les informations de cache pour cet analyseur.&quot;&quot;&quot;</span>
+        <span class="n">full_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache_manager</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">full_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;analyzers&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;operations&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;size_mb&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, William.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

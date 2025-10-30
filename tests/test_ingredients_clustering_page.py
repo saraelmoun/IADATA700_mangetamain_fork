@@ -47,9 +47,9 @@ class TestIngredientsClusteringConfig:
     def test_config_with_defaults(self):
         """Test que les valeurs par défaut sont correctement appliquées."""
         config = IngredientsClusteringConfig(recipes_path=Path("recipes.csv"))
-        assert config.n_ingredients == 50
-        assert config.n_clusters == 5
-        assert config.tsne_perplexity == 30
+        assert config.n_ingredients == 30  # Updated after performance optimization
+        assert config.n_clusters == 4  # Updated after performance optimization  
+        assert config.tsne_perplexity == 15  # Updated after performance optimization
 
     def test_config_path_types(self):
         """Test la gestion des différents types de chemins."""

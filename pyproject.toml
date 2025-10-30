@@ -26,6 +26,10 @@ dev = [
     "autoflake>=2.3.1",
     "autopep8>=2.3.2",
     "isort>=6.0.1",
+    "linkify-it-py>=2.0.3",
+    "myst-parser>=4.0.1",
+    "sphinx-autodoc-typehints>=3.5.2",
+    "sphinx-rtd-theme>=3.0.2",
 ]
 
 [tool.black]
@@ -36,5 +40,4 @@ target-version = ['py311']
 max_line_length = 125
 ignore = ["E203", "W503"]
 aggressive = 2
-
 
