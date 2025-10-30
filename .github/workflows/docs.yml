@@ -1,0 +1,82 @@
+name: Docs (Sphinx)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+
+      # Crée l'environnement et installe les dépendances (groupe dev inclus)
+      - name: Create venv + install project & docs deps
+        run: |
+          uv venv
+          uv pip install -e .
+          uv sync --group dev
+
+      # Génère automatiquement les stubs API à partir du dossier src/
+      - name: Generate API stubs (sphinx-apidoc)
+        run: |
+          uv run sphinx-apidoc -o docs/source/api src
+
+      # Build la documentation Sphinx
+      - name: Build Sphinx HTML
+        run: |
+          uv run sphinx-build -b html --keep-going docs/source docs/build/html
+
+      # Sauvegarde la doc générée comme artifact (téléchargeable)
+      - name: Upload docs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-html
+          path: docs/build/html
+          retention-days: 7
+
+  # ---------- Déploiement automatique sur GitHub Pages ----------
+  deploy:
+    needs: build-docs
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v3
+
+      - name: Create venv + install project & docs deps
+        run: |
+          uv venv
+          uv pip install -e .
+          uv sync --group dev
+          uv run sphinx-build -b html -W --keep-going docs/source docs/build/html
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/build/html
+          # cname: docs.ton-domaine.com  # garde en commentaire si pas de domaine

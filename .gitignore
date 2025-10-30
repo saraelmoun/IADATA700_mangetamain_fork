@@ -22,6 +22,7 @@ Makefile
 # OS 
 .DS_Store
 
+
 # Dossier des caches
 cache/
 
@@ -43,5 +44,4 @@ htmlcov/
 
 CACHE_ MIGRATION_PLAN.md
 
-# sphinx
-.github/workflows/docs.yml
+
