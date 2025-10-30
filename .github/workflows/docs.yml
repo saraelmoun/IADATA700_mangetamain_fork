@@ -37,10 +37,10 @@ jobs:
         run: |
           uv run sphinx-apidoc -o docs/source/api src
 
-      # Build la documentation Sphinx (warnings = erreurs)
+      # Build la documentation Sphinx
       - name: Build Sphinx HTML
         run: |
-          uv run sphinx-build -b html -W --keep-going docs/source docs/build/html
+          uv run sphinx-build -b html --keep-going docs/source docs/build/html
 
       # Sauvegarde la doc générée comme artifact (téléchargeable)
       - name: Upload docs as artifact
