@@ -172,9 +172,9 @@ class PopularityAnalysisPage:
                     )
 
         # Visualization of segments
-        self._plot_popularity_segments(segmented_data)
+        self._plot_popularity_segments(segmented_data, analyzer)
 
-    def _plot_popularity_segments(self, segmented_data: pd.DataFrame):
+    def _plot_popularity_segments(self, segmented_data: pd.DataFrame, analyzer: InteractionsAnalyzer):
         """Create visualization for popularity segments."""
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
 
@@ -197,29 +197,92 @@ class PopularityAnalysisPage:
             ax1.set_ylabel("Note moyenne")
             ax1.tick_params(axis="x", rotation=45)
 
-        # Plot 2: Scatter plot colored by segment
-        colors = {"Low": "blue", "Medium": "green", "High": "orange", "Viral": "red"}
-        for segment in segments_present:
-            segment_data = segmented_data[
-                segmented_data["popularity_segment"] == segment
-            ]
-            ax2.scatter(
-                segment_data["avg_rating"],
-                segment_data["interaction_count"],
-                c=colors.get(segment, "gray"),
-                label=segment,
-                alpha=0.6,
-                s=30,
-            )
-
-        ax2.set_xlabel("Note moyenne")
-        ax2.set_ylabel("Nombre d'interactions")
-        ax2.set_title("Popularité vs Note par segment")
+        # Plot 2: Distribution des recettes par nombre d'interactions
+        # Créons un histogramme pour visualiser la vraie distribution
+        interactions_counts = segmented_data["interaction_count"].value_counts().sort_index()
+        
+        # Limitons à 30 interactions max pour la lisibilité
+        max_interactions = min(30, interactions_counts.index.max())
+        interactions_limited = interactions_counts[interactions_counts.index <= max_interactions]
+        
+        # Créons le graphique en barres
+        bars = ax2.bar(
+            interactions_limited.index, 
+            interactions_limited.values,
+            alpha=0.7,
+            color='steelblue',
+            edgecolor='black',
+            linewidth=0.5
+        )
+        
+        # Ajoutons les lignes de seuils de segmentation
+        thresholds = analyzer._popularity_segments_info["thresholds"]
+        ax2.axvline(thresholds['low_max'], color='blue', linestyle='--', alpha=0.8, label=f'P25 = {thresholds["low_max"]:.0f}')
+        ax2.axvline(thresholds['medium_max'], color='green', linestyle='--', alpha=0.8, label=f'P75 = {thresholds["medium_max"]:.0f}')
+        ax2.axvline(thresholds['high_max'], color='red', linestyle='--', alpha=0.8, label=f'P95 = {thresholds["high_max"]:.0f}')
+        
+        ax2.set_xlabel("Nombre d'interactions")
+        ax2.set_ylabel("Nombre de recettes")
+        ax2.set_title("Distribution: Combien de recettes pour chaque niveau d'interactions")
         ax2.legend()
-        ax2.set_yscale("log")  # Log scale for better visualization
+        ax2.grid(True, alpha=0.3)
+        
+        # Calculons les pourcentages réels dynamiquement
+        segment_counts = segmented_data['popularity_segment'].value_counts()
+        total_recipes = len(segmented_data)
+        segment_percentages = {}
+        for segment in ['Low', 'Medium', 'High', 'Viral']:
+            if segment in segment_counts.index:
+                segment_percentages[segment] = (segment_counts[segment] / total_recipes) * 100
+            else:
+                segment_percentages[segment] = 0.0
+        
+        # Ajoutons des annotations pour les zones avec pourcentages dynamiques
+        ax2.text(0.5, ax2.get_ylim()[1]*0.8, f'Low\n{segment_percentages["Low"]:.1f}%', ha='center', va='center', 
+                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
+        ax2.text(2.5, ax2.get_ylim()[1]*0.6, f'Medium\n{segment_percentages["Medium"]:.1f}%', ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
+        ax2.text(8, ax2.get_ylim()[1]*0.4, f'High\n{segment_percentages["High"]:.1f}%', ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='orange', alpha=0.7))
+        if max_interactions > 14:
+            ax2.text(20, ax2.get_ylim()[1]*0.2, f'Viral\n{segment_percentages["Viral"]:.1f}%', ha='center', va='center',
+                    bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
 
         plt.tight_layout()
         st.pyplot(fig)
+        
+        # Calculons les statistiques pour l'explication (éviter de recalculer)
+        segment_counts = segmented_data['popularity_segment'].value_counts()
+        total_recipes = len(segmented_data)
+        low_pct = (segment_counts.get('Low', 0) / total_recipes) * 100
+        viral_pct = (segment_counts.get('Viral', 0) / total_recipes) * 100
+        low_count = segment_counts.get('Low', 0)
+        thresholds = analyzer._popularity_segments_info["thresholds"]
+        
+        # Explication de la distribution observée avec pourcentages dynamiques
+        st.markdown(f"""
+        **🔍 Lecture de la distribution (graphique de droite) :**
+        
+        Ce graphique révèle la **réalité de l'engagement** sur les plateformes de contenu :
+        - **Très haute colonne à 1 interaction** : {low_pct:.1f}% des recettes (~{low_count//1000}k) n'ont qu'une seule interaction
+        - **Décroissance rapide** : Plus le nombre d'interactions augmente, moins il y a de recettes
+        - **Rareté du viral** : Très peu de recettes dépassent {thresholds['high_max']:.0f} interactions (seuil viral P95)
+        
+        Cette distribution de type **"longue traîne"** est typique des plateformes de contenu et 
+        **renforce la valeur** de notre analyse : identifier les facteurs qui distinguent les {viral_pct:.1f}% 
+        de recettes virales des {low_pct:.1f}% à faible engagement devient d'autant plus précieux !
+        
+        **📐 Pourquoi pas exactement 25%/50%/75%/95% ?**
+        
+        Les percentiles P25/P75/P95 sont corrects, mais avec des **données discrètes entières** 
+        (1, 2, 3... interactions), les segments ne peuvent pas être exactement équilibrés :
+        
+        - **P25 = {thresholds['low_max']:.0f}** : mais {low_pct:.1f}% des recettes ont exactement {thresholds['low_max']:.0f} interaction
+        - **Impossible d'avoir exactement 25%** sans utiliser des seuils fractionnaires (1.5, 2.3...)
+        - **C'est mathématiquement normal** : les percentiles indiquent les valeurs, pas forcément des répartitions égales
+        
+        Cette asymétrie **renforce l'analyse** : elle reflète la vraie nature de l'engagement numérique !
+        """)
 
     def _render_step_1(
         self,
@@ -265,7 +328,10 @@ class PopularityAnalysisPage:
             les meilleures notes, suggérant l'existence de facteurs additionnels.
 
             **� Implication :** Cette distribution non-linéaire indique que la popularité s'organise
-            en segments distincts plutôt qu'en progression continue.
+            en segments distincts plutôt qu'en progression continue. Cependant une grande majorité des recettes possède une bonne note.
+            Les utilisateurs sont peut-être bienveillant entre eux ou les recettes sont peut-être toutes délicieuses. 
+            Nous allons donc plutôt nous focaliser dans la suite sur l'étude du nombre de fois où une recette a été faite soit sa
+            popularité pour qualifier son succés tout en gardant un oeil sur sa note.
             """
             )
 
@@ -296,8 +362,18 @@ class PopularityAnalysisPage:
         self._render_popularity_segmentation(analyzer, pop_rating)
 
         # Obtenir les seuils de segmentation pour l'explication
-        analyzer.create_popularity_segments(pop_rating)
+        segmented_data = analyzer.create_popularity_segments(pop_rating)
         thresholds = analyzer._popularity_segments_info["thresholds"]
+        
+        # Calculer les pourcentages réels de chaque segment
+        segment_counts = segmented_data['popularity_segment'].value_counts()
+        total_recipes = len(segmented_data)
+        segment_percentages = {}
+        for segment in ['Low', 'Medium', 'High', 'Viral']:
+            if segment in segment_counts.index:
+                segment_percentages[segment] = (segment_counts[segment] / total_recipes) * 100
+            else:
+                segment_percentages[segment] = 0.0
 
         st.markdown(
             f"""
@@ -306,19 +382,17 @@ class PopularityAnalysisPage:
         L'analyse révèle quatre segments distincts basés sur le niveau d'engagement :
 
         - **Engagement Faible** : 1 à {int(thresholds['low_max'])} interactions
-          (25% des recettes - souvent de qualité mais visibilité limitée)
+          ({segment_percentages['Low']:.1f}% des recettes - souvent de qualité mais visibilité limitée)
 
         - **Engagement Modéré** : {int(thresholds['low_max']) + 1} à {int(thresholds['medium_max'])} interactions
-          (50% des recettes - performance stable et audience fidèle)
+          ({segment_percentages['Medium']:.1f}% des recettes - performance stable et audience fidèle)
 
         - **Engagement Élevé** : {int(thresholds['medium_max']) + 1} à {int(thresholds['high_max'])} interactions
-          (20% des recettes - forte popularité établie)
+          ({segment_percentages['High']:.1f}% des recettes - forte popularité établie)
 
         - **Engagement Viral** : Plus de {int(thresholds['high_max'])} interactions
-          (5% des recettes - phénomènes d'adoption exceptionnelle)
+          ({segment_percentages['Viral']:.1f}% des recettes - phénomènes d'adoption exceptionnelle)
 
-        **🎯 Constat :** Cette segmentation basée sur les percentiles révèle une concentration
-        progressive de la popularité plutôt qu'une progression linéaire.
         """
         )
 
@@ -366,7 +440,7 @@ class PopularityAnalysisPage:
                 elif feat == "n_steps":
                     st.markdown(
                         """
-                    #### � Influence de la complexité procédurale
+                    #### 🧩 Influence de la complexité procédurale
 
                     **Hypothèse :** La complexité (nombre d'étapes) peut freiner l'adoption mais améliorer la satisfaction.  
                     **Variable :** Nombre d'étapes vs nombre d'interactions.  
@@ -444,7 +518,7 @@ class PopularityAnalysisPage:
                     if feat == "minutes":
                         st.markdown(
                             """
-                        **� Ce que révèle le graphique du temps :**
+                        **Ce que révèle le graphique du temps :**
 
                         L'analyse de la distribution révèle une concentration
                         de recettes bien notées dans certaines zones de temps, indiquant les "sweet spots"
@@ -458,7 +532,7 @@ class PopularityAnalysisPage:
                     elif feat == "n_steps":
                         st.markdown(
                             """
-                        **� Le verdict sur la complexité :**
+                        **Le verdict sur la complexité :**
 
                         L'analyse révèle l'un des paradoxes les plus significatifs de la cuisine.
                         Une concentration de recettes bien notées (gros points) autour de 5-8 étapes
@@ -473,7 +547,7 @@ class PopularityAnalysisPage:
                     elif feat == "n_ingredients":
                         st.markdown(
                             """
-                        **� La révélation des ingrédients :**
+                        **La révélation des ingrédients :**
 
                         L'analyse révèle la relation entre nombre d'ingrédients et satisfaction utilisateur.
                         Cette distribution montre comment la perception de "richesse" d'une recette influence
@@ -1478,7 +1552,7 @@ class PopularityAnalysisPage:
             ### Qu'est-ce qui rend une recette populaire ?
 
             Cette analyse explore la relation entre la qualité des recettes (notes des utilisateurs) et leur
-            succès (nombre d'interactions). Nous examinons comment les caractéristiques des recettes influencent
+            succès (nombre d'interactions soit le nombre d'utilisateur ayant review la recette). Nous examinons comment les caractéristiques des recettes influencent
             leur adoption par la communauté.
 
             **Questions centrales :** La qualité garantit-elle la popularité ? Quels sont les facteurs
