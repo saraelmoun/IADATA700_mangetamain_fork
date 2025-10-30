@@ -34,18 +34,6 @@ class App:
         self.logger = get_logger()
         self.logger.info("Mangetamain application starting")
 
-    def _ensure_data_files(self):
-        """Download data files from S3 if not present locally."""
-        try:
-            import sys
-            sys.path.insert(0, str(Path(__file__).parent.parent))
-            from download_data import ensure_data_files
-            ensure_data_files()
-        except Exception as e:
-            st.error(f"⚠️ Error downloading data files: {e}")
-            st.info("Please check your internet connection and refresh the page.")
-            st.stop()
-
     def _sidebar(self) -> dict:
         """Configuration de la sidebar avec sélection des pages et datasets."""
         st.sidebar.header("Navigation")
@@ -99,10 +87,7 @@ class App:
         }
 
     def run(self):
-        """Point d'entrée principal de l'application."""
-        # Ensure data files are downloaded from S3 if missing
-        self._ensure_data_files()
-        
+        """Point d'entrée principal de l'application."""        
         st.set_page_config(
             page_title=self.config.page_title,
             layout=self.config.layout,
