@@ -787,9 +787,7 @@ class PopularityAnalysisPage:
 
         # Utiliser ces exemples pour la visualisation 3D
         selected_recipe_ids = list(representative_examples.values())
-        recipe_display = [
-            f"Top {i + 1}: {examples_data[i]['Nom']}" for i, pattern in enumerate(representative_examples.keys())
-        ]
+        recipe_display = [f"Top {i + 1}: {examples_data[i]['Nom']}" for i, pattern in enumerate(representative_examples.keys())]
         selected_indices = list(range(len(selected_recipe_ids)))
 
         # Temporal analysis
@@ -828,9 +826,7 @@ class PopularityAnalysisPage:
         date_columns = [col for col in interactions_df.columns if "date" in col.lower()]
 
         if not date_columns:
-            st.error(
-                "Aucune colonne de date trouvée. Colonnes disponibles : " + ", ".join(interactions_df.columns.tolist())
-            )
+            st.error("Aucune colonne de date trouvée. Colonnes disponibles : " + ", ".join(interactions_df.columns.tolist()))
             return
 
         # Use the first date column found, or let user choose if multiple

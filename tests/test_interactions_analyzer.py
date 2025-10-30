@@ -162,9 +162,7 @@ class TestInteractionsAnalyzer:
         if available_features:
             # After preprocessing, data should be clean (no missing values, outliers removed)
             for feature in available_features:
-                assert (
-                    merged_df[feature].notna().all()
-                ), f"Feature {feature} still has missing values after preprocessing"
+                assert merged_df[feature].notna().all(), f"Feature {feature} still has missing values after preprocessing"
 
     def test_outlier_removal_iqr(self, sample_interactions_data):
         """Test IQR outlier removal method."""
@@ -218,9 +216,7 @@ class TestInteractionsAnalyzer:
 
         # Verify that we still have SOME missing values preserved (no imputation occurred)
         total_missing_in_result = (
-            merged_df["minutes"].isnull().sum()
-            + merged_df["n_steps"].isnull().sum()
-            + merged_df["n_ingredients"].isnull().sum()
+            merged_df["minutes"].isnull().sum() + merged_df["n_steps"].isnull().sum() + merged_df["n_ingredients"].isnull().sum()
         )
 
         # We should have at least some missing values preserved if no imputation is done

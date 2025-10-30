@@ -68,8 +68,7 @@ class DataLoader:
         self._df = self.preprocess(df)
 
         self.logger.info(
-            f"Data loaded successfully: {self._df.shape} rows/cols, "
-            f"{self._df.memory_usage(deep=True).sum() / 1024**2:.1f} MB"
+            f"Data loaded successfully: {self._df.shape} rows/cols, " f"{self._df.memory_usage(deep=True).sum() / 1024**2:.1f} MB"
         )
 
         return self._df

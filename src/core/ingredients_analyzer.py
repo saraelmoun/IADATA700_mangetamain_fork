@@ -42,9 +42,7 @@ class IngredientsAnalyzer(CacheableMixin):
         """Generate cache parameters for the current configuration."""
         return {
             "data_shape": self.data.shape,
-            "data_hash": hash(
-                str(self.data.columns.tolist()) + str(self.data.index.tolist())
-            ),
+            "data_hash": hash(str(self.data.columns.tolist()) + str(self.data.index.tolist())),
             "analyzer_type": "ingredients",
         }
 
@@ -265,17 +263,9 @@ class IngredientsAnalyzer(CacheableMixin):
             # Règles de singularisation
             if w.endswith("ies") and len(w) > 4:
                 norm_tokens.append(w[:-3] + "y")
-            elif (
-                w.endswith("es")
-                and len(w) > 3
-                and not w.endswith(("ses", "ches", "shes", "xes"))
-            ):
+            elif w.endswith("es") and len(w) > 3 and not w.endswith(("ses", "ches", "shes", "xes")):
                 norm_tokens.append(w[:-2])
-            elif (
-                w.endswith("s")
-                and len(w) > 3
-                and not w.endswith(("ss", "us", "is", "as", "os"))
-            ):
+            elif w.endswith("s") and len(w) > 3 and not w.endswith(("ss", "us", "is", "as", "os")):
                 norm_tokens.append(w[:-1])
             else:
                 norm_tokens.append(w)
@@ -289,9 +279,7 @@ class IngredientsAnalyzer(CacheableMixin):
         else:
             return ""
 
-    def build_similarity_groups(
-        self, ingredients: list, threshold: float = 0.55
-    ) -> list:
+    def build_similarity_groups(self, ingredients: list, threshold: float = 0.55) -> list:
         """
         Regroupe les ingrédients similaires basé sur la normalisation.
 
@@ -427,18 +415,14 @@ class IngredientsAnalyzer(CacheableMixin):
         all_ingredients = []
 
         # Détection automatique de la colonne des ingrédients
-        ingredient_columns = [
-            col for col in self.data.columns if "ingredient" in col.lower()
-        ]
+        ingredient_columns = [col for col in self.data.columns if "ingredient" in col.lower()]
         if not ingredient_columns:
             possible_columns = [
                 "ingredients",
                 "recipe_ingredient_parts",
                 "ingredients_list",
             ]
-            ingredient_columns = [
-                col for col in possible_columns if col in self.data.columns
-            ]
+            ingredient_columns = [col for col in possible_columns if col in self.data.columns]
 
         if not ingredient_columns:
             raise ValueError("Aucune colonne d'ingrédients trouvée dans les données")
@@ -455,10 +439,7 @@ class IngredientsAnalyzer(CacheableMixin):
 
         # Prendre plus d'ingrédients pour le regroupement
         n_for_grouping = max(200, n_ingredients * 4)
-        top_ingredients_raw = [
-            ingredient
-            for ingredient, count in ingredient_counts.most_common(n_for_grouping)
-        ]
+        top_ingredients_raw = [ingredient for ingredient, count in ingredient_counts.most_common(n_for_grouping)]
 
         # Regroupement par similarité
         self.ingredient_groups = self.build_similarity_groups(top_ingredients_raw)
@@ -487,12 +468,8 @@ class IngredientsAnalyzer(CacheableMixin):
                     self.ingredient_mapping[ingredient] = representative
 
         # Trier les représentants par fréquence totale
-        sorted_representatives = sorted(
-            representative_counts.items(), key=lambda x: x[1], reverse=True
-        )
-        final_ingredients = [
-            rep for rep, count in sorted_representatives[:n_ingredients]
-        ]
+        sorted_representatives = sorted(representative_counts.items(), key=lambda x: x[1], reverse=True)
+        final_ingredients = [rep for rep, count in sorted_representatives[:n_ingredients]]
 
         return final_ingredients
 
@@ -507,23 +484,17 @@ class IngredientsAnalyzer(CacheableMixin):
             Matrice de co-occurrence sous forme de DataFrame
         """
         # Créer une matrice DataFrame
-        co_occurrence_matrix = pd.DataFrame(
-            0, index=top_ingredients, columns=top_ingredients, dtype=int
-        )
+        co_occurrence_matrix = pd.DataFrame(0, index=top_ingredients, columns=top_ingredients, dtype=int)
 
         # Détection de la colonne des ingrédients
-        ingredient_columns = [
-            col for col in self.data.columns if "ingredient" in col.lower()
-        ]
+        ingredient_columns = [col for col in self.data.columns if "ingredient" in col.lower()]
         if not ingredient_columns:
             possible_columns = [
                 "ingredients",
                 "recipe_ingredient_parts",
                 "ingredients_list",
             ]
-            ingredient_columns = [
-                col for col in possible_columns if col in self.data.columns
-            ]
+            ingredient_columns = [col for col in possible_columns if col in self.data.columns]
 
         ingredient_column = ingredient_columns[0]
 
@@ -568,13 +539,9 @@ class IngredientsAnalyzer(CacheableMixin):
             },
         )
 
-    def _compute_process_ingredients(
-        self, n_ingredients: int = 50
-    ) -> tuple[pd.DataFrame, list]:
+    def _compute_process_ingredients(self, n_ingredients: int = 50) -> tuple[pd.DataFrame, list]:
         """Compute the ingredients processing (called when not in cache)."""
-        self.logger.info(
-            f"Computing ingredients processing from scratch with n_ingredients={n_ingredients}"
-        )
+        self.logger.info(f"Computing ingredients processing from scratch with n_ingredients={n_ingredients}")
 
         # Obtenir les ingrédients représentatifs avec regroupement
         self.ingredient_names = self.get_most_common_ingredients(n_ingredients)
@@ -584,9 +551,7 @@ class IngredientsAnalyzer(CacheableMixin):
 
         return self.ingredients_matrix, self.ingredient_names
 
-    def perform_clustering(
-        self, co_occurrence_df: pd.DataFrame, n_clusters: int = 5
-    ) -> np.ndarray:
+    def perform_clustering(self, co_occurrence_df: pd.DataFrame, n_clusters: int = 5) -> np.ndarray:
         """
         Effectue le clustering sur la matrice de co-occurrence.
 
@@ -607,19 +572,13 @@ class IngredientsAnalyzer(CacheableMixin):
 
         return self.cached_operation(
             operation_name="perform_clustering",
-            operation_func=lambda: self._compute_clustering(
-                co_occurrence_df, n_clusters
-            ),
+            operation_func=lambda: self._compute_clustering(co_occurrence_df, n_clusters),
             cache_params=cache_params,
         )
 
-    def _compute_clustering(
-        self, co_occurrence_df: pd.DataFrame, n_clusters: int = 5
-    ) -> np.ndarray:
+    def _compute_clustering(self, co_occurrence_df: pd.DataFrame, n_clusters: int = 5) -> np.ndarray:
         """Compute the clustering (called when not in cache)."""
-        self.logger.info(
-            f"Computing clustering from scratch with n_clusters={n_clusters}"
-        )
+        self.logger.info(f"Computing clustering from scratch with n_clusters={n_clusters}")
 
         # Appliquer KMeans sur la matrice de co-occurrence
         kmeans = KMeans(n_clusters=n_clusters, random_state=42)
@@ -631,9 +590,7 @@ class IngredientsAnalyzer(CacheableMixin):
 
         return cluster_labels
 
-    def generate_tsne_visualization(
-        self, cluster_labels: np.ndarray, perplexity: int = 30, random_state: int = 42
-    ) -> dict:
+    def generate_tsne_visualization(self, cluster_labels: np.ndarray, perplexity: int = 30, random_state: int = 42) -> dict:
         """
         Génère une visualisation t-SNE 2D des ingrédients colorés par cluster.
 
@@ -661,19 +618,13 @@ class IngredientsAnalyzer(CacheableMixin):
 
         return self.cached_operation(
             operation_name="generate_tsne_visualization",
-            operation_func=lambda: self._compute_tsne_visualization(
-                cluster_labels, perplexity, random_state
-            ),
+            operation_func=lambda: self._compute_tsne_visualization(cluster_labels, perplexity, random_state),
             cache_params=cache_params,
         )
 
-    def _compute_tsne_visualization(
-        self, cluster_labels: np.ndarray, perplexity: int = 30, random_state: int = 42
-    ) -> dict:
+    def _compute_tsne_visualization(self, cluster_labels: np.ndarray, perplexity: int = 30, random_state: int = 42) -> dict:
         """Compute t-SNE visualization (called when not in cache)."""
-        self.logger.info(
-            f"Computing t-SNE visualization from scratch with perplexity={perplexity}, random_state={random_state}"
-        )
+        self.logger.info(f"Computing t-SNE visualization from scratch with perplexity={perplexity}, random_state={random_state}")
 
         # Utiliser la matrice de co-occurrence comme données d'entrée pour t-SNE
         matrix_data = self.ingredients_matrix.values
@@ -742,9 +693,7 @@ class IngredientsAnalyzer(CacheableMixin):
             Informations de debug sur les mappings
         """
         if not hasattr(self, "ingredient_mapping"):
-            return {
-                "error": "Aucun mapping d'ingrédients disponible. Lancez d'abord l'analyse."
-            }
+            return {"error": "Aucun mapping d'ingrédients disponible. Lancez d'abord l'analyse."}
 
         debug_info = {
             "total_mappings": len(self.ingredient_mapping),
@@ -777,10 +726,7 @@ class IngredientsAnalyzer(CacheableMixin):
                 matches = []
                 term_lower = term.lower()
                 for ingredient, representative in self.ingredient_mapping.items():
-                    if (
-                        term_lower in ingredient.lower()
-                        or term_lower in representative.lower()
-                    ):
+                    if term_lower in ingredient.lower() or term_lower in representative.lower():
                         matches.append(
                             {
                                 "ingredient": ingredient,
@@ -800,18 +746,14 @@ class IngredientsAnalyzer(CacheableMixin):
             Statistiques complètes du pipeline de traitement
         """
         if not hasattr(self, "ingredient_mapping"):
-            return {
-                "error": "Pipeline non exécuté. Lancez d'abord process_ingredients()."
-            }
+            return {"error": "Pipeline non exécuté. Lancez d'abord process_ingredients()."}
 
         # Statistiques de base
         total_recipes = len(self.data)
         total_raw_ingredients = 0
 
         # Compter les ingrédients bruts
-        ingredient_column = [
-            col for col in self.data.columns if "ingredient" in col.lower()
-        ][0]
+        ingredient_column = [col for col in self.data.columns if "ingredient" in col.lower()][0]
         for ingredients_str in self.data[ingredient_column].dropna():
             ingredients = self.parse_ingredients(ingredients_str)
             total_raw_ingredients += len(ingredients)
@@ -827,11 +769,7 @@ class IngredientsAnalyzer(CacheableMixin):
                 reverse_mapping[representative] = []
             reverse_mapping[representative].append(ingredient)
 
-        multi_groups = {
-            rep: ingredients
-            for rep, ingredients in reverse_mapping.items()
-            if len(ingredients) > 1
-        }
+        multi_groups = {rep: ingredients for rep, ingredients in reverse_mapping.items() if len(ingredients) > 1}
 
         # Statistiques de la matrice
         matrix_size = len(self.ingredient_names)
@@ -842,24 +780,16 @@ class IngredientsAnalyzer(CacheableMixin):
             "input_data": {
                 "total_recipes": total_recipes,
                 "total_raw_ingredients": total_raw_ingredients,
-                "avg_ingredients_per_recipe": round(
-                    total_raw_ingredients / total_recipes, 2
-                ),
+                "avg_ingredients_per_recipe": round(total_raw_ingredients / total_recipes, 2),
             },
             "normalization": {
                 "total_unique_raw": total_mapped,
                 "total_normalized": unique_normalized,
-                "reduction_ratio": round(
-                    (1 - unique_normalized / total_mapped) * 100, 1
-                ),
+                "reduction_ratio": round((1 - unique_normalized / total_mapped) * 100, 1),
             },
             "grouping": {
                 "groups_with_multiple_items": len(multi_groups),
-                "largest_group_size": (
-                    max([len(ingredients) for ingredients in multi_groups.values()])
-                    if multi_groups
-                    else 0
-                ),
+                "largest_group_size": (max([len(ingredients) for ingredients in multi_groups.values()]) if multi_groups else 0),
                 "example_large_groups": dict(list(multi_groups.items())[:3]),
             },
             "cooccurrence_matrix": {

@@ -194,57 +194,50 @@ class TestPopularityAnalysisPage:
 
     def test_scatter_plot_method(self, page_instance):
         """Test the _scatter_plot method directly."""
-        data = pd.DataFrame({
-            "x": [1, 2, 3, 4, 5],
-            "y": [2, 4, 6, 8, 10],
-            "size": [10, 20, 30, 40, 50]
-        })
-        
+        data = pd.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 4, 6, 8, 10], "size": [10, 20, 30, 40, 50]})
+
         fig, ax = plt.subplots()
-        
+
         # Test scatter plot with size
         page_instance._scatter_plot(data, "x", "y", "size", ax, 0.7)
-        
+
         # Check that points were plotted
         collections = ax.collections
         assert len(collections) > 0
-        
+
         plt.close(fig)
-        
+
         # Test scatter plot without size
         fig, ax = plt.subplots()
         page_instance._scatter_plot(data, "x", "y", None, ax, 0.7)
-        
+
         collections = ax.collections
         assert len(collections) > 0
-        
+
         plt.close(fig)
 
     def test_histogram_plot_method(self, page_instance):
         """Test the _histogram_plot method directly."""
-        data = pd.DataFrame({
-            "x": np.random.normal(5, 2, 100),
-            "y": np.random.normal(10, 3, 100)
-        })
-        
+        data = pd.DataFrame({"x": np.random.normal(5, 2, 100), "y": np.random.normal(10, 3, 100)})
+
         fig, ax = plt.subplots()
-        
+
         # Test histogram with count aggregation
         page_instance._histogram_plot(data, "x", "y", None, ax, n_bins=10, bin_agg="count")
-        
+
         # Check that histogram was plotted
         patches = ax.patches
         assert len(patches) > 0
-        
+
         plt.close(fig)
-        
+
         # Test histogram with mean aggregation
         fig, ax = plt.subplots()
         page_instance._histogram_plot(data, "x", "y", None, ax, n_bins=10, bin_agg="mean")
-        
+
         patches = ax.patches
         assert len(patches) > 0
-        
+
         plt.close(fig)
 
     def test_sidebar_default_values(self, page_instance):
@@ -277,15 +270,11 @@ class TestPopularityAnalysisPage:
     def test_render_cache_controls(self, page_instance):
         """Test cache controls rendering logic."""
         from core.interactions_analyzer import InteractionsAnalyzer
-        
-        # Create mock analyzer 
-        interactions_data = pd.DataFrame({
-            "user_id": [1, 2, 3],
-            "recipe_id": [1, 1, 2], 
-            "rating": [4.0, 5.0, 3.0]
-        })
+
+        # Create mock analyzer
+        interactions_data = pd.DataFrame({"user_id": [1, 2, 3], "recipe_id": [1, 1, 2], "rating": [4.0, 5.0, 3.0]})
         analyzer = InteractionsAnalyzer(interactions=interactions_data, cache_enabled=True)
-        
+
         # Mock streamlit components
         with (
             patch("streamlit.sidebar.markdown") as mock_markdown,
@@ -293,10 +282,10 @@ class TestPopularityAnalysisPage:
             patch("streamlit.sidebar.info") as mock_info,
         ):
             mock_button.return_value = False  # Don't trigger clear cache
-            
+
             # This should not raise an exception
             page_instance._render_cache_controls(analyzer)
-            
+
             # Verify streamlit components were called
             assert mock_markdown.called
 
@@ -309,24 +298,22 @@ class TestPopularityAnalysisPage:
             patch("streamlit.sidebar.markdown"),
             patch("streamlit.sidebar.button", return_value=False),
             patch("streamlit.sidebar.info"),
-            patch.object(page_instance, '_load_data') as mock_load_data,
+            patch.object(page_instance, "_load_data") as mock_load_data,
         ):
             # Mock data loading with minimal valid data
-            interactions_data = pd.DataFrame({
-                "user_id": [1, 2, 3],
-                "recipe_id": [1, 1, 2], 
-                "rating": [4.0, 5.0, 3.0],
-                "date": pd.date_range("2023-01-01", periods=3)
-            })
-            recipes_data = pd.DataFrame({
-                "id": [1, 2],
-                "name": ["Recipe 1", "Recipe 2"],
-                "minutes": [30, 45],
-                "n_steps": [5, 8],
-                "n_ingredients": [6, 10]
-            })
+            interactions_data = pd.DataFrame(
+                {
+                    "user_id": [1, 2, 3],
+                    "recipe_id": [1, 1, 2],
+                    "rating": [4.0, 5.0, 3.0],
+                    "date": pd.date_range("2023-01-01", periods=3),
+                }
+            )
+            recipes_data = pd.DataFrame(
+                {"id": [1, 2], "name": ["Recipe 1", "Recipe 2"], "minutes": [30, 45], "n_steps": [5, 8], "n_ingredients": [6, 10]}
+            )
             mock_load_data.return_value = (interactions_data, recipes_data)
-            
+
             # Test that method can be called and data loading works
             try:
                 # We test only the data loading part, not the full UI rendering
@@ -335,7 +322,7 @@ class TestPopularityAnalysisPage:
                 assert len(loaded_recipes) == 2
                 assert True  # Basic structure test passed
             except Exception:
-                # Even if full run fails due to Streamlit complexity, 
+                # Even if full run fails due to Streamlit complexity,
                 # we've tested the data loading which is the core logic
                 assert True
 

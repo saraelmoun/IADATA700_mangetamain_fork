@@ -347,9 +347,7 @@ class IngredientsClusteringPage:
                 for i, ingredient in enumerate(cluster_ingredients):
                     cols[i % 4].write(f"• **{ingredient}**")
 
-    def render_tsne_visualization(
-        self, analyzer: IngredientsAnalyzer, clusters: np.ndarray, tsne_perplexity: int
-    ) -> None:
+    def render_tsne_visualization(self, analyzer: IngredientsAnalyzer, clusters: np.ndarray, tsne_perplexity: int) -> None:
         """Affiche la visualisation t-SNE 2D des clusters d'ingrédients.
 
         Génère et affiche un graphique interactif Plotly montrant les ingrédients
@@ -801,9 +799,7 @@ class IngredientsClusteringPage:
         """
         )
 
-    def _render_step_4_visualization(
-        self, analyzer: IngredientsAnalyzer, clusters: np.ndarray, tsne_perplexity: int
-    ) -> None:
+    def _render_step_4_visualization(self, analyzer: IngredientsAnalyzer, clusters: np.ndarray, tsne_perplexity: int) -> None:
         """Affiche l'étape 4 : Visualisation t-SNE 2D.
 
         Args:

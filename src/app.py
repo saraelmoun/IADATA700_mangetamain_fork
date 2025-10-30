@@ -87,7 +87,7 @@ class App:
         }
 
     def run(self):
-        """Point d'entrée principal de l'application."""        
+        """Point d'entrée principal de l'application."""
         st.set_page_config(
             page_title=self.config.page_title,
             layout=self.config.layout,
@@ -143,9 +143,7 @@ class App:
 
                 try:
                     tmp_df = pd.read_csv(uploaded)
-                    self.logger.info(
-                        f"Successfully loaded {dataset_type} from upload: {tmp_df.shape}"
-                    )
+                    self.logger.info(f"Successfully loaded {dataset_type} from upload: {tmp_df.shape}")
                 except Exception as e:
                     self.logger.error(f"Error reading uploaded file: {e}")
                     st.error(f"Erreur lors de la lecture: {e}")
@@ -176,9 +174,7 @@ class App:
             missing_values = df.isnull().sum().sum()
             memory_mb = df.memory_usage(deep=True).sum() / 1024**2
 
-            self.logger.debug(
-                f"Dataset analysis: {len(df)} rows, {len(df.columns)} cols, {missing_values} missing values"
-            )
+            self.logger.debug(f"Dataset analysis: {len(df)} rows, {len(df.columns)} cols, {missing_values} missing values")
 
             col1, col2 = st.columns(2)
             with col1:

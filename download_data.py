@@ -32,27 +32,27 @@ def download_file(url: str, destination: Path) -> bool:
     try:
         print(f"📥 Downloading {destination.name}...")
         print(f"🔗 URL: {url}")
-        
+
         # Create request with better headers and timeout
         req = urllib.request.Request(
             url,
             headers={
-                'User-Agent': 'Python-urllib/3.12 MangetamainApp/1.0',
-                'Accept': '*/*',
-                'Accept-Encoding': 'identity'  # Disable compression for speed
-            }
+                "User-Agent": "Python-urllib/3.12 MangetamainApp/1.0",
+                "Accept": "*/*",
+                "Accept-Encoding": "identity",  # Disable compression for speed
+            },
         )
-        
+
         # Open with timeout
         with urllib.request.urlopen(req, timeout=30) as response:
-            file_size = int(response.headers.get('Content-Length', 0))
+            file_size = int(response.headers.get("Content-Length", 0))
             downloaded = 0
             chunk_size = 1024 * 1024  # 1MB chunks instead of 8KB
             last_progress = -1  # Track last shown progress to reduce prints
 
             print(f"📦 Size: {file_size / (1024 * 1024):.1f} MB")
-            
-            with open(destination, 'wb') as f:
+
+            with open(destination, "wb") as f:
                 while True:
                     chunk = response.read(chunk_size)
                     if not chunk:
