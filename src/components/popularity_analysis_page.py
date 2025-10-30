@@ -1632,9 +1632,7 @@ class PopularityAnalysisPage:
             self.logger.info("Loading data for popularity analysis")
             interactions_df, recipes_df = self._load_data()
             self.logger.debug(
-                f"Loaded interactions: {
-                    interactions_df.shape}, recipes: {
-                    recipes_df.shape}"
+                f"Loaded interactions: {interactions_df.shape}, recipes: {recipes_df.shape}"
             )
 
         # Configuration preprocessing sélective : filtrer les valeurs techniques

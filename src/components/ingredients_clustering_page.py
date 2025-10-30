@@ -961,12 +961,10 @@ class IngredientsClusteringPage:
                                     status = (
                                         "✅ Représentant"
                                         if match["is_representative"]
-                                        else f"➡️ Mappé vers '{
-                                            match['representative']}'"
+                                        else f"➡️ Mappé vers '{match['representative']}'"
                                     )
                                     st.write(
-                                        f"  • `{
-                                            match['ingredient']}` → `{normalized}` {status}"
+                                        f"  • `{match['ingredient']}` → `{normalized}` {status}"
                                     )
 
                     # Exemple de normalisation en temps réel
