@@ -1,0 +1,1287 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.components.ingredients_clustering_page &mdash; Documentation MangetamainTESTWR 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a28dfa3"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MangetamainTESTWR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">IADATA700_mangetamain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">src</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ClassDiagram.html">Diagramme de classes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MangetamainTESTWR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">src.components.ingredients_clustering_page</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de src.components.ingredients_clustering_page</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="sd">&quot;&quot;&quot;Streamlit page: Analyse de co-occurrence et clustering d&#39;ingrédients.</span>
+
+<span class="sd">Note: La User Story est affichée dans l&#39;interface Streamlit (méthode run()),</span>
+<span class="sd">pas dans cette docstring, conformément au pattern de la page 1.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.data_loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.ingredients_analyzer</span><span class="w"> </span><span class="kn">import</span> <span class="n">IngredientsAnalyzer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+
+<div class="viewcode-block" id="IngredientsClusteringConfig">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringConfig">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IngredientsClusteringConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration pour l&#39;analyse de clustering d&#39;ingrédients.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        recipes_path: Chemin vers le fichier CSV contenant les recettes.</span>
+<span class="sd">        n_ingredients: Nombre d&#39;ingrédients les plus fréquents à analyser.</span>
+<span class="sd">        n_clusters: Nombre de clusters à créer avec K-means.</span>
+<span class="sd">        tsne_perplexity: Paramètre de perplexité pour la visualisation t-SNE.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">recipes_path</span><span class="p">:</span> <span class="n">Path</span>
+    <span class="n">n_ingredients</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">tsne_perplexity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span></div>
+
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IngredientsClusteringPage</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Page Streamlit pour l&#39;analyse de clustering des ingrédients.</span>
+
+<span class="sd">    Cette classe gère l&#39;interface utilisateur et la logique de présentation</span>
+<span class="sd">    pour l&#39;analyse de co-occurrence et le clustering d&#39;ingrédients basé sur</span>
+<span class="sd">    leurs patterns d&#39;apparition dans les recettes.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        default_recipes_path: Chemin par défaut vers le fichier de recettes.</span>
+<span class="sd">        logger: Instance du logger pour le suivi des opérations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_recipes_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;data/RAW_recipes.csv&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialise la page de clustering d&#39;ingrédients.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            default_recipes_path: Chemin par défaut vers le fichier CSV des recettes.</span>
+<span class="sd">                Doit contenir une colonne avec les listes d&#39;ingrédients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Si le chemin fourni est invalide ou vide.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">default_recipes_path</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Le chemin du fichier de recettes ne peut pas être vide&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_recipes_path</span> <span class="o">=</span> <span class="n">default_recipes_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initializing IngredientsClusteringPage&quot;</span><span class="p">)</span>
+
+    <span class="nd">@st</span><span class="o">.</span><span class="n">cache_data</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_and_prepare_data</span><span class="p">(</span><span class="n">_self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Charge automatiquement le dataset au démarrage.</span>
+
+<span class="sd">        Cette méthode est mise en cache par Streamlit pour éviter de recharger</span>
+<span class="sd">        les données à chaque interaction utilisateur.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame contenant les recettes si le chargement réussit, None sinon.</span>
+<span class="sd">            Le DataFrame contient au minimum une colonne d&#39;ingrédients.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: Affiche une erreur Streamlit mais ne propage pas l&#39;exception.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">_self</span><span class="o">.</span><span class="n">default_recipes_path</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data_loader</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Erreur lors du chargement des données : </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_cache_controls</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">:</span> <span class="n">IngredientsAnalyzer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche les contrôles de gestion du cache dans la sidebar.</span>
+
+<span class="sd">        Permet à l&#39;utilisateur de visualiser l&#39;état du cache et de le supprimer</span>
+<span class="sd">        si nécessaire. Affiche des métriques sur l&#39;âge, la taille et le nombre</span>
+<span class="sd">        de fichiers en cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer: Instance de l&#39;analyseur d&#39;ingrédients dont on gère le cache.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;### Cache Management&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get cache info</span>
+        <span class="n">cache_info</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">get_cache_info</span><span class="p">()</span>
+
+        <span class="c1"># Cache status</span>
+        <span class="n">cache_enabled</span> <span class="o">=</span> <span class="n">cache_info</span><span class="p">[</span><span class="s2">&quot;cache_enabled&quot;</span><span class="p">]</span>
+        <span class="n">cache_exists</span> <span class="o">=</span> <span class="n">cache_info</span><span class="p">[</span><span class="s2">&quot;cache_exists&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">cache_enabled</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cache_exists</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Cache disponible&quot;</span><span class="p">)</span>
+                <span class="c1"># Show cache details</span>
+                <span class="k">if</span> <span class="s2">&quot;cache_age_minutes&quot;</span> <span class="ow">in</span> <span class="n">cache_info</span><span class="p">:</span>
+                    <span class="n">age_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cache_info</span><span class="p">[</span><span class="s1">&#39;cache_age_minutes&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> min&quot;</span>
+                    <span class="n">size_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cache_info</span><span class="p">[</span><span class="s1">&#39;cache_size_mb&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Age: </span><span class="si">{</span><span class="n">age_str</span><span class="si">}</span><span class="s2">, Taille: </span><span class="si">{</span><span class="n">size_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Cache sera créé après traitement&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Cache management buttons</span>
+            <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                    <span class="s2">&quot;🗑️ Clear Cache&quot;</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Supprimer tous les fichiers de cache&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;clear_ingredients_cache&quot;</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="kn">from</span><span class="w"> </span><span class="nn">core.cache_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_cache_manager</span>
+
+                    <span class="n">cache_manager</span> <span class="o">=</span> <span class="n">get_cache_manager</span><span class="p">()</span>
+                    <span class="n">deleted_files</span> <span class="o">=</span> <span class="n">cache_manager</span><span class="o">.</span><span class="n">clear</span><span class="p">(</span><span class="n">analyzer_name</span><span class="o">=</span><span class="s2">&quot;ingredients&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">deleted_files</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache effacé! (</span><span class="si">{</span><span class="n">deleted_files</span><span class="si">}</span><span class="s2"> fichiers)&quot;</span><span class="p">)</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">rerun</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Aucun fichier de cache à supprimer&quot;</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                    <span class="s2">&quot;ℹ️ Info Cache&quot;</span><span class="p">,</span>
+                    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Afficher les détails du cache&quot;</span><span class="p">,</span>
+                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;info_ingredients_cache&quot;</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">cache_info</span><span class="p">)</span>
+
+            <span class="c1"># Show total cache files</span>
+            <span class="k">if</span> <span class="n">cache_info</span><span class="p">[</span><span class="s2">&quot;cache_files_count&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;📁 </span><span class="si">{</span><span class="n">cache_info</span><span class="p">[</span><span class="s1">&#39;cache_files_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> fichier(s) de cache&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Cache désactivé&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_sidebar">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_sidebar">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_sidebar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche la sidebar avec les paramètres de clustering.</span>
+
+<span class="sd">        Crée une interface interactive dans la sidebar permettant à l&#39;utilisateur</span>
+<span class="sd">        de configurer les paramètres de l&#39;analyse de clustering:</span>
+<span class="sd">        - Nombre d&#39;ingrédients à analyser</span>
+<span class="sd">        - Nombre de clusters à créer</span>
+<span class="sd">        - Paramètres de visualisation t-SNE</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionnaire contenant les paramètres sélectionnés par l&#39;utilisateur:</span>
+<span class="sd">                - n_ingredients: Nombre d&#39;ingrédients les plus fréquents (10-200)</span>
+<span class="sd">                - n_clusters: Nombre de groupes à créer (2-20)</span>
+<span class="sd">                - tsne_perplexity: Paramètre de densité pour t-SNE (5-50)</span>
+<span class="sd">                - analyze_button: True si le bouton d&#39;analyse a été cliqué</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;🔧 Paramètres de Clustering&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Paramètres de clustering</span>
+        <span class="n">n_ingredients</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">slider</span><span class="p">(</span>
+            <span class="s2">&quot;Nombre d&#39;ingrédients à analyser&quot;</span><span class="p">,</span>
+            <span class="n">min_value</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">max_value</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Nombre d&#39;ingrédients les plus fréquents à inclure dans l&#39;analyse&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">slider</span><span class="p">(</span>
+            <span class="s2">&quot;Nombre de clusters&quot;</span><span class="p">,</span>
+            <span class="n">min_value</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">max_value</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Nombre de groupes d&#39;ingrédients à créer&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Paramètres t-SNE</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🎨 Paramètres Visualisation&quot;</span><span class="p">)</span>
+        <span class="n">tsne_perplexity</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">slider</span><span class="p">(</span>
+            <span class="s2">&quot;Perplexité t-SNE&quot;</span><span class="p">,</span>
+            <span class="n">min_value</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">max_value</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+            <span class="n">value</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Contrôle la densité des groupes dans la visualisation&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Bouton d&#39;analyse dans la sidebar</span>
+        <span class="n">analyze_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">button</span><span class="p">(</span><span class="s2">&quot;🚀 Lancer l&#39;analyse&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;n_ingredients&quot;</span><span class="p">:</span> <span class="n">n_ingredients</span><span class="p">,</span>
+            <span class="s2">&quot;n_clusters&quot;</span><span class="p">:</span> <span class="n">n_clusters</span><span class="p">,</span>
+            <span class="s2">&quot;tsne_perplexity&quot;</span><span class="p">:</span> <span class="n">tsne_perplexity</span><span class="p">,</span>
+            <span class="s2">&quot;analyze_button&quot;</span><span class="p">:</span> <span class="n">analyze_button</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_cooccurrence_analysis">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_cooccurrence_analysis">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_cooccurrence_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ingredients_matrix</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche l&#39;analyse de co-occurrence interactive.</span>
+
+<span class="sd">        Permet à l&#39;utilisateur de sélectionner deux ingrédients et visualise</span>
+<span class="sd">        leur score de co-occurrence (nombre de recettes où ils apparaissent ensemble).</span>
+<span class="sd">        Affiche également des statistiques contextuelles pour interpréter le score.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredient_names: Liste des noms d&#39;ingrédients disponibles pour la sélection.</span>
+<span class="sd">            ingredients_matrix: Matrice de co-occurrence (DataFrame symétrique) où</span>
+<span class="sd">                matrix[ing1, ing2] = nombre de recettes contenant ing1 ET ing2.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: Si les ingrédients sélectionnés ne sont pas dans la matrice.</span>
+<span class="sd">            IndexError: Si un accès invalide à la matrice est tenté.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🔍 Analyse de Co-occurrence&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Création de trois colonnes pour les menus déroulants</span>
+        <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+            <span class="n">ingredient1</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="s2">&quot;Premier ingrédient&quot;</span><span class="p">,</span>
+                <span class="n">options</span><span class="o">=</span><span class="n">ingredient_names</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ingredient1&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+            <span class="n">ingredient2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
+                <span class="s2">&quot;Deuxième ingrédient&quot;</span><span class="p">,</span>
+                <span class="n">options</span><span class="o">=</span><span class="n">ingredient_names</span><span class="p">,</span>
+                <span class="n">index</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ingredient2&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Afficher le score de co-occurrence</span>
+        <span class="k">if</span> <span class="n">ingredient1</span> <span class="ow">and</span> <span class="n">ingredient2</span> <span class="ow">and</span> <span class="n">ingredient1</span> <span class="o">!=</span> <span class="n">ingredient2</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Récupérer le score de co-occurrence</span>
+                <span class="n">cooccurrence_score</span> <span class="o">=</span> <span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">ingredient1</span><span class="p">,</span> <span class="n">ingredient2</span><span class="p">]</span>
+
+                <span class="c1"># Calculer les statistiques de la matrice</span>
+                <span class="n">matrix_values</span> <span class="o">=</span> <span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span>
+                <span class="n">matrix_values_flat</span> <span class="o">=</span> <span class="n">matrix_values</span><span class="p">[</span><span class="n">matrix_values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># Seulement les valeurs non-nulles</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix_values_flat</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">max_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">matrix_values_flat</span><span class="p">)</span>
+                    <span class="n">avg_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">matrix_values_flat</span><span class="p">)</span>
+                    <span class="n">median_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">matrix_values_flat</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">max_score</span> <span class="o">=</span> <span class="n">avg_score</span> <span class="o">=</span> <span class="n">median_score</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="c1"># Affichage des métriques</span>
+                <span class="n">col_metric1</span><span class="p">,</span> <span class="n">col_metric2</span><span class="p">,</span> <span class="n">col_metric3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">col_metric1</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                        <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Score de co-occurrence&quot;</span><span class="p">,</span>
+                        <span class="n">value</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cooccurrence_score</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Nombre de recettes contenant &#39;</span><span class="si">{</span><span class="n">ingredient1</span><span class="si">}</span><span class="s2">&#39; ET &#39;</span><span class="si">{</span><span class="n">ingredient2</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">col_metric2</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">max_score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">percentile</span> <span class="o">=</span> <span class="p">(</span><span class="n">cooccurrence_score</span> <span class="o">/</span> <span class="n">max_score</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Percentile&quot;</span><span class="p">,</span>
+                            <span class="n">value</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">percentile</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Position par rapport au score maximum&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                <span class="k">with</span> <span class="n">col_metric3</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">avg_score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">ratio_avg</span> <span class="o">=</span> <span class="n">cooccurrence_score</span> <span class="o">/</span> <span class="n">avg_score</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Ratio vs Moyenne&quot;</span><span class="p">,</span>
+                            <span class="n">value</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ratio_avg</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">x&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Ratio par rapport à la moyenne (</span><span class="si">{</span><span class="n">avg_score</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                <span class="c1"># Barre de progression visuelle</span>
+                <span class="k">if</span> <span class="n">max_score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">normalized_score</span> <span class="o">=</span> <span class="n">cooccurrence_score</span> <span class="o">/</span> <span class="n">max_score</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">progress</span><span class="p">(</span><span class="n">normalized_score</span><span class="p">)</span>
+
+                    <span class="c1"># Interprétation du score</span>
+                    <span class="k">if</span> <span class="n">cooccurrence_score</span> <span class="o">&gt;=</span> <span class="n">median_score</span> <span class="o">*</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;🔥 Combinaison très fréquente!&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">cooccurrence_score</span> <span class="o">&gt;=</span> <span class="n">median_score</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;✅ Combinaison courante&quot;</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">cooccurrence_score</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;⚠️ Combinaison rare&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;❌ Aucune co-occurrence trouvée&quot;</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Erreur lors du calcul du score de co-occurrence&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_clusters">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_clusters">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_clusters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche les clusters d&#39;ingrédients de manière organisée.</span>
+
+<span class="sd">        Présente chaque cluster dans un expander séparé avec une couleur distinctive.</span>
+<span class="sd">        Les ingrédients sont affichés en colonnes pour une meilleure lisibilité.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            clusters: Array numpy contenant les labels de cluster pour chaque ingrédient.</span>
+<span class="sd">                Taille = len(ingredient_names), valeurs de 0 à n_clusters-1.</span>
+<span class="sd">            ingredient_names: Liste ordonnée des noms d&#39;ingrédients correspondant</span>
+<span class="sd">                aux indices dans l&#39;array clusters.</span>
+<span class="sd">            n_clusters: Nombre total de clusters créés (pour l&#39;itération).</span>
+
+<span class="sd">        Example:</span>
+<span class="sd">            &gt;&gt;&gt; clusters = np.array([0, 1, 0, 2, 1])</span>
+<span class="sd">            &gt;&gt;&gt; names = [&#39;salt&#39;, &#39;sugar&#39;, &#39;pepper&#39;, &#39;flour&#39;, &#39;honey&#39;]</span>
+<span class="sd">            &gt;&gt;&gt; page.render_clusters(clusters, names, 3)</span>
+<span class="sd">            # Affiche 3 expanders avec les ingrédients regroupés</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🎯 Clusters d&#39;Ingrédients&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Affichage par cluster avec couleurs</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;🔴&quot;</span><span class="p">,</span> <span class="s2">&quot;🟠&quot;</span><span class="p">,</span> <span class="s2">&quot;🟡&quot;</span><span class="p">,</span> <span class="s2">&quot;🟢&quot;</span><span class="p">,</span> <span class="s2">&quot;🔵&quot;</span><span class="p">,</span> <span class="s2">&quot;🟣&quot;</span><span class="p">,</span> <span class="s2">&quot;⚫&quot;</span><span class="p">,</span> <span class="s2">&quot;⚪&quot;</span><span class="p">,</span> <span class="s2">&quot;🟤&quot;</span><span class="p">,</span> <span class="s2">&quot;🔘&quot;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">):</span>
+            <span class="n">cluster_ingredients</span> <span class="o">=</span> <span class="p">[</span><span class="n">ingredient_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cluster</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span> <span class="k">if</span> <span class="n">cluster</span> <span class="o">==</span> <span class="n">cluster_id</span><span class="p">]</span>
+
+            <span class="n">color_emoji</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">cluster_id</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">color_emoji</span><span class="si">}</span><span class="s2"> Cluster </span><span class="si">{</span><span class="n">cluster_id</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cluster_ingredients</span><span class="p">)</span><span class="si">}</span><span class="s2"> ingrédients)&quot;</span><span class="p">,</span>
+                <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="c1"># Affichage en colonnes pour une meilleure lisibilité</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ingredient</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cluster_ingredients</span><span class="p">):</span>
+                    <span class="n">cols</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• **</span><span class="si">{</span><span class="n">ingredient</span><span class="si">}</span><span class="s2">**&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_tsne_visualization">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_tsne_visualization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_tsne_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">:</span> <span class="n">IngredientsAnalyzer</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tsne_perplexity</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche la visualisation t-SNE 2D des clusters d&#39;ingrédients.</span>
+
+<span class="sd">        Génère et affiche un graphique interactif Plotly montrant les ingrédients</span>
+<span class="sd">        dans un espace 2D obtenu par réduction de dimensionnalité t-SNE. Les points</span>
+<span class="sd">        sont colorés selon leur cluster et peuvent être régénérés avec de nouveaux</span>
+<span class="sd">        paramètres.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer: Instance de IngredientsAnalyzer utilisée pour générer la</span>
+<span class="sd">                visualisation t-SNE à partir de la matrice de co-occurrence.</span>
+<span class="sd">            clusters: Array numpy des labels de cluster pour chaque ingrédient.</span>
+<span class="sd">            tsne_perplexity: Paramètre de perplexité pour t-SNE (5-50).</span>
+<span class="sd">                Contrôle la densité des groupes dans la visualisation.</span>
+<span class="sd">                Valeurs faibles = focus local, valeurs élevées = structure globale.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            La visualisation est mise en cache dans st.session_state pour éviter</span>
+<span class="sd">            de la recalculer à chaque interaction. Un bouton permet de forcer la</span>
+<span class="sd">            régénération avec de nouveaux paramètres aléatoires.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">col_title</span><span class="p">,</span> <span class="n">col_button</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">with</span> <span class="n">col_title</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;🎨 Visualisation t-SNE 2D des Clusters&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col_button</span><span class="p">:</span>
+            <span class="n">regenerate_tsne</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
+                <span class="s2">&quot;🔄 Régénérer t-SNE&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Regénérer la visualisation avec de nouveaux paramètres&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Générer t-SNE au premier lancement ou si demandé</span>
+        <span class="n">should_generate_tsne</span> <span class="o">=</span> <span class="s2">&quot;tsne_data&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span> <span class="ow">or</span> <span class="n">regenerate_tsne</span>
+
+        <span class="k">if</span> <span class="n">should_generate_tsne</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Génération de la visualisation t-SNE...&quot;</span><span class="p">):</span>
+                <span class="n">tsne_data</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">generate_tsne_visualization</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">perplexity</span><span class="o">=</span><span class="n">tsne_perplexity</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;tsne_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tsne_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tsne_data</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;tsne_data&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tsne_data</span><span class="p">:</span>
+            <span class="c1"># Créer le graphique de dispersion avec Plotly</span>
+            <span class="n">fig_tsne</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+            <span class="c1"># Palette de couleurs hexadécimales pour t-SNE</span>
+            <span class="n">tsne_colors</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;#FF6B6B&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#45B7D1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#96CEB4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#FFEAA7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#DDA0DD&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#98D8C8&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#F7DC6F&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#BB8FCE&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#85C1E9&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Ajouter les points par cluster pour avoir des couleurs distinctes</span>
+            <span class="k">for</span> <span class="n">cluster_id</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">):</span>
+                <span class="c1"># Filtrer les données pour ce cluster</span>
+                <span class="n">cluster_mask</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="o">==</span> <span class="n">cluster_id</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;cluster_labels&quot;</span><span class="p">]]</span>
+                <span class="n">cluster_x</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;x_coords&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">cluster_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                <span class="n">cluster_y</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;y_coords&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">cluster_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                <span class="n">cluster_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;ingredient_names&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">cluster_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+                <span class="n">color</span> <span class="o">=</span> <span class="n">tsne_colors</span><span class="p">[</span><span class="n">cluster_id</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">tsne_colors</span><span class="p">)]</span>
+
+                <span class="n">fig_tsne</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+                        <span class="n">x</span><span class="o">=</span><span class="n">cluster_x</span><span class="p">,</span>
+                        <span class="n">y</span><span class="o">=</span><span class="n">cluster_y</span><span class="p">,</span>
+                        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;markers+text&quot;</span><span class="p">,</span>
+                        <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                            <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                            <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                            <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;white&quot;</span><span class="p">),</span>
+                            <span class="n">opacity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+                        <span class="p">),</span>
+                        <span class="n">text</span><span class="o">=</span><span class="n">cluster_names</span><span class="p">,</span>
+                        <span class="n">textposition</span><span class="o">=</span><span class="s2">&quot;top center&quot;</span><span class="p">,</span>
+                        <span class="n">textfont</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">cluster_id</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">hovertemplate</span><span class="o">=</span><span class="s2">&quot;&lt;b&gt;%</span><span class="si">{text}</span><span class="s2">&lt;/b&gt;&lt;br&gt;Cluster: &quot;</span>
+                        <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cluster_id</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&lt;br&gt;&quot;</span>
+                        <span class="o">+</span> <span class="s2">&quot;Coordonnées: (%</span><span class="si">{x:.2f}</span><span class="s2">, %</span><span class="si">{y:.2f}</span><span class="s2">)&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Mise en forme du graphique</span>
+            <span class="n">fig_tsne</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Visualisation t-SNE des Ingrédients par Cluster&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Dimension t-SNE 1&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;Dimension t-SNE 2&quot;</span><span class="p">,</span>
+                <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+                <span class="n">hovermode</span><span class="o">=</span><span class="s2">&quot;closest&quot;</span><span class="p">,</span>
+                <span class="n">plot_bgcolor</span><span class="o">=</span><span class="s2">&quot;rgba(245,245,245,0.8)&quot;</span><span class="p">,</span>
+                <span class="n">legend</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="n">yanchor</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">1.02</span><span class="p">,</span> <span class="n">xanchor</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Afficher le graphique</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">plotly_chart</span><span class="p">(</span><span class="n">fig_tsne</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Informations sur t-SNE</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;ℹ️ À propos de la visualisation t-SNE / Diagnostics&quot;</span><span class="p">):</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                **t-SNE (t-Distributed Stochastic Neighbor Embedding)** est une technique de réduction de dimensionnalité</span>
+<span class="sd">                qui permet de visualiser des données haute-dimensionnelles en 2D.</span>
+
+<span class="sd">                **Dans ce contexte :**</span>
+<span class="sd">                - Chaque point représente un **ingrédient**</span>
+<span class="sd">                - La position est basée sur les **profils de co-occurrence** avec les autres ingrédients</span>
+<span class="sd">                - Les couleurs correspondent aux **clusters K-means**</span>
+<span class="sd">                - Les ingrédients proches ont des **patterns de co-occurrence similaires**</span>
+
+<span class="sd">                **Interprétation :**</span>
+<span class="sd">                - Points regroupés = ingrédients utilisés dans des contextes similaires</span>
+<span class="sd">                - Clusters colorés = groupes détectés par l&#39;algorithme K-means</span>
+<span class="sd">                - Distance = mesure de similarité des profils culinaires</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+
+                <span class="n">method</span> <span class="o">=</span> <span class="n">tsne_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tsne_params&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;tsne&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                **Paramètres &amp; Méthode :**</span>
+<span class="s2">                - Méthode effective : `</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">`</span>
+<span class="s2">                - Perplexité (après ajustement) : </span><span class="si">{</span><span class="n">tsne_data</span><span class="p">[</span><span class="s1">&#39;tsne_params&#39;</span><span class="p">][</span><span class="s1">&#39;perplexity&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                - Itérations max : </span><span class="si">{</span><span class="n">tsne_data</span><span class="p">[</span><span class="s1">&#39;tsne_params&#39;</span><span class="p">][</span><span class="s1">&#39;max_iter&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                - Seed aléatoire : </span><span class="si">{</span><span class="n">tsne_data</span><span class="p">[</span><span class="s1">&#39;tsne_params&#39;</span><span class="p">][</span><span class="s1">&#39;random_state&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                - Ingrédients (n_samples) : </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tsne_data</span><span class="p">[</span><span class="s1">&#39;ingredient_names&#39;</span><span class="p">])</span><span class="si">}</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">&quot;tsne&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;fallback_circle&quot;</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="s2">&quot;Fallback circle layout utilisé car t-SNE instable (trop peu d&#39;ingrédients ou matrice dégénérée).&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;fallback_svd&quot;</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Projection issue de la décomposition SVD (approximation PCA) suite à un échec t-SNE.&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Afficher quelques stats basiques sur la dispersion</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">xs</span> <span class="o">=</span> <span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;x_coords&quot;</span><span class="p">]</span>
+                    <span class="n">ys</span> <span class="o">=</span> <span class="n">tsne_data</span><span class="p">[</span><span class="s2">&quot;y_coords&quot;</span><span class="p">]</span>
+                    <span class="n">spread_x</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+                    <span class="n">spread_y</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dispersion: Δx=</span><span class="si">{</span><span class="n">spread_x</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, Δy=</span><span class="si">{</span><span class="n">spread_y</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> (échelle relative des clusters)&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Erreur lors de la génération de la visualisation t-SNE&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;🛠 Détails de l&#39;erreur&quot;</span><span class="p">):</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">tsne_data</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                **Causes possibles :**</span>
+<span class="sd">                - Perplexité trop élevée par rapport au nombre d&#39;ingrédients (doit être &lt; n_samples)</span>
+<span class="sd">                - Matrice de co-occurrence vide ou dégénérée (toutes valeurs nulles)</span>
+<span class="sd">                - Incohérence entre le nombre de labels de clusters et la liste d&#39;ingrédients</span>
+<span class="sd">                - Conflit de cache sur des anciennes données</span>
+
+<span class="sd">                **Actions suggérées :**</span>
+<span class="sd">                1. Réduire le nombre d&#39;ingrédients ou ajuster la perplexité</span>
+<span class="sd">                2. Vider le cache (bouton Clear Cache) puis relancer</span>
+<span class="sd">                3. Vérifier que l&#39;étape de clustering a bien été effectuée</span>
+<span class="sd">                &quot;&quot;&quot;</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_sidebar_statistics">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_sidebar_statistics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_sidebar_statistics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche les statistiques de clustering dans la sidebar.</span>
+
+<span class="sd">        Présente des métriques récapitulatives et un graphique de répartition</span>
+<span class="sd">        des ingrédients par cluster. N&#39;affiche rien si les données ne sont pas</span>
+<span class="sd">        disponibles.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            clusters: Array numpy des labels de cluster, ou None si l&#39;analyse</span>
+<span class="sd">                n&#39;a pas encore été effectuée.</span>
+<span class="sd">            ingredient_names: Liste des noms d&#39;ingrédients, ou None si l&#39;analyse</span>
+<span class="sd">                n&#39;a pas encore été effectuée.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            Cette méthode vérifie que les deux paramètres sont non-None avant</span>
+<span class="sd">            d&#39;afficher les statistiques. Le graphique utilise Plotly pour une</span>
+<span class="sd">            visualisation interactive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">clusters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ingredient_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;### 📊 Statistiques&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Comptage par cluster</span>
+            <span class="n">cluster_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Total ingrédients&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">))</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Nombre de clusters&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_counts</span><span class="p">))</span>
+
+            <span class="c1"># Graphique horizontal des proportions par cluster</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;**Répartition par cluster:**&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Créer le graphique avec Plotly</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;#FF6B6B&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#45B7D1&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#96CEB4&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#FFEAA7&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#DDA0DD&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#98D8C8&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#F7DC6F&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#BB8FCE&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;#85C1E9&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cluster_counts</span><span class="p">):</span>
+                <span class="n">percentage</span> <span class="o">=</span> <span class="p">(</span><span class="n">count</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span>
+                <span class="n">color</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+                        <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="n">count</span><span class="p">],</span>
+                        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
+                        <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Cluster </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                        <span class="n">marker_color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                        <span class="n">text</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">percentage</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%)&quot;</span><span class="p">,</span>
+                        <span class="n">textposition</span><span class="o">=</span><span class="s2">&quot;outside&quot;</span><span class="p">,</span>
+                        <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Nombre d&#39;ingrédients&quot;</span><span class="p">,</span>
+                <span class="n">yaxis_title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="n">height</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_counts</span><span class="p">)</span> <span class="o">*</span> <span class="mi">40</span> <span class="o">+</span> <span class="mi">100</span><span class="p">),</span>
+                <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+                <span class="n">font</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">plotly_chart</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">use_container_width</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ---------------- Étapes de l&#39;analyse ---------------- #</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_step_1_preprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">:</span> <span class="n">IngredientsAnalyzer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche l&#39;étape 1 : Prétraitement NLP des ingrédients.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer: Instance de l&#39;analyseur contenant les résultats du preprocessing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;📈 ÉTAPE 1 : Prétraitement NLP des ingrédients&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Question :** Comment normaliser et regrouper les variantes d&#39;un même ingrédient ?</span>
+
+<span class="sd">        Les recettes utilisent des descriptions variées pour un même ingrédient (ex: &quot;sel&quot;, &quot;gros sel&quot;,</span>
+<span class="sd">        &quot;sel de mer&quot;, &quot;sel fin&quot;). Le prétraitement NLP vise à identifier et regrouper ces variantes</span>
+<span class="sd">        pour créer une représentation cohérente.</span>
+
+<span class="sd">        **Métrique :** Taux de réduction du nombre d&#39;ingrédients uniques après normalisation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Afficher le résumé du preprocessing</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">analyzer</span><span class="p">,</span> <span class="s2">&quot;ingredient_groups&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">ingredient_groups</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;🔍 Détails du prétraitement&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="c1"># Récupérer les statistiques de traitement</span>
+                <span class="n">summary</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">get_processing_summary</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">:</span>
+                    <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+                    <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                            <span class="s2">&quot;Ingrédients bruts uniques&quot;</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;total_unique_raw&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Nombre d&#39;ingrédients uniques avant normalisation&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                    <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                            <span class="s2">&quot;Après normalisation&quot;</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;total_normalized&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">delta</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;-</span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;reduction_ratio&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Nombre d&#39;ingrédients après regroupement des variantes&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                    <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                            <span class="s2">&quot;Groupes créés&quot;</span><span class="p">,</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;grouping&#39;</span><span class="p">][</span><span class="s1">&#39;groups_with_multiple_items&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Nombre de groupes contenant plusieurs variantes&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                    <span class="c1"># Exemples de normalisation</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;**🧪 Exemples de normalisation :**&quot;</span><span class="p">)</span>
+                    <span class="n">test_ingredients</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s2">&quot;large eggs&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;fresh ground black pepper&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;unsalted butter&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;red onions&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;whole milk&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;extra virgin olive oil&quot;</span><span class="p">,</span>
+                    <span class="p">]</span>
+                    <span class="k">for</span> <span class="n">ing</span> <span class="ow">in</span> <span class="n">test_ingredients</span><span class="p">:</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">normalize_ingredient</span><span class="p">(</span><span class="n">ing</span><span class="p">)</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• `</span><span class="si">{</span><span class="n">ing</span><span class="si">}</span><span class="s2">` → `</span><span class="si">{</span><span class="n">normalized</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Exemples de regroupements</span>
+                    <span class="n">multi_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">ingredient_groups</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">multi_groups</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;**🔗 Exemples de regroupements d&#39;ingrédients similaires :**&quot;</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">multi_groups</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
+                            <span class="n">members_display</span> <span class="o">=</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">group</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+                                <span class="n">members_display</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (+ </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">5</span><span class="si">}</span><span class="s2"> autres)&quot;</span>
+                            <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;**Groupe </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">:** </span><span class="si">{</span><span class="n">members_display</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **💡 Observations :** Le prétraitement NLP réduit significativement la redondance en identifiant</span>
+<span class="sd">        les variantes linguistiques d&#39;un même ingrédient. Cette étape est cruciale pour obtenir une</span>
+<span class="sd">        matrice de co-occurrence fiable.</span>
+
+<span class="sd">        **🎯 Implication :** La normalisation permet de concentrer l&#39;analyse sur les véritables patterns</span>
+<span class="sd">        culinaires plutôt que sur les variations de nomenclature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_step_2_cooccurrence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ingredients_matrix</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche l&#39;étape 2 : Création de la matrice de co-occurrence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredient_names: Liste des noms d&#39;ingrédients.</span>
+<span class="sd">            ingredients_matrix: Matrice de co-occurrence.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;📈 ÉTAPE 2 : Matrice de co-occurrence&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Objectif :** Quantifier la fréquence d&#39;apparition conjointe de chaque paire d&#39;ingrédients.</span>
+
+<span class="sd">        La matrice de co-occurrence capture l&#39;information fondamentale : combien de fois deux</span>
+<span class="sd">        ingrédients apparaissent ensemble dans les recettes. Cette matrice symétrique constitue</span>
+<span class="sd">        la base de notre analyse de similarité.</span>
+
+<span class="sd">        **Méthode :** Pour chaque recette, toutes les paires d&#39;ingrédients présents sont comptabilisées.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Statistiques de la matrice</span>
+        <span class="n">total_cooccurrences</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">non_zero_pairs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">matrix_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">)</span>
+        <span class="n">max_possible_pairs</span> <span class="o">=</span> <span class="n">matrix_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">matrix_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">sparsity</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">non_zero_pairs</span> <span class="o">/</span> <span class="n">max_possible_pairs</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+        <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span><span class="p">,</span> <span class="n">col4</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Dimension matrice&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrix_size</span><span class="si">}</span><span class="s2">×</span><span class="si">{</span><span class="n">matrix_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Co-occurrences totales&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">total_cooccurrences</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Paires non-nulles&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">non_zero_pairs</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col4</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
+                <span class="s2">&quot;Sparsité&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sparsity</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">,</span>
+                <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pourcentage de paires sans co-occurrence&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Analyse interactive de co-occurrence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render_cooccurrence_analysis</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">,</span> <span class="n">ingredients_matrix</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **📊 Ce que révèle la matrice :**</span>
+
+<span class="sd">        La distribution des co-occurrences n&#39;est pas uniforme. Certaines paires d&#39;ingrédients</span>
+<span class="sd">        apparaissent ensemble dans des milliers de recettes, révélant des associations culinaires</span>
+<span class="sd">        fortes.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_step_3_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche l&#39;étape 3 : Clustering K-means.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            clusters: Array des labels de cluster.</span>
+<span class="sd">            ingredient_names: Liste des noms d&#39;ingrédients.</span>
+<span class="sd">            n_clusters: Nombre de clusters créés.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;📈 ÉTAPE 3 : Clustering K-means&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        **Objectif :** Regrouper automatiquement les ingrédients en </span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> familles distinctes.</span>
+
+<span class="s2">        L&#39;algorithme K-means partitionne les ingrédients en fonction de leurs profils de co-occurrence.</span>
+<span class="s2">        Deux ingrédients dans le même cluster partagent des contextes d&#39;utilisation similaires, même</span>
+<span class="s2">        s&#39;ils ne co-occurrent pas directement.</span>
+
+<span class="s2">        **Méthode :** K-means avec k=</span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2">, distance euclidienne sur les vecteurs de co-occurrence.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Statistiques des clusters</span>
+        <span class="n">cluster_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+        <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Nombre de clusters&quot;</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+            <span class="n">avg_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_clusters</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Taille moyenne&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">avg_size</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> ingrédients&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+            <span class="n">largest_cluster_size</span> <span class="o">=</span> <span class="n">cluster_counts</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Plus grand cluster&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">largest_cluster_size</span><span class="si">}</span><span class="s2"> ingrédients&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Affichage des clusters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render_clusters</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        **🎯 Interprétation des clusters :**</span>
+
+<span class="s2">        Les clusters arrivent à révéler des &quot;famille culinaire&quot; d&#39;ingrédients. Ils peuvent être :</span>
+<span class="s2">        - **Ingrédients pour patisserie**</span>
+<span class="s2">        - **Produits de recettes salés**</span>
+
+<span class="s2">        **Limite méthodologique** : Le choix de k=</span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> est paramétrique. Différentes valeurs</span>
+<span class="s2">        de k révèlent des structures à différentes granularités.</span>
+<span class="s2">        De plus, les clusters ont tendance à ne pas être de la même taille car une masse d&#39;ingrédient à faible co-occurence se regrouppent ensemble.</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_step_4_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">:</span> <span class="n">IngredientsAnalyzer</span><span class="p">,</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tsne_perplexity</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche l&#39;étape 4 : Visualisation t-SNE 2D.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer: Instance de l&#39;analyseur.</span>
+<span class="sd">            clusters: Array des labels de cluster.</span>
+<span class="sd">            tsne_perplexity: Paramètre de perplexité pour t-SNE.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;📈 ÉTAPE 4 : Visualisation t-SNE 2D&quot;</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **Objectif :** Projeter l&#39;espace haute-dimensionnalité des co-occurrences en 2D pour exploration visuelle.</span>
+
+<span class="sd">        La matrice de co-occurrence est un espace à n dimensions (une par ingrédient). t-SNE</span>
+<span class="sd">        (t-Distributed Stochastic Neighbor Embedding) réduit cette dimensionnalité à 2D tout en</span>
+<span class="sd">        préservant les proximités locales.</span>
+
+<span class="sd">        **Méthode :** t-SNE avec perplexité={}, optimisation par descente de gradient.</span>
+<span class="sd">        &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">tsne_perplexity</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Visualisation t-SNE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">render_tsne_visualization</span><span class="p">(</span><span class="n">analyzer</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">tsne_perplexity</span><span class="p">)</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        **🔍 Lecture de la visualisation :**</span>
+
+<span class="sd">        - **Proximité spatiale** : Les ingrédients proches dans l&#39;espace 2D ont des profils de</span>
+<span class="sd">          co-occurrence similaires (utilisés dans des contextes culinaires similaires)</span>
+<span class="sd">        - **Couleurs** : Chaque couleur représente un cluster K-means. La cohésion spatiale des</span>
+<span class="sd">          couleurs valide la qualité du clustering</span>
+<span class="sd">        - **Groupes isolés** : Les clusters bien séparés géographiquement indiquent des familles</span>
+<span class="sd">          culinaires distinctes</span>
+
+<span class="sd">        **💡 Insights visuels :**</span>
+
+<span class="sd">        La visualisation révèle souvent une structure non-linéaire de l&#39;espace culinaire. Certains</span>
+<span class="sd">        ingrédients &quot;pont&quot; peuvent se situer entre plusieurs clusters, reflétant leur polyvalence</span>
+<span class="sd">        (ex: l&#39;huile d&#39;olive utilisée dans de multiples contextes, ou l&#39;eau).</span>
+
+<span class="sd">        **Validation du clustering** : Si les couleurs (clusters K-means) forment des groupes</span>
+<span class="sd">        visuellement cohérents dans l&#39;espace t-SNE, cela confirme que le clustering a capturé</span>
+<span class="sd">        des structures réelles plutôt qu&#39;artificielles.</span>
+
+<span class="sd">        **Limite de t-SNE** : La représentation 2D est approximative. Les distances absolues ne</span>
+<span class="sd">        sont pas strictement préservées, seules les proximités relatives comptent. Différentes</span>
+<span class="sd">        exécutions peuvent donner des configurations légèrement différentes (non-déterminisme).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_conclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clusters</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche la conclusion de l&#39;analyse.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredient_names: Liste des noms d&#39;ingrédients.</span>
+<span class="sd">            clusters: Array des labels de cluster.</span>
+<span class="sd">            n_clusters: Nombre de clusters créés.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;📋 Conclusion de l&#39;analyse&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Calculer quelques statistiques finales</span>
+        <span class="n">cluster_counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">clusters</span><span class="p">)</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+        <span class="n">largest_cluster</span> <span class="o">=</span> <span class="n">cluster_counts</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">smallest_cluster</span> <span class="o">=</span> <span class="n">cluster_counts</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        ### Synthèse des résultats</span>
+
+<span class="s2">        **1. Prétraitement NLP réussi :** La normalisation automatique a permis de réduire</span>
+<span class="s2">        significativement la redondance des variantes d&#39;ingrédients, créant une base solide</span>
+<span class="s2">        pour l&#39;analyse.</span>
+
+<span class="s2">        **2. Structure révélée par la co-occurrence :** L&#39;analyse de </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        ingrédients a révélé des patterns clairs d&#39;association culinaire, confirmant que la</span>
+<span class="s2">        cuisine n&#39;est pas aléatoire.</span>
+
+<span class="s2">        **3. Clustering cohérent :** L&#39;algorithme K-means a identifié </span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> familles</span>
+<span class="s2">        d&#39;ingrédients distinctes, avec des tailles variant de </span><span class="si">{</span><span class="n">smallest_cluster</span><span class="si">}</span><span class="s2"> à </span><span class="si">{</span><span class="n">largest_cluster</span><span class="si">}</span>
+<span class="s2">        ingrédients. Ces clusters essaye de capturer des insight sur le co-usage des ingrédients.</span>
+
+<span class="s2">        **4. Validation visuelle :** La projection t-SNE montre la structure des clusters et</span>
+<span class="s2">        l&#39;organisation de l&#39;espace culinaire.</span>
+
+<span class="s2">        ### Applications pratiques</span>
+
+<span class="s2">        Ces résultats peuvent être utilisés pour :</span>
+<span class="s2">        - **Systèmes de recommandation** : Suggérer des ingrédients complémentaires lors de la</span>
+<span class="s2">          création de recettes</span>
+<span class="s2">        - **Analyse nutritionnelle** : Identifier les associations alimentaires courantes pour</span>
+<span class="s2">          des études diététiques, nottament en reliant les informations caloriques</span>
+<span class="s2">        - **Créativité culinaire** : Découvrir des combinaisons innovantes en explorant les</span>
+<span class="s2">          frontières entre clusters</span>
+<span class="s2">        - **Détection d&#39;anomalies** : Identifier des recettes avec des combinaisons inhabituelles</span>
+
+<span class="s2">        ### Limites et perspectives</span>
+
+<span class="s2">        **Limites :**</span>
+<span class="s2">        - La co-occurrence ne capture pas l&#39;ordre ou les quantités des ingrédients</span>
+<span class="s2">        - Les ingrédients très rares ne sont pas représentés et ceux trop présent</span>
+<span class="s2">        peuvent être mal représentés</span>
+
+<span class="s2">        **Perspectives d&#39;amélioration :**</span>
+<span class="s2">        - Clustering hiérarchique pour révéler plusieurs niveaux de granularité</span>
+<span class="s2">        - Intégration d&#39;informations sémantiques (catégories nutritionnelles, origines)</span>
+<span class="s2">        - Modèles de recommandation basés sur les embeddings d&#39;ingrédients</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="IngredientsClusteringPage.render_analysis_summary">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.render_analysis_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">render_analysis_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer</span><span class="p">:</span> <span class="n">IngredientsAnalyzer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Affiche le résumé détaillé du processus d&#39;analyse.</span>
+
+<span class="sd">        Présente des informations sur le regroupement d&#39;ingrédients similaires,</span>
+<span class="sd">        la normalisation effectuée et des exemples de mappings. Utile pour</span>
+<span class="sd">        comprendre les transformations appliquées aux données brutes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer: Instance de l&#39;analyseur contenant les résultats du</span>
+<span class="sd">                traitement (groupes d&#39;ingrédients, mappings, etc.).</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">            Affiche plusieurs sections extensibles:</span>
+<span class="sd">            - Exemples de regroupements d&#39;ingrédients similaires</span>
+<span class="sd">            - Debug de la normalisation pour des ingrédients courants</span>
+<span class="sd">            - Tests de normalisation en temps réel</span>
+<span class="sd">            - Résumé complet du pipeline de traitement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Afficher quelques exemples de regroupements d&#39;ingrédients</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">analyzer</span><span class="p">,</span> <span class="s2">&quot;ingredient_groups&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">ingredient_groups</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;🔗 Exemples de regroupements d&#39;ingrédients similaires&quot;</span><span class="p">):</span>
+                <span class="c1"># Afficher les groupes avec plus d&#39;un élément</span>
+                <span class="n">multi_groups</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">ingredient_groups</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">multi_groups</span><span class="p">:</span>
+                    <span class="c1"># Afficher les 10 premiers groupes</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">multi_groups</span><span class="p">[:</span><span class="mi">10</span><span class="p">]):</span>
+                        <span class="n">members_display</span> <span class="o">=</span> <span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">group</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+                            <span class="n">members_display</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; (+ </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">5</span><span class="si">}</span><span class="s2"> autres)&quot;</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;**Groupe </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">:** </span><span class="si">{</span><span class="n">members_display</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">multi_groups</span><span class="p">)</span><span class="si">}</span><span class="s2"> groupes d&#39;ingrédients similaires détectés&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Debug pour des ingrédients problématiques</span>
+                    <span class="n">debug_info</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">debug_ingredient_mapping</span><span class="p">([</span><span class="s2">&quot;pepper&quot;</span><span class="p">,</span> <span class="s2">&quot;egg&quot;</span><span class="p">,</span> <span class="s2">&quot;salt&quot;</span><span class="p">,</span> <span class="s2">&quot;butter&quot;</span><span class="p">,</span> <span class="s2">&quot;onion&quot;</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="s2">&quot;search_results&quot;</span> <span class="ow">in</span> <span class="n">debug_info</span><span class="p">:</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**🔍 Debug - Exemples de normalisation:**&quot;</span><span class="p">)</span>
+                        <span class="k">for</span> <span class="n">term</span><span class="p">,</span> <span class="n">matches</span> <span class="ow">in</span> <span class="n">debug_info</span><span class="p">[</span><span class="s2">&quot;search_results&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="k">if</span> <span class="n">matches</span><span class="p">:</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="n">term</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s2">:*&quot;</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">[:</span><span class="mi">3</span><span class="p">]:</span>  <span class="c1"># Limiter à 3 résultats</span>
+                                    <span class="c1"># Montrer aussi la normalisation</span>
+                                    <span class="n">normalized</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">normalize_ingredient</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="s2">&quot;ingredient&quot;</span><span class="p">])</span>
+                                    <span class="n">status</span> <span class="o">=</span> <span class="p">(</span>
+                                        <span class="s2">&quot;✅ Représentant&quot;</span>
+                                        <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;is_representative&quot;</span><span class="p">]</span>
+                                        <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;➡️ Mappé vers &#39;</span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s1">&#39;representative&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                                    <span class="p">)</span>
+                                    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                                        <span class="sa">f</span><span class="s2">&quot;  • `</span><span class="si">{</span><span class="n">match</span><span class="p">[</span><span class="s1">&#39;ingredient&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">` → `</span><span class="si">{</span><span class="n">normalized</span><span class="si">}</span><span class="s2">` </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span>
+                                    <span class="p">)</span>
+
+                    <span class="c1"># Exemple de normalisation en temps réel</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**🧪 Test de normalisation:**&quot;</span><span class="p">)</span>
+                    <span class="n">test_ingredients</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s2">&quot;large eggs&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;fresh ground black pepper&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;unsalted butter&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;red onions&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;whole milk&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;extra virgin olive oil&quot;</span><span class="p">,</span>
+                    <span class="p">]</span>
+                    <span class="k">for</span> <span class="n">ing</span> <span class="ow">in</span> <span class="n">test_ingredients</span><span class="p">:</span>
+                        <span class="n">normalized</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">normalize_ingredient</span><span class="p">(</span><span class="n">ing</span><span class="p">)</span>
+                        <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• `</span><span class="si">{</span><span class="n">ing</span><span class="si">}</span><span class="s2">` → `</span><span class="si">{</span><span class="n">normalized</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Résumé complet du processus</span>
+                    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;📋 Résumé Complet du Data Processing&quot;</span><span class="p">):</span>
+                        <span class="n">summary</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">get_processing_summary</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">summary</span><span class="p">:</span>
+                            <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+                            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**📊 Données d&#39;entrée:**&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Recettes: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;input_data&#39;</span><span class="p">][</span><span class="s1">&#39;total_recipes&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Ingrédients bruts: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;input_data&#39;</span><span class="p">][</span><span class="s1">&#39;total_raw_ingredients&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Moyenne par recette: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;input_data&#39;</span><span class="p">][</span><span class="s1">&#39;avg_ingredients_per_recipe&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**🔄 Normalisation:**&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Ingrédients uniques bruts: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;total_unique_raw&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Après normalisation: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;total_normalized&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Réduction: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;normalization&#39;</span><span class="p">][</span><span class="s1">&#39;reduction_ratio&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+
+                            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**🔗 Regroupement:**&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Groupes multiples: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;grouping&#39;</span><span class="p">][</span><span class="s1">&#39;groups_with_multiple_items&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Plus grand groupe: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;grouping&#39;</span><span class="p">][</span><span class="s1">&#39;largest_group_size&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> éléments&quot;</span><span class="p">)</span>
+
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;**📈 Matrice Co-occurrence:**&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Dimensions: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;cooccurrence_matrix&#39;</span><span class="p">][</span><span class="s1">&#39;dimensions&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Co-occurrences: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;cooccurrence_matrix&#39;</span><span class="p">][</span><span class="s1">&#39;total_cooccurrences&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Paires non-nulles: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;cooccurrence_matrix&#39;</span><span class="p">][</span><span class="s1">&#39;non_zero_pairs&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;• Sparsité: </span><span class="si">{</span><span class="n">summary</span><span class="p">[</span><span class="s1">&#39;cooccurrence_matrix&#39;</span><span class="p">][</span><span class="s1">&#39;sparsity&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Aucun regroupement détecté. Tous les ingrédients sont considérés comme uniques.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IngredientsClusteringPage.run">
+<a class="viewcode-back" href="../../../api/src.components.html#src.components.ingredients_clustering_page.IngredientsClusteringPage.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Point d&#39;entrée principal de la page.</span>
+
+<span class="sd">        Orchestre l&#39;ensemble du workflow de la page de clustering:</span>
+<span class="sd">        1. Chargement automatique des données</span>
+<span class="sd">        2. Affichage de la sidebar avec paramètres</span>
+<span class="sd">        3. Exécution de l&#39;analyse (process, clustering, visualisation)</span>
+<span class="sd">        4. Affichage des résultats interactifs</span>
+
+<span class="sd">        Cette méthode gère également le cache de session Streamlit pour</span>
+<span class="sd">        persister les résultats entre les interactions utilisateur.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            Exception: Affiche les erreurs via st.error mais ne les propage pas</span>
+<span class="sd">                pour maintenir l&#39;interface fonctionnelle.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting ingredients clustering analysis&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Introduction et User Story</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;🎯 Objectifs et méthodologie de l&#39;analyse&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            ### Peut-on regrouper les ingrédients selon leurs usages culinaires ?</span>
+
+<span class="sd">            Cette analyse explore les patterns de co-occurrence d&#39;ingrédients dans les recettes pour</span>
+<span class="sd">            identifier les associations culinaires naturelles. En analysant des milliers de recettes,</span>
+<span class="sd">            nous révélons les combinaisons d&#39;ingrédients qui apparaissent fréquemment ensemble.</span>
+
+<span class="sd">            **Questions centrales :** Quels ingrédients sont naturellement associés ? Existe-t-il des</span>
+<span class="sd">            familles d&#39;ingrédients distinctes ? Comment les ingrédients se regroupent-ils en fonction</span>
+<span class="sd">            de leurs profils d&#39;utilisation ?</span>
+
+<span class="sd">            **Approche :** Analyse NLP des listes d&#39;ingrédients, construction d&#39;une matrice de</span>
+<span class="sd">            co-occurrence, clustering automatique par K-means, et visualisation en 2D par t-SNE.</span>
+
+<span class="sd">            **Problématique :** Dans un espace culinaire où des milliers d&#39;ingrédients peuvent être</span>
+<span class="sd">            combinés, comment identifier automatiquement les groupes d&#39;ingrédients qui partagent des</span>
+<span class="sd">            contextes d&#39;utilisation similaires ?</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Sidebar pour les paramètres</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">render_sidebar</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clustering parameters: </span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Chargement automatique des données</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Loading and preparing data&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_and_prepare_data</span><span class="p">()</span>
+
+        <span class="c1"># Traitement des données</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset loaded successfully: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2"> recipes&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Initialisation de l&#39;analyseur</span>
+            <span class="n">analyzer</span> <span class="o">=</span> <span class="n">IngredientsAnalyzer</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+            <span class="c1"># Cache controls dans la sidebar</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_render_cache_controls</span><span class="p">(</span><span class="n">analyzer</span><span class="p">)</span>
+
+            <span class="c1"># Vérifier si les paramètres ont changé</span>
+            <span class="n">params_changed</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="s2">&quot;last_params&quot;</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+                <span class="n">last_params</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;last_params&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">last_params</span><span class="p">[</span><span class="s2">&quot;n_ingredients&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_ingredients&quot;</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">last_params</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">]</span>
+                    <span class="ow">or</span> <span class="n">last_params</span><span class="p">[</span><span class="s2">&quot;tsne_perplexity&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tsne_perplexity&quot;</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="n">params_changed</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Lancer l&#39;analyse si bouton cliqué, première fois, ou paramètres changés</span>
+            <span class="n">should_analyze</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;analyze_button&quot;</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;ingredient_names&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span> <span class="ow">or</span> <span class="n">params_changed</span>
+
+            <span class="k">if</span> <span class="n">should_analyze</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Starting clustering analysis with parameters: n_ingredients=</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_ingredients&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, n_clusters=</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">spinner</span><span class="p">(</span><span class="s2">&quot;Analyse en cours...&quot;</span><span class="p">):</span>
+                    <span class="c1"># Traitement des ingrédients</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Processing ingredients with n_ingredients=</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_ingredients&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">ingredients_matrix</span><span class="p">,</span> <span class="n">ingredient_names</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">process_ingredients</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_ingredients&quot;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed ingredients matrix: </span><span class="si">{</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Clustering</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Performing clustering with n_clusters=</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">clusters</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">perform_clustering</span><span class="p">(</span><span class="n">ingredients_matrix</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Clustering completed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">clusters</span><span class="p">))</span><span class="si">}</span><span class="s2"> unique clusters found&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># Sauvegarde des résultats dans la session</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;ingredient_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ingredient_names</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;clusters&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusters</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;ingredients_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ingredients_matrix</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;analyzer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analyzer</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;last_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+            <span class="c1"># Affichage des résultats si disponibles</span>
+            <span class="k">if</span> <span class="s2">&quot;ingredient_names&quot;</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Displaying cached clustering results&quot;</span><span class="p">)</span>
+                <span class="n">ingredient_names</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;ingredient_names&quot;</span><span class="p">]</span>
+                <span class="n">ingredients_matrix</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;ingredients_matrix&quot;</span><span class="p">]</span>
+                <span class="n">clusters</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;clusters&quot;</span><span class="p">]</span>
+                <span class="n">analyzer</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span><span class="s2">&quot;analyzer&quot;</span><span class="p">]</span>
+
+                <span class="c1"># Statistiques générales</span>
+                <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span><span class="p">,</span> <span class="n">col3</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;📊 Recettes analysées&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;🥘 Ingrédients retenus&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">col3</span><span class="p">:</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;🎯 Clusters créés&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+                <span class="c1"># ÉTAPE 1 : Prétraitement NLP</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_render_step_1_preprocessing</span><span class="p">(</span><span class="n">analyzer</span><span class="p">)</span>
+
+                <span class="c1"># ÉTAPE 2 : Matrice de co-occurrence</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_render_step_2_cooccurrence</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">,</span> <span class="n">ingredients_matrix</span><span class="p">)</span>
+
+                <span class="c1"># ÉTAPE 3 : Clustering</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_render_step_3_clustering</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">])</span>
+
+                <span class="c1"># ÉTAPE 4 : Visualisation t-SNE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_render_step_4_visualization</span><span class="p">(</span><span class="n">analyzer</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;tsne_perplexity&quot;</span><span class="p">])</span>
+
+                <span class="c1"># Conclusion</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_render_conclusion</span><span class="p">(</span><span class="n">ingredient_names</span><span class="p">,</span> <span class="n">clusters</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">])</span>
+
+                <span class="c1"># Statistiques dans la sidebar</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">render_sidebar_statistics</span><span class="p">(</span><span class="n">clusters</span><span class="p">,</span> <span class="n">ingredient_names</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Impossible de charger les données. Vérifiez la présence du fichier de données.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Footer</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
+            <span class="s2">&quot;💡 **Configuration** : Ajustez les paramètres dans la sidebar pour explorer différentes configurations de clustering.&quot;</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, William.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

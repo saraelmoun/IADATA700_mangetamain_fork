@@ -1,0 +1,951 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core.ingredients_analyzer &mdash; Documentation MangetamainTESTWR 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a28dfa3"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MangetamainTESTWR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">IADATA700_mangetamain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">src</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ClassDiagram.html">Diagramme de classes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MangetamainTESTWR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">src.core.ingredients_analyzer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de src.core.ingredients_analyzer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="sd">&quot;&quot;&quot;Analyseur d&#39;ingrédients avec clustering basé sur la co-occurrence.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ast</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMeans</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.manifold</span><span class="w"> </span><span class="kn">import</span> <span class="n">TSNE</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cacheable_mixin</span><span class="w"> </span><span class="kn">import</span> <span class="n">CacheableMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IngredientsAnalyzer</span><span class="p">(</span><span class="n">CacheableMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classe pour analyser les ingrédients et effectuer le clustering basé sur la co-occurrence.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise l&#39;analyseur avec les données de recettes.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data: DataFrame contenant les recettes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_groups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;IngredientsAnalyzer initialized with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s2"> recipes&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Enable cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enable_cache</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_default_cache_params</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate cache parameters for the current configuration.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;data_shape&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="s2">&quot;data_hash&quot;</span><span class="p">:</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">tolist</span><span class="p">())),</span>
+            <span class="s2">&quot;analyzer_type&quot;</span><span class="p">:</span> <span class="s2">&quot;ingredients&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="IngredientsAnalyzer.get_cache_info">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.get_cache_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cache_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get cache information compatible with the old interface.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.cache_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_cache_manager</span>
+
+        <span class="n">cache_manager</span> <span class="o">=</span> <span class="n">get_cache_manager</span><span class="p">()</span>
+        <span class="n">cache_info</span> <span class="o">=</span> <span class="n">cache_manager</span><span class="o">.</span><span class="n">get_info</span><span class="p">()</span>
+
+        <span class="c1"># Check if cache exists for this analyzer</span>
+        <span class="n">analyzer_name</span> <span class="o">=</span> <span class="s2">&quot;ingredients&quot;</span>
+        <span class="n">analyzer_files</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cache_exists</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">analyzer_name</span> <span class="ow">in</span> <span class="n">cache_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;analyzers&quot;</span><span class="p">,</span> <span class="p">{}):</span>
+            <span class="n">analyzer_files</span> <span class="o">=</span> <span class="n">cache_info</span><span class="p">[</span><span class="s2">&quot;analyzers&quot;</span><span class="p">][</span><span class="n">analyzer_name</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;files&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">cache_exists</span> <span class="o">=</span> <span class="n">analyzer_files</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+        <span class="c1"># Return format compatible with old interface</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;cache_enabled&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># Always enabled with new cache system</span>
+            <span class="s2">&quot;cache_exists&quot;</span><span class="p">:</span> <span class="n">cache_exists</span><span class="p">,</span>
+            <span class="s2">&quot;cache_files_count&quot;</span><span class="p">:</span> <span class="n">analyzer_files</span><span class="p">,</span>  <span class="c1"># Add missing key for compatibility</span>
+            <span class="s2">&quot;cache_info&quot;</span><span class="p">:</span> <span class="n">cache_info</span><span class="p">,</span>  <span class="c1"># Include full cache info for advanced usage</span>
+            <span class="s2">&quot;total_files&quot;</span><span class="p">:</span> <span class="n">cache_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_files&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;total_size_mb&quot;</span><span class="p">:</span> <span class="n">cache_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;total_size_mb&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.normalize_ingredient">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.normalize_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Normalise un ingrédient pour garder seulement l&#39;essentiel.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            txt: Nom de l&#39;ingrédient brut</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Ingrédient normalisé à sa forme la plus générale</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">txt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-z0-9\s]&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Liste exhaustive de tous les mots non importants à supprimer</span>
+        <span class="n">stop_words</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="c1"># Adjectifs de taille/quantité</span>
+            <span class="s2">&quot;large&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;small&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;big&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;little&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tiny&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;huge&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;extra&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;half&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;quarter&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;whole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sliced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;diced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;chopped&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;minced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;thick&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;thin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fine&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;coarse&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;rough&quot;</span><span class="p">,</span>
+            <span class="c1"># Couleurs</span>
+            <span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;white&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;red&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;green&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;yellow&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;brown&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dark&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;light&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;golden&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pale&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;deep&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bright&quot;</span><span class="p">,</span>
+            <span class="c1"># États/préparations</span>
+            <span class="s2">&quot;fresh&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dried&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;frozen&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;canned&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;raw&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cooked&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;baked&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grilled&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fried&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;boiled&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;steamed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;roasted&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;smoked&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ground&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;crushed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;powdered&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;granulated&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;shredded&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grated&quot;</span><span class="p">,</span>
+            <span class="c1"># Qualités</span>
+            <span class="s2">&quot;organic&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;natural&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pure&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;virgin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;extra&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;premium&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;quality&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grade&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;top&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;best&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;good&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bad&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;old&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;new&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;aged&quot;</span><span class="p">,</span>
+            <span class="c1"># Goûts/textures</span>
+            <span class="s2">&quot;sweet&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sour&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bitter&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;salty&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;hot&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mild&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;spicy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bland&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;soft&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;hard&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;crispy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;crunchy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;smooth&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;rough&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;tender&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sharp&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mild&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;strong&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;weak&quot;</span><span class="p">,</span>
+            <span class="c1"># Parties/cuts</span>
+            <span class="s2">&quot;boneless&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;skinless&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bone&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;skin&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;lean&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fat&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;trimmed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;untrimmed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;breast&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;thigh&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;wing&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;leg&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;fillet&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;steak&quot;</span><span class="p">,</span>
+            <span class="c1"># Emballage/contenant</span>
+            <span class="s2">&quot;canned&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;jarred&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bottled&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bagged&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;boxed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;packaged&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;container&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;package&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;can&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;jar&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bottle&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bag&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;box&quot;</span><span class="p">,</span>
+            <span class="c1"># Marques/types génériques</span>
+            <span class="s2">&quot;brand&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;style&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;kind&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sort&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variety&quot;</span><span class="p">,</span>
+            <span class="c1"># Sel/graisse spécifiques</span>
+            <span class="s2">&quot;unsalted&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;salted&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;low&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;reduced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;free&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;zero&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;diet&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;light&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;heavy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;full&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;skim&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;non&quot;</span><span class="p">,</span>
+            <span class="c1"># Prépositions et articles</span>
+            <span class="s2">&quot;with&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;without&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;and&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;or&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;in&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;on&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;of&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;for&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;to&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;the&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;an&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Garder seulement les mots importants (substantifs principaux)</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stop_words</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="c1"># Si on n&#39;a plus rien, prendre le mot le plus long de l&#39;original</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tokens</span><span class="p">:</span>
+            <span class="n">original_words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">original_words</span><span class="p">:</span>
+                <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="n">original_words</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)]</span>
+
+        <span class="c1"># Singularisation agressive</span>
+        <span class="n">norm_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+            <span class="c1"># Règles de singularisation</span>
+            <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;ies&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">norm_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;y&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;es&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;ses&quot;</span><span class="p">,</span> <span class="s2">&quot;ches&quot;</span><span class="p">,</span> <span class="s2">&quot;shes&quot;</span><span class="p">,</span> <span class="s2">&quot;xes&quot;</span><span class="p">)):</span>
+                <span class="n">norm_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;s&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">w</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;ss&quot;</span><span class="p">,</span> <span class="s2">&quot;us&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;as&quot;</span><span class="p">,</span> <span class="s2">&quot;os&quot;</span><span class="p">)):</span>
+                <span class="n">norm_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">norm_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+        <span class="c1"># Prendre seulement le mot principal (le plus long généralement)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">norm_tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">main_ingredient</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">norm_tokens</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">main_ingredient</span>
+        <span class="k">elif</span> <span class="n">norm_tokens</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">norm_tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.build_similarity_groups">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.build_similarity_groups">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_similarity_groups</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredients</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.55</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Regroupe les ingrédients similaires basé sur la normalisation.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredients: Liste des ingrédients à regrouper</span>
+<span class="sd">            threshold: Seuil de similarité (non utilisé dans cette implémentation)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Liste de groupes d&#39;ingrédients similaires</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ingredients</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="c1"># Regroupement basé sur la normalisation stricte</span>
+        <span class="n">norm_to_ingredients</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">ingredient</span> <span class="ow">in</span> <span class="n">ingredients</span><span class="p">:</span>
+            <span class="n">normalized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_ingredient</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">normalized</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">normalized</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">norm_to_ingredients</span><span class="p">:</span>
+                    <span class="n">norm_to_ingredients</span><span class="p">[</span><span class="n">normalized</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">norm_to_ingredients</span><span class="p">[</span><span class="n">normalized</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span>
+
+        <span class="c1"># Créer les groupes basés sur la normalisation</span>
+        <span class="n">rule_groups</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">normalized</span><span class="p">,</span> <span class="n">ingredient_list</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">norm_to_ingredients</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredient_list</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">rule_groups</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">ingredient_list</span>
+
+        <span class="c1"># Construire la liste finale des groupes</span>
+        <span class="n">final_groups</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rule_groups</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+        <span class="c1"># Trier chaque groupe par longueur (plus court = plus général = représentant)</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">final_groups</span><span class="p">:</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># Trier les groupes par taille décroissante</span>
+        <span class="n">final_groups</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_groups</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.clean_ingredient">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.clean_ingredient">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clean_ingredient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredient</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Nettoie et standardise un ingrédient.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredient: Nom de l&#39;ingrédient brut</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Ingrédient nettoyé</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">ingredient</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="c1"># Conversion en minuscules</span>
+        <span class="n">ingredient</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Suppression des caractères spéciaux et des quantités</span>
+        <span class="n">ingredient</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+            <span class="sa">r</span><span class="s2">&quot;[0-9]+\.?[0-9]*\s*(cups?|tablespoons?|teaspoons?|ounces?|pounds?|grams?|ml|l)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">ingredient</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ingredient</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^\w\s-]&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ingredient</span><span class="p">)</span>
+        <span class="n">ingredient</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">ingredient</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Suppression des mots courants non significatifs</span>
+        <span class="n">stop_words</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;fresh&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;dried&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;chopped&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;minced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;sliced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;diced&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ground&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;crushed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;whole&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;large&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;small&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;medium&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="n">ingredient</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">word</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stop_words</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.parse_ingredients">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.parse_ingredients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_ingredients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ingredients_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse une chaîne d&#39;ingrédients et retourne une liste d&#39;ingrédients nettoyés.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            ingredients_str: Chaîne contenant les ingrédients (format liste Python)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Liste des ingrédients nettoyés</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Utiliser ast.literal_eval pour parser les listes Python</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">ingredients_list</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">ingredients_list</span> <span class="o">=</span> <span class="n">ingredients_str</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Fallback: séparation par virgules</span>
+                <span class="n">ingredients_list</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Nettoyage de chaque ingrédient</span>
+            <span class="n">cleaned_ingredients</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">ingredient</span> <span class="ow">in</span> <span class="n">ingredients_list</span><span class="p">:</span>
+                <span class="n">cleaned</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clean_ingredient</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">cleaned</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">cleaned</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">cleaned_ingredients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cleaned</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">cleaned_ingredients</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># En cas d&#39;erreur, traiter comme une chaîne simple</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">clean_ingredient</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">))]</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.get_most_common_ingredients">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.get_most_common_ingredients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_most_common_ingredients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_ingredients</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Obtient les ingrédients les plus fréquents avec regroupement.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_ingredients: Nombre d&#39;ingrédients à retourner</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Liste des ingrédients représentatifs les plus fréquents</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">all_ingredients</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Détection automatique de la colonne des ingrédients</span>
+        <span class="n">ingredient_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s2">&quot;ingredient&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ingredient_columns</span><span class="p">:</span>
+            <span class="n">possible_columns</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;ingredients&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;recipe_ingredient_parts&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ingredients_list&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="n">ingredient_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">possible_columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ingredient_columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Aucune colonne d&#39;ingrédients trouvée dans les données&quot;</span><span class="p">)</span>
+
+        <span class="n">ingredient_column</span> <span class="o">=</span> <span class="n">ingredient_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Extraction de tous les ingrédients</span>
+        <span class="k">for</span> <span class="n">ingredients_str</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ingredient_column</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">():</span>
+            <span class="n">ingredients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_ingredients</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">)</span>
+            <span class="n">all_ingredients</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span>
+
+        <span class="c1"># Comptage initial des ingrédients</span>
+        <span class="n">ingredient_counts</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">all_ingredients</span><span class="p">)</span>
+
+        <span class="c1"># Prendre plus d&#39;ingrédients pour le regroupement</span>
+        <span class="n">n_for_grouping</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="n">n_ingredients</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">top_ingredients_raw</span> <span class="o">=</span> <span class="p">[</span><span class="n">ingredient</span> <span class="k">for</span> <span class="n">ingredient</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">ingredient_counts</span><span class="o">.</span><span class="n">most_common</span><span class="p">(</span><span class="n">n_for_grouping</span><span class="p">)]</span>
+
+        <span class="c1"># Regroupement par similarité</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_similarity_groups</span><span class="p">(</span><span class="n">top_ingredients_raw</span><span class="p">)</span>
+
+        <span class="c1"># Créer un mapping ingredient -&gt; représentant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">representative_counts</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_groups</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">ingredient</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">[</span><span class="n">ingredient</span><span class="p">]</span> <span class="o">=</span> <span class="n">ingredient</span>
+                <span class="n">representative_counts</span><span class="p">[</span><span class="n">ingredient</span><span class="p">]</span> <span class="o">=</span> <span class="n">ingredient_counts</span><span class="p">[</span><span class="n">ingredient</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Choisir le représentant (le plus fréquent)</span>
+                <span class="n">group_with_counts</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ing</span><span class="p">,</span> <span class="n">ingredient_counts</span><span class="p">[</span><span class="n">ing</span><span class="p">])</span> <span class="k">for</span> <span class="n">ing</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span>
+                <span class="n">group_with_counts</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+                <span class="n">representative</span> <span class="o">=</span> <span class="n">group_with_counts</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="c1"># Calculer le score total du groupe</span>
+                <span class="n">total_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ingredient_counts</span><span class="p">[</span><span class="n">ing</span><span class="p">]</span> <span class="k">for</span> <span class="n">ing</span> <span class="ow">in</span> <span class="n">group</span><span class="p">)</span>
+                <span class="n">representative_counts</span><span class="p">[</span><span class="n">representative</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_count</span>
+
+                <span class="c1"># Mapper tous les membres du groupe vers le représentant</span>
+                <span class="k">for</span> <span class="n">ingredient</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">[</span><span class="n">ingredient</span><span class="p">]</span> <span class="o">=</span> <span class="n">representative</span>
+
+        <span class="c1"># Trier les représentants par fréquence totale</span>
+        <span class="n">sorted_representatives</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">representative_counts</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">final_ingredients</span> <span class="o">=</span> <span class="p">[</span><span class="n">rep</span> <span class="k">for</span> <span class="n">rep</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">sorted_representatives</span><span class="p">[:</span><span class="n">n_ingredients</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">final_ingredients</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.create_cooccurrence_matrix">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.create_cooccurrence_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_cooccurrence_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ingredients</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Crée une matrice de co-occurrence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            top_ingredients: Liste des ingrédients représentatifs à analyser</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Matrice de co-occurrence sous forme de DataFrame</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Créer une matrice DataFrame</span>
+        <span class="n">co_occurrence_matrix</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">top_ingredients</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">top_ingredients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Détection de la colonne des ingrédients</span>
+        <span class="n">ingredient_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s2">&quot;ingredient&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ingredient_columns</span><span class="p">:</span>
+            <span class="n">possible_columns</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;ingredients&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;recipe_ingredient_parts&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ingredients_list&quot;</span><span class="p">,</span>
+            <span class="p">]</span>
+            <span class="n">ingredient_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">possible_columns</span> <span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+
+        <span class="n">ingredient_column</span> <span class="o">=</span> <span class="n">ingredient_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Parcourir chaque recette</span>
+        <span class="k">for</span> <span class="n">ingredients_str</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ingredient_column</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">():</span>
+            <span class="n">ingredients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_ingredients</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">)</span>
+
+            <span class="c1"># Mapper les ingrédients vers leurs représentants</span>
+            <span class="n">mapped_ingredients</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">ing</span> <span class="ow">in</span> <span class="n">ingredients</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ing</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">:</span>
+                    <span class="n">representative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">[</span><span class="n">ing</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">representative</span> <span class="ow">in</span> <span class="n">top_ingredients</span><span class="p">:</span>
+                        <span class="n">mapped_ingredients</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">representative</span><span class="p">)</span>
+
+            <span class="c1"># Éliminer les doublons dans cette recette</span>
+            <span class="n">present_ingredients</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">mapped_ingredients</span><span class="p">))</span>
+
+            <span class="c1"># Mettre à jour la matrice avec toutes les combinaisons</span>
+            <span class="k">for</span> <span class="n">ingr1</span><span class="p">,</span> <span class="n">ingr2</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">present_ingredients</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                <span class="n">co_occurrence_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">ingr1</span><span class="p">,</span> <span class="n">ingr2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">co_occurrence_matrix</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">ingr2</span><span class="p">,</span> <span class="n">ingr1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># matrice symétrique</span>
+
+        <span class="k">return</span> <span class="n">co_occurrence_matrix</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.process_ingredients">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.process_ingredients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_ingredients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_ingredients</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pipeline principal : traite les ingrédients et crée la matrice de co-occurrence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_ingredients: Nombre d&#39;ingrédients représentatifs finaux</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple (matrice de co-occurrence DataFrame, noms des ingrédients représentatifs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_operation</span><span class="p">(</span>
+            <span class="n">operation_name</span><span class="o">=</span><span class="s2">&quot;process_ingredients&quot;</span><span class="p">,</span>
+            <span class="n">operation_func</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_process_ingredients</span><span class="p">(</span><span class="n">n_ingredients</span><span class="p">),</span>
+            <span class="n">cache_params</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;n_ingredients&quot;</span><span class="p">:</span> <span class="n">n_ingredients</span><span class="p">,</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_default_cache_params</span><span class="p">(),</span>
+            <span class="p">},</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_process_ingredients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_ingredients</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the ingredients processing (called when not in cache).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing ingredients processing from scratch with n_ingredients=</span><span class="si">{</span><span class="n">n_ingredients</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Obtenir les ingrédients représentatifs avec regroupement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_most_common_ingredients</span><span class="p">(</span><span class="n">n_ingredients</span><span class="p">)</span>
+
+        <span class="c1"># Créer la matrice de co-occurrence</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_cooccurrence_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span>
+
+<div class="viewcode-block" id="IngredientsAnalyzer.perform_clustering">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.perform_clustering">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">perform_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co_occurrence_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effectue le clustering sur la matrice de co-occurrence.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            co_occurrence_df: Matrice de co-occurrence</span>
+<span class="sd">            n_clusters: Nombre de clusters</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Labels des clusters pour chaque ingrédient</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Create cache key based on matrix and parameters</span>
+        <span class="n">matrix_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">co_occurrence_df</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="n">cache_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;n_clusters&quot;</span><span class="p">:</span> <span class="n">n_clusters</span><span class="p">,</span>
+            <span class="s2">&quot;matrix_hash&quot;</span><span class="p">:</span> <span class="n">matrix_hash</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_default_cache_params</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_operation</span><span class="p">(</span>
+            <span class="n">operation_name</span><span class="o">=</span><span class="s2">&quot;perform_clustering&quot;</span><span class="p">,</span>
+            <span class="n">operation_func</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_clustering</span><span class="p">(</span><span class="n">co_occurrence_df</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">),</span>
+            <span class="n">cache_params</span><span class="o">=</span><span class="n">cache_params</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">co_occurrence_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the clustering (called when not in cache).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing clustering from scratch with n_clusters=</span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Appliquer KMeans sur la matrice de co-occurrence</span>
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+        <span class="c1"># Utiliser seulement les données numériques</span>
+        <span class="n">matrix_data</span> <span class="o">=</span> <span class="n">co_occurrence_df</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">])</span>
+
+        <span class="n">cluster_labels</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">matrix_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cluster_labels</span>
+
+<div class="viewcode-block" id="IngredientsAnalyzer.generate_tsne_visualization">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.generate_tsne_visualization">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_tsne_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">perplexity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Génère une visualisation t-SNE 2D des ingrédients colorés par cluster.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            cluster_labels: Labels des clusters pour chaque ingrédient</span>
+<span class="sd">            perplexity: Paramètre de perplexité pour t-SNE</span>
+<span class="sd">            random_state: Seed pour reproductibilité</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Données pour la visualisation (coordonnées, labels, couleurs)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;ingredients_matrix&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Matrice de co-occurrence non disponible&quot;</span><span class="p">}</span>
+
+        <span class="c1"># Create cache key based on matrix, clusters and parameters</span>
+        <span class="n">matrix_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="n">clusters_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cluster_labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
+        <span class="n">cache_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;matrix_hash&quot;</span><span class="p">:</span> <span class="n">matrix_hash</span><span class="p">,</span>
+            <span class="s2">&quot;clusters_hash&quot;</span><span class="p">:</span> <span class="n">clusters_hash</span><span class="p">,</span>
+            <span class="s2">&quot;perplexity&quot;</span><span class="p">:</span> <span class="n">perplexity</span><span class="p">,</span>
+            <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="n">random_state</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_default_cache_params</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_operation</span><span class="p">(</span>
+            <span class="n">operation_name</span><span class="o">=</span><span class="s2">&quot;generate_tsne_visualization&quot;</span><span class="p">,</span>
+            <span class="n">operation_func</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_tsne_visualization</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">,</span> <span class="n">perplexity</span><span class="p">,</span> <span class="n">random_state</span><span class="p">),</span>
+            <span class="n">cache_params</span><span class="o">=</span><span class="n">cache_params</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_tsne_visualization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">perplexity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute t-SNE visualization (called when not in cache).&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing t-SNE visualization from scratch with perplexity=</span><span class="si">{</span><span class="n">perplexity</span><span class="si">}</span><span class="s2">, random_state=</span><span class="si">{</span><span class="n">random_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Utiliser la matrice de co-occurrence comme données d&#39;entrée pour t-SNE</span>
+        <span class="n">matrix_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span>
+
+        <span class="c1"># Ajuster la perplexité si nécessaire</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span><span class="p">)</span>
+        <span class="n">perplexity</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">perplexity</span><span class="p">,</span> <span class="n">n_samples</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
+
+        <span class="c1"># Appliquer t-SNE</span>
+        <span class="n">tsne</span> <span class="o">=</span> <span class="n">TSNE</span><span class="p">(</span>
+            <span class="n">n_components</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">perplexity</span><span class="o">=</span><span class="n">perplexity</span><span class="p">,</span>
+            <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span><span class="p">,</span>
+            <span class="n">max_iter</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+            <span class="n">init</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Transformer les données</span>
+        <span class="n">tsne_coords</span> <span class="o">=</span> <span class="n">tsne</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">matrix_data</span><span class="p">)</span>
+
+        <span class="c1"># Palette de couleurs pour les clusters</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;#FF6B6B&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#4ECDC4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#45B7D1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#96CEB4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FFEAA7&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#DDA0DD&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#98D8C8&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#F7DC6F&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#BB8FCE&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#85C1E9&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#F8C471&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#82E0AA&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#AED6F1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#E8DAEF&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;#FADBD8&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Préparer les données pour la visualisation</span>
+        <span class="n">visualization_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;x_coords&quot;</span><span class="p">:</span> <span class="n">tsne_coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;y_coords&quot;</span><span class="p">:</span> <span class="n">tsne_coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;ingredient_names&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span><span class="p">,</span>
+            <span class="s2">&quot;cluster_labels&quot;</span><span class="p">:</span> <span class="n">cluster_labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="s2">&quot;colors&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">colors</span><span class="p">[</span><span class="n">label</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cluster_labels</span><span class="p">],</span>
+            <span class="s2">&quot;n_clusters&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">cluster_labels</span><span class="p">)),</span>
+            <span class="s2">&quot;tsne_params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;perplexity&quot;</span><span class="p">:</span> <span class="n">perplexity</span><span class="p">,</span>
+                <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+                <span class="s2">&quot;random_state&quot;</span><span class="p">:</span> <span class="n">random_state</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">visualization_data</span>
+
+<div class="viewcode-block" id="IngredientsAnalyzer.debug_ingredient_mapping">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.debug_ingredient_mapping">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">debug_ingredient_mapping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">search_terms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Méthode de debug pour voir comment les ingrédients sont mappés.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            search_terms: Liste de termes à rechercher dans les mappings</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Informations de debug sur les mappings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;ingredient_mapping&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Aucun mapping d&#39;ingrédients disponible. Lancez d&#39;abord l&#39;analyse.&quot;</span><span class="p">}</span>
+
+        <span class="n">debug_info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;total_mappings&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">),</span>
+            <span class="s2">&quot;unique_representatives&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
+            <span class="s2">&quot;groups_with_multiple_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Grouper par représentant</span>
+        <span class="n">reverse_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ingredient</span><span class="p">,</span> <span class="n">representative</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">representative</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reverse_mapping</span><span class="p">:</span>
+                <span class="n">reverse_mapping</span><span class="p">[</span><span class="n">representative</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">reverse_mapping</span><span class="p">[</span><span class="n">representative</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span>
+
+        <span class="c1"># Identifier les groupes avec plusieurs éléments</span>
+        <span class="k">for</span> <span class="n">representative</span><span class="p">,</span> <span class="n">ingredients</span> <span class="ow">in</span> <span class="n">reverse_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">debug_info</span><span class="p">[</span><span class="s2">&quot;groups_with_multiple_items&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;representative&quot;</span><span class="p">:</span> <span class="n">representative</span><span class="p">,</span>
+                        <span class="s2">&quot;members&quot;</span><span class="p">:</span> <span class="n">ingredients</span><span class="p">,</span>
+                        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredients</span><span class="p">),</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Recherche spécifique si demandée</span>
+        <span class="k">if</span> <span class="n">search_terms</span><span class="p">:</span>
+            <span class="n">debug_info</span><span class="p">[</span><span class="s2">&quot;search_results&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">search_terms</span><span class="p">:</span>
+                <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">term_lower</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">ingredient</span><span class="p">,</span> <span class="n">representative</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">term_lower</span> <span class="ow">in</span> <span class="n">ingredient</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="n">term_lower</span> <span class="ow">in</span> <span class="n">representative</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="p">{</span>
+                                <span class="s2">&quot;ingredient&quot;</span><span class="p">:</span> <span class="n">ingredient</span><span class="p">,</span>
+                                <span class="s2">&quot;representative&quot;</span><span class="p">:</span> <span class="n">representative</span><span class="p">,</span>
+                                <span class="s2">&quot;is_representative&quot;</span><span class="p">:</span> <span class="n">ingredient</span> <span class="o">==</span> <span class="n">representative</span><span class="p">,</span>
+                            <span class="p">}</span>
+                        <span class="p">)</span>
+                <span class="n">debug_info</span><span class="p">[</span><span class="s2">&quot;search_results&quot;</span><span class="p">][</span><span class="n">term</span><span class="p">]</span> <span class="o">=</span> <span class="n">matches</span>
+
+        <span class="k">return</span> <span class="n">debug_info</span></div>
+
+
+<div class="viewcode-block" id="IngredientsAnalyzer.get_processing_summary">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.ingredients_analyzer.IngredientsAnalyzer.get_processing_summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_processing_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Génère un résumé complet du processus de traitement des données.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Statistiques complètes du pipeline de traitement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;ingredient_mapping&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;Pipeline non exécuté. Lancez d&#39;abord process_ingredients().&quot;</span><span class="p">}</span>
+
+        <span class="c1"># Statistiques de base</span>
+        <span class="n">total_recipes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">total_raw_ingredients</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1"># Compter les ingrédients bruts</span>
+        <span class="n">ingredient_column</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="s2">&quot;ingredient&quot;</span> <span class="ow">in</span> <span class="n">col</span><span class="o">.</span><span class="n">lower</span><span class="p">()][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">ingredients_str</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ingredient_column</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">():</span>
+            <span class="n">ingredients</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_ingredients</span><span class="p">(</span><span class="n">ingredients_str</span><span class="p">)</span>
+            <span class="n">total_raw_ingredients</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span>
+
+        <span class="c1"># Statistiques de regroupement</span>
+        <span class="n">unique_normalized</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="n">total_mapped</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="p">)</span>
+
+        <span class="c1"># Groupes multiples</span>
+        <span class="n">reverse_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ingredient</span><span class="p">,</span> <span class="n">representative</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">representative</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">reverse_mapping</span><span class="p">:</span>
+                <span class="n">reverse_mapping</span><span class="p">[</span><span class="n">representative</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">reverse_mapping</span><span class="p">[</span><span class="n">representative</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ingredient</span><span class="p">)</span>
+
+        <span class="n">multi_groups</span> <span class="o">=</span> <span class="p">{</span><span class="n">rep</span><span class="p">:</span> <span class="n">ingredients</span> <span class="k">for</span> <span class="n">rep</span><span class="p">,</span> <span class="n">ingredients</span> <span class="ow">in</span> <span class="n">reverse_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">}</span>
+
+        <span class="c1"># Statistiques de la matrice</span>
+        <span class="n">matrix_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span><span class="p">)</span>
+        <span class="n">total_cooccurrences</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">non_zero_pairs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ingredients_matrix</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;input_data&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;total_recipes&quot;</span><span class="p">:</span> <span class="n">total_recipes</span><span class="p">,</span>
+                <span class="s2">&quot;total_raw_ingredients&quot;</span><span class="p">:</span> <span class="n">total_raw_ingredients</span><span class="p">,</span>
+                <span class="s2">&quot;avg_ingredients_per_recipe&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">total_raw_ingredients</span> <span class="o">/</span> <span class="n">total_recipes</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;normalization&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;total_unique_raw&quot;</span><span class="p">:</span> <span class="n">total_mapped</span><span class="p">,</span>
+                <span class="s2">&quot;total_normalized&quot;</span><span class="p">:</span> <span class="n">unique_normalized</span><span class="p">,</span>
+                <span class="s2">&quot;reduction_ratio&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">unique_normalized</span> <span class="o">/</span> <span class="n">total_mapped</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;grouping&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;groups_with_multiple_items&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">multi_groups</span><span class="p">),</span>
+                <span class="s2">&quot;largest_group_size&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">max</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">ingredients</span><span class="p">)</span> <span class="k">for</span> <span class="n">ingredients</span> <span class="ow">in</span> <span class="n">multi_groups</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span> <span class="k">if</span> <span class="n">multi_groups</span> <span class="k">else</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s2">&quot;example_large_groups&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multi_groups</span><span class="o">.</span><span class="n">items</span><span class="p">())[:</span><span class="mi">3</span><span class="p">]),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;cooccurrence_matrix&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;dimensions&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">matrix_size</span><span class="si">}</span><span class="s2">x</span><span class="si">{</span><span class="n">matrix_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;total_cooccurrences&quot;</span><span class="p">:</span> <span class="n">total_cooccurrences</span><span class="p">,</span>
+                <span class="s2">&quot;non_zero_pairs&quot;</span><span class="p">:</span> <span class="n">non_zero_pairs</span><span class="p">,</span>
+                <span class="s2">&quot;sparsity&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span>
+                    <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">non_zero_pairs</span> <span class="o">/</span> <span class="p">(</span><span class="n">matrix_size</span> <span class="o">*</span> <span class="p">(</span><span class="n">matrix_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+                    <span class="mi">1</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;final_ingredients&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingredient_names</span><span class="p">[:</span><span class="mi">10</span><span class="p">],</span>
+        <span class="p">}</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, William.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
