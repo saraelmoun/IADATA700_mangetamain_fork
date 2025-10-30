@@ -1086,15 +1086,12 @@ class IngredientsClusteringPage:
 
             if should_analyze:
                 self.logger.info(
-                    f"Starting clustering analysis with parameters: n_ingredients={
-                        params['n_ingredients']}, n_clusters={
-                        params['n_clusters']}"
+                    f"Starting clustering analysis with parameters: n_ingredients={params['n_ingredients']}, n_clusters={params['n_clusters']}"
                 )
                 with st.spinner("Analyse en cours..."):
                     # Traitement des ingrédients
                     self.logger.debug(
-                        f"Processing ingredients with n_ingredients={
-                            params['n_ingredients']}"
+                        f"Processing ingredients with n_ingredients={params['n_ingredients']}"
                     )
                     ingredients_matrix, ingredient_names = analyzer.process_ingredients(params["n_ingredients"])
                     self.logger.info(f"Processed ingredients matrix: {ingredients_matrix.shape}")
