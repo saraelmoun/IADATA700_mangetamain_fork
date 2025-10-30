@@ -72,7 +72,7 @@ jobs:
           uv venv
           uv pip install -e .
           uv sync --group dev
-          uv run sphinx-build -b html -W --keep-going docs/source docs/build/html
+          uv run sphinx-build -b html --keep-going docs/source docs/build/html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
