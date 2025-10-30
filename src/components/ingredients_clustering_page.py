@@ -989,55 +989,25 @@ class IngredientsClusteringPage:
 
                             with col1:
                                 st.write("**📊 Données d'entrée:**")
-                                st.write(
-                                    f"• Recettes: {
-                                        summary['input_data']['total_recipes']:,}"
-                                )
-                                st.write(
-                                    f"• Ingrédients bruts: {
-                                        summary['input_data']['total_raw_ingredients']:,}"
-                                )
-                                st.write(
-                                    f"• Moyenne par recette: {
-                                        summary['input_data']['avg_ingredients_per_recipe']}"
-                                )
+                                st.write(f"• Recettes: {summary['input_data']['total_recipes']:,}")
+                                st.write(f"• Ingrédients bruts: {summary['input_data']['total_raw_ingredients']:,}")
+                                st.write(f"• Moyenne par recette: {summary['input_data']['avg_ingredients_per_recipe']}")
 
                                 st.write("**🔄 Normalisation:**")
-                                st.write(
-                                    f"• Ingrédients uniques bruts: {
-                                        summary['normalization']['total_unique_raw']:,}"
-                                )
-                                st.write(
-                                    f"• Après normalisation: {
-                                        summary['normalization']['total_normalized']:,}"
-                                )
-                                st.write(
-                                    f"• Réduction: {
-                                        summary['normalization']['reduction_ratio']}%"
-                                )
+                                st.write(f"• Ingrédients uniques bruts: {summary['normalization']['total_unique_raw']:,}")
+                                st.write(f"• Après normalisation: {summary['normalization']['total_normalized']:,}")
+                                st.write(f"• Réduction: {summary['normalization']['reduction_ratio']}%")
 
                             with col2:
                                 st.write("**🔗 Regroupement:**")
-                                st.write(
-                                    f"• Groupes multiples: {
-                                        summary['grouping']['groups_with_multiple_items']}"
-                                )
-                                st.write(
-                                    f"• Plus grand groupe: {
-                                        summary['grouping']['largest_group_size']} éléments"
-                                )
+                                st.write(f"• Groupes multiples: {summary['grouping']['groups_with_multiple_items']}")
+                                st.write(f"• Plus grand groupe: {summary['grouping']['largest_group_size']} éléments")
 
                                 st.write("**📈 Matrice Co-occurrence:**")
-                                st.write(
-                                    f"• Dimensions: {
-                                        summary['cooccurrence_matrix']['dimensions']}"
-                                )
+                                st.write(f"• Dimensions: {summary['cooccurrence_matrix']['dimensions']}")
                                 st.write(f"• Co-occurrences: {summary['cooccurrence_matrix']['total_cooccurrences']:,}")
                                 st.write(f"• Paires non-nulles: {summary['cooccurrence_matrix']['non_zero_pairs']:,}")
-                                st.write(
-                                    f"• Sparsité: {
-                                        summary['cooccurrence_matrix']['sparsity']}%"
-                                )
+                                st.write(f"• Sparsité: {summary['cooccurrence_matrix']['sparsity']}%")
                 else:
                     st.warning("Aucun regroupement détecté. Tous les ingrédients sont considérés comme uniques.")
 
