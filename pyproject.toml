@@ -33,11 +33,13 @@ dev = [
 ]
 
 [tool.black]
-line-length = 125
+line-length = 130
 target-version = ['py311']
+# Évite de casser les f-strings sur plusieurs lignes
+skip-string-normalization = false
 
 [tool.autopep8]
-max_line_length = 125
+max_line_length = 130
 ignore = ["E203", "W503"]
 aggressive = 2
 

@@ -946,10 +946,7 @@ class IngredientsClusteringPage:
                             members_display += f" (+ {len(group) - 5} autres)"
                         st.write(f"**Groupe {i + 1}:** {members_display}")
 
-                    st.info(
-                        f"Total: {
-                            len(multi_groups)} groupes d'ingrédients similaires détectés"
-                    )
+                    st.info(f"Total: {len(multi_groups)} groupes d'ingrédients similaires détectés")
 
                     # Debug pour des ingrédients problématiques
                     debug_info = analyzer.debug_ingredient_mapping(["pepper", "egg", "salt", "butter", "onion"])

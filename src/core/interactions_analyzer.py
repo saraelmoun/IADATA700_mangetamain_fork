@@ -222,10 +222,7 @@ class InteractionsAnalyzer(CacheableMixin):
             df_processed, outliers_count = self._remove_outliers(df_processed, available_features)
             stats["outliers_removed"] = outliers_count
             if outliers_count > 0:
-                self.logger.info(
-                    f"Removed {outliers_count} outliers using {
-                        self.preprocessing.outlier_method} method"
-                )
+                self.logger.info(f"Removed {outliers_count} outliers using {self.preprocessing.outlier_method} method")
 
         stats["final_rows"] = len(df_processed)
         return df_processed, stats

@@ -840,10 +840,7 @@ class PopularityAnalysisPage:
         try:
             interactions_df[date_col] = pd.to_datetime(interactions_df[date_col])
         except Exception as e:
-            st.error(
-                f"Erreur lors de la conversion de la colonne '{date_col}' en date : {
-                    str(e)}"
-            )
+            st.error(f"Erreur lors de la conversion de la colonne '{date_col}' en date : {str(e)}")
             return
 
         # Add interval selection for temporal sampling

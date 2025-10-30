@@ -157,11 +157,7 @@ class App:
         self.logger.debug("Initializing DataExplorer")
         explorer = DataExplorer(loader=loader)
         self.logger.info(
-            f"Data overview: {
-                explorer.df.shape} rows/cols, {
-                explorer.df.memory_usage(
-                    deep=True).sum()
-                / 1024**2:.1f} MB"
+            f"Data overview: {explorer.df.shape} rows/cols, " f"{explorer.df.memory_usage(deep=True).sum() / 1024**2:.1f} MB"
         )
 
         st.subheader("📋 Aperçu des données (10 premières lignes)")
