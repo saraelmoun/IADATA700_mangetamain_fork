@@ -1,58 +1,247 @@
 @startuml class-diagram
-hide empty methods
+' Configuration pour un affichage horizontal et aéré
+left to right direction
+skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
 skinparam shadowing false
-skinparam defaultFontName JetBrains Mono
-skinparam dpi 150
+skinparam defaultFontName Arial, Helvetica, sans-serif
+skinparam dpi 200
+skinparam linetype polyline
+skinparam nodesep 100
+skinparam ranksep 120
+skinparam padding 10
 
-class AppConfig {
-  +Path default_recipes_path
-  +Path default_interactions_path
-  +str page_title
-  +str layout
+' Couleurs pour une meilleure lisibilité
+skinparam class {
+    BackgroundColor<<config>> LightYellow
+    BackgroundColor<<analyzer>> LightBlue
+    BackgroundColor<<page>> LightGreen
+    BackgroundColor<<cache>> LightCoral
+    BorderColor Black
+    ArrowColor DarkGray
 }
 
-class App {
-  -AppConfig config
-  +run()
-  ..internes..
-  -_sidebar()
-  -_load_dataframe(path)
+title Architecture IADATA700 MangetaMain - Vue Horizontale Simplifiée
+
+package "🎯 APPLICATION" #TECHNOLOGY {
+    class App {
+        -config: AppConfig
+        --
+        +run(): void
+    }
+    
+    class "AppConfig" as AppConfig <<config>> {
+        +default_recipes_path: Path
+        +default_interactions_path: Path
+        +page_title: str
+        +layout: str
+    }
+    
+    App -right-> AppConfig : configure
 }
 
-class DataLoader {
-  -Path path
-  -DataFrame _df
-  +load_data(force=False): DataFrame
+package "📦 CORE (Logique Métier)" #BUSINESS {
+    
+    together {
+        class DataLoader {
+            -data_path: Path
+            --
+            +load_data(): DataFrame
+            +get_data(): DataFrame
+        }
+        
+        class DataExplorer {
+            -loader: DataLoader
+            --
+            +df: DataFrame
+        }
+    }
+    
+    class "CacheManager" as CacheManager <<cache>> {
+        -base_cache_dir: Path
+        -logger: Logger
+        --
+        +get(): Optional[T]
+        +set(): bool
+        +clear(): int
+        +get_info(): dict
+    }
+    
+    abstract class "CacheableMixin" as CacheableMixin <<cache>> {
+        {abstract}
+        --
+        +cached_operation(): T
+        +enable_cache(): void
+    }
+    
+    class "PreprocessingConfig" as PreprocessingConfig <<config>> {
+        +enable_preprocessing: bool
+        +outlier_method: str
+        +outlier_threshold: float
+        --
+        +get_hash(): str
+    }
+    
+    class "InteractionsAnalyzer" as InteractionsAnalyzer <<analyzer>> {
+        +interactions: DataFrame
+        +recipes: DataFrame
+        +preprocessing: PreprocessingConfig
+        --
+        +aggregate(): DataFrame
+        +popularity_vs_rating(): DataFrame
+        +get_cache_info(): dict
+    }
+    
+    class "IngredientsAnalyzer" as IngredientsAnalyzer <<analyzer>> {
+        -data: DataFrame
+        --
+        +process_ingredients(): tuple
+        +perform_clustering(): ndarray
+        +generate_tsne_visualization(): dict
+        +get_cache_info(): dict
+    }
+    
+    ' Relations internes au package core
+    DataExplorer -right-> DataLoader : utilise
+    CacheableMixin -up-> CacheManager : utilise
+    InteractionsAnalyzer -up-|> CacheableMixin : hérite
+    IngredientsAnalyzer -up-|> CacheableMixin : hérite
+    InteractionsAnalyzer .right.> PreprocessingConfig : utilise
 }
 
-class DataExplorer {
-  -DataFrame _df
-  -DataLoader loader
-  +df: DataFrame
-  +reload(force=True): DataFrame
+package "🖥️ COMPONENTS (Interface UI)" #APPLICATION {
+    
+    together {
+        class "PopularityAnalysisPage\n(Page 1)" as PopularityAnalysisPage <<page>> {
+            -interactions_analyzer: InteractionsAnalyzer
+            -config, logger
+            --
+            +run(), render_sidebar()
+            +_render_step_1_preprocessing()
+            +_render_step_2_aggregation()
+            +_render_step_3_scatter()
+            +_render_step_4_characteristics()
+        }
+        
+        class PopularityAnalysisConfig <<config>> {
+            +interactions_path: Path
+            +recipes_path: Path
+        }
+    }
+    
+    together {
+        class "IngredientsClusteringPage\n(Page 2)" as IngredientsClusteringPage <<page>> {
+            -ingredients_analyzer: IngredientsAnalyzer
+            -config, logger
+            --
+            +run(), render_sidebar()
+            +_render_step_1_preprocessing()
+            +_render_step_2_cooccurrence()
+            +_render_step_3_clustering()
+            +_render_step_4_visualization()
+            --
+            +render_cooccurrence_analysis()
+            +render_clusters()
+            +render_tsne_visualization()
+            +render_analysis_summary()
+        }
+        
+        class IngredientsClusteringConfig <<config>> {
+            +recipes_path: Path
+            +n_ingredients: int = 50
+            +n_clusters: int = 5
+            +tsne_perplexity: int = 30
+        }
+    }
+    
+    ' Relations internes composants
+    PopularityAnalysisPage -right-> PopularityAnalysisConfig
+    IngredientsClusteringPage -right-> IngredientsClusteringConfig
 }
 
-class RecipesExplorer {
-  +ingredient_diversity(): int
-  +avg_ingredients_per_recipe(): float
-}
+' ═══════════════════════════════════════════════════════════════
+' RELATIONS PRINCIPALES
+' ═══════════════════════════════════════════════════════════════
 
-class InteractionsExplorer {
-  +popularity_vs_rating(): DataFrame
-  +plot_popularity_vs_rating(min_interactions=1)
-}
+' Application vers Pages (utilisation)
+App --> PopularityAnalysisPage : <<Page 1>>
+App --> IngredientsClusteringPage : <<Page 2>>
+App --> DataExplorer : <<Home>>
 
-App --> AppConfig
-App --> DataLoader : utilise
-DataExplorer --> DataLoader : optionnel
-RecipesExplorer --|> DataExplorer
-InteractionsExplorer --|> DataExplorer
-App --> RecipesExplorer : instancie
-App --> InteractionsExplorer : instancie
-'
-' NOTE: Si vous voyez une erreur liée à "dot" (Graphviz), installez graphviz ou utilisez docker:
-'   sudo apt-get install graphviz
-'   docker run --rm -v "$PWD":/workspace plantuml/plantuml -tpng docs/class-diagram.puml
-' Le nom du diagramme (class-diagram) permet de générer class-diagram.png automatiquement.
+' Pages vers Analyseurs (composition forte)
+PopularityAnalysisPage --> InteractionsAnalyzer : analyse
+IngredientsClusteringPage --> IngredientsAnalyzer : analyse
+
+' Analyseurs vers DataLoader (dépendance)
+InteractionsAnalyzer ..> DataLoader : charge
+IngredientsAnalyzer ..> DataLoader : charge
+
+' Mixins et héritages
+InteractionsAnalyzer -up-|> CacheableMixin : hérite
+IngredientsAnalyzer -up-|> CacheableMixin : hérite
+
+' Cache management
+CacheableMixin ..> CacheManager : utilise
+PopularityAnalysisPage ..> CacheManager : contrôle
+IngredientsClusteringPage ..> CacheManager : contrôle
+
+' ═══════════════════════════════════════════════════════════════
+' NOTES EXPLICATIVES
+' ═══════════════════════════════════════════════════════════════
+
+note top of App
+  **Application Streamlit Multi-Pages**
+  • 🏠 Home (exploration générale)
+  • 🔥 Page 1: Analyse popularité
+  • 🍳 Page 2: Clustering ingrédients
+  --
+  • Logger structuré
+  • Tests: 24 tests (Page 2)
+end note
+
+note bottom of CacheManager
+  **Cache Centralisé**
+  • Structure: cache/analyzer/operation/hash.pkl
+  • Métadonnées: timestamp, params
+  • Support multi-analyseurs
+  • Nettoyage granulaire
+end note
+
+note bottom of PopularityAnalysisPage
+  **Page 1 - Structure 4 Étapes**
+  ① Preprocessing outliers
+  ② Agrégation par recette
+  ③ Scatter popularité/notes
+  ④ Features vs popularité
+  --
+  • User Story dans UI
+  • Contrôles cache sidebar
+end note
+
+note bottom of IngredientsClusteringPage
+  **Page 2 - Structure 4 Étapes**
+  ① Prétraitement NLP
+  ② Matrice co-occurrence
+  ③ Clustering K-means
+  ④ Visualisation t-SNE 2D
+  --
+  • User Story dans UI
+  • 15 méthodes publiques
+  • Typage strict + Doc complète
+  • Détection changements params
+end note
+
+legend bottom right
+  **Légende**
+  <<config>> = Configuration (dataclass)
+  <<analyzer>> = Analyseur métier
+  <<page>> = Page Streamlit
+  <<cache>> = Système de cache
+  --
+  Flèches:
+  → Relation forte (composition)
+  ⇢ Relation faible (dépendance)
+  ──|> Héritage
+endlegend
+
 @enduml

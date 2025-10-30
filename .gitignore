@@ -19,7 +19,29 @@ Makefile
 # Notebooks checkpoints
 *.ipynb_checkpoints
 
-# OS
+# OS 
 .DS_Store
+
+
+# Dossier des caches
+cache/
+
+# Logs et debug
+debug/
+*.log
+
+# Scripts de test temporaires (gardés pour compatibilité si des fichiers restent)
+comprehensive_audit.py
+test_cache.py
+test_feature_engineering.py
+verify_*.py
+run_tests.py
+
+# Test artifacts
+.pytest_cache/
+*.coverage
+htmlcov/
+
+CACHE_ MIGRATION_PLAN.md
 
 

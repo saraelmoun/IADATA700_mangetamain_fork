@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core.cache_manager &mdash; Documentation MangetamainTESTWR 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=7a28dfa3"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            MangetamainTESTWR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">IADATA700_mangetamain</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">src</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../ClassDiagram.html">Diagramme de classes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">MangetamainTESTWR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">src.core.cache_manager</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de src.core.cache_manager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Gestionnaire de cache centralisé pour tous les analyseurs.</span>
+<span class="sd">Permet une gestion uniforme du cache across l&#39;application.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CacheManager">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.CacheManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CacheManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Gestionnaire de cache centralisé avec support multi-analyseurs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_cache_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cache&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialise le gestionnaire de cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            base_cache_dir: Répertoire de base pour le cache</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_cache_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Génère une clé de cache unique basée sur l&#39;analyseur, l&#39;opération et les paramètres.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer_name: Nom de l&#39;analyseur (ex: &quot;interactions&quot;, &quot;ingredients&quot;)</span>
+<span class="sd">            operation: Nom de l&#39;opération (ex: &quot;aggregate&quot;, &quot;cluster&quot;)</span>
+<span class="sd">            params: Paramètres de l&#39;opération</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Clé de cache unique</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Créer un dictionnaire ordonné pour une sérialisation cohérente</span>
+        <span class="n">cache_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;analyzer&quot;</span><span class="p">:</span> <span class="n">analyzer_name</span><span class="p">,</span>
+            <span class="s2">&quot;operation&quot;</span><span class="p">:</span> <span class="n">operation</span><span class="p">,</span>
+            <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Sérialiser et hasher</span>
+        <span class="n">serialized</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">cache_data</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">serialized</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_cache_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Génère le chemin du fichier de cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer_name: Nom de l&#39;analyseur</span>
+<span class="sd">            operation: Nom de l&#39;opération</span>
+<span class="sd">            cache_key: Clé de cache</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Chemin vers le fichier de cache</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Structure: cache/analyzer_name/operation/cache_key.pkl</span>
+        <span class="n">cache_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span> <span class="o">/</span> <span class="n">analyzer_name</span> <span class="o">/</span> <span class="n">operation</span>
+        <span class="n">cache_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cache_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cache_key</span><span class="si">}</span><span class="s2">.pkl&quot;</span>
+
+<div class="viewcode-block" id="CacheManager.get">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.CacheManager.get">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">T</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Récupère un objet du cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer_name: Nom de l&#39;analyseur</span>
+<span class="sd">            operation: Nom de l&#39;opération</span>
+<span class="sd">            params: Paramètres de l&#39;opération</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Objet mis en cache ou None si pas trouvé</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key</span><span class="p">(</span><span class="n">analyzer_name</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="n">cache_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cache_path</span><span class="p">(</span><span class="n">analyzer_name</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache miss: </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">cached_data</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="c1"># Vérifier la validité (optionnel: ajouter TTL plus tard)</span>
+            <span class="k">if</span> <span class="s2">&quot;timestamp&quot;</span> <span class="ow">in</span> <span class="n">cached_data</span> <span class="ow">and</span> <span class="s2">&quot;data&quot;</span> <span class="ow">in</span> <span class="n">cached_data</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache hit: </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">cached_data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid cache format for </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error loading cache for </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="CacheManager.set">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.CacheManager.set">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">data</span><span class="p">:</span> <span class="n">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sauvegarde un objet dans le cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer_name: Nom de l&#39;analyseur</span>
+<span class="sd">            operation: Nom de l&#39;opération</span>
+<span class="sd">            params: Paramètres de l&#39;opération</span>
+<span class="sd">            data: Données à mettre en cache</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True si la sauvegarde a réussi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cache_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_key</span><span class="p">(</span><span class="n">analyzer_name</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="n">cache_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_cache_path</span><span class="p">(</span><span class="n">analyzer_name</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">cache_key</span><span class="p">)</span>
+
+            <span class="c1"># Préparer les données avec métadonnées</span>
+            <span class="n">cache_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">&quot;analyzer&quot;</span><span class="p">:</span> <span class="n">analyzer_name</span><span class="p">,</span>
+                <span class="s2">&quot;operation&quot;</span><span class="p">:</span> <span class="n">operation</span><span class="p">,</span>
+                <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="n">params</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">cache_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">cache_data</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache saved: </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error saving cache for </span><span class="si">{</span><span class="n">analyzer_name</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">operation</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="CacheManager.clear">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.CacheManager.clear">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analyzer_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">operation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Nettoie le cache.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            analyzer_name: Si spécifié, nettoie seulement cet analyseur</span>
+<span class="sd">            operation: Si spécifié (avec analyzer_name), nettoie seulement cette opération</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Nombre de fichiers supprimés</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">deleted_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">analyzer_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Nettoyer tout le cache</span>
+                <span class="n">target_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span>
+            <span class="k">elif</span> <span class="n">operation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Nettoyer un analyseur</span>
+                <span class="n">target_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span> <span class="o">/</span> <span class="n">analyzer_name</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Nettoyer une opération spécifique</span>
+                <span class="n">target_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span> <span class="o">/</span> <span class="n">analyzer_name</span> <span class="o">/</span> <span class="n">operation</span>
+
+            <span class="k">if</span> <span class="n">target_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">cache_file</span> <span class="ow">in</span> <span class="n">target_path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">):</span>
+                    <span class="n">cache_file</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                    <span class="n">deleted_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1"># Supprimer les dossiers vides</span>
+                <span class="k">if</span> <span class="n">analyzer_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Ne pas supprimer le dossier racine du cache</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">operation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">target_path</span><span class="o">.</span><span class="n">rmdir</span><span class="p">()</span>  <span class="c1"># Supprimer le dossier d&#39;opération s&#39;il est vide</span>
+                        <span class="c1"># Essayer de supprimer le dossier d&#39;analyseur s&#39;il est vide</span>
+                        <span class="n">analyzer_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span> <span class="o">/</span> <span class="n">analyzer_name</span>
+                        <span class="k">if</span> <span class="n">analyzer_path</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">analyzer_path</span><span class="o">.</span><span class="n">iterdir</span><span class="p">()):</span>
+                            <span class="n">analyzer_path</span><span class="o">.</span><span class="n">rmdir</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                        <span class="k">pass</span>  <span class="c1"># Dossier pas vide, c&#39;est normal</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cache cleared: </span><span class="si">{</span><span class="n">deleted_count</span><span class="si">}</span><span class="s2"> files deleted&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">deleted_count</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error clearing cache: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="CacheManager.get_info">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.CacheManager.get_info">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retourne des informations sur le cache.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dictionnaire avec les statistiques du cache</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;base_directory&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span><span class="p">),</span>
+            <span class="s2">&quot;analyzers&quot;</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">&quot;total_files&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;total_size_mb&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">analyzer_dir</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_cache_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">analyzer_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                    <span class="n">analyzer_name</span> <span class="o">=</span> <span class="n">analyzer_dir</span><span class="o">.</span><span class="n">name</span>
+                    <span class="n">analyzer_info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;operations&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;size_mb&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span>
+
+                    <span class="k">for</span> <span class="n">operation_dir</span> <span class="ow">in</span> <span class="n">analyzer_dir</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">operation_dir</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                            <span class="n">operation_name</span> <span class="o">=</span> <span class="n">operation_dir</span><span class="o">.</span><span class="n">name</span>
+                            <span class="n">operation_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">operation_dir</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*.pkl&quot;</span><span class="p">))</span>
+                            <span class="n">operation_size</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">operation_files</span><span class="p">)</span>
+
+                            <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;operations&quot;</span><span class="p">][</span><span class="n">operation_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                                <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">operation_files</span><span class="p">),</span>
+                                <span class="s2">&quot;size_mb&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">operation_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span>
+                            <span class="p">}</span>
+
+                            <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">operation_files</span><span class="p">)</span>
+                            <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;size_mb&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">operation_size</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+
+                    <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;size_mb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;size_mb&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+                    <span class="n">info</span><span class="p">[</span><span class="s2">&quot;analyzers&quot;</span><span class="p">][</span><span class="n">analyzer_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">analyzer_info</span>
+                    <span class="n">info</span><span class="p">[</span><span class="s2">&quot;total_files&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;files&quot;</span><span class="p">]</span>
+                    <span class="n">info</span><span class="p">[</span><span class="s2">&quot;total_size_mb&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">analyzer_info</span><span class="p">[</span><span class="s2">&quot;size_mb&quot;</span><span class="p">]</span>
+
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;total_size_mb&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;total_size_mb&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error getting cache info: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">info</span></div>
+</div>
+
+
+
+<span class="c1"># Instance globale pour faciliter l&#39;utilisation</span>
+<span class="n">_cache_manager</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="get_cache_manager">
+<a class="viewcode-back" href="../../../api/src.core.html#src.core.cache_manager.get_cache_manager">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cache_manager</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">CacheManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retourne l&#39;instance globale du gestionnaire de cache.&quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_cache_manager</span>
+    <span class="k">if</span> <span class="n">_cache_manager</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_cache_manager</span> <span class="o">=</span> <span class="n">CacheManager</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_cache_manager</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, William.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
