@@ -31,9 +31,7 @@ class DataExplorer:
         if df is not None and hasattr(df, "shape"):
             self.logger.debug(f"DataExplorer initialized with DataFrame: {df.shape}")
         elif loader is not None and hasattr(loader, "data_path"):
-            self.logger.debug(
-                f"DataExplorer initialized with DataLoader: {loader.data_path}"
-            )
+            self.logger.debug(f"DataExplorer initialized with DataLoader: {loader.data_path}")
         else:
             self.logger.debug("DataExplorer initialized with basic objects")
 

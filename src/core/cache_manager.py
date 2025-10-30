@@ -28,9 +28,7 @@ class CacheManager:
         self.base_cache_dir.mkdir(exist_ok=True)
         self.logger = get_logger()
 
-    def _generate_key(
-        self, analyzer_name: str, operation: str, params: Dict[str, Any]
-    ) -> str:
+    def _generate_key(self, analyzer_name: str, operation: str, params: Dict[str, Any]) -> str:
         """
         Génère une clé de cache unique basée sur l'analyseur, l'opération et les paramètres.
 
@@ -53,9 +51,7 @@ class CacheManager:
         serialized = str(sorted(cache_data.items()))
         return hashlib.md5(serialized.encode()).hexdigest()
 
-    def _get_cache_path(
-        self, analyzer_name: str, operation: str, cache_key: str
-    ) -> Path:
+    def _get_cache_path(self, analyzer_name: str, operation: str, cache_key: str) -> Path:
         """
         Génère le chemin du fichier de cache.
 
@@ -72,9 +68,7 @@ class CacheManager:
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir / f"{cache_key}.pkl"
 
-    def get(
-        self, analyzer_name: str, operation: str, params: Dict[str, Any]
-    ) -> Optional[T]:
+    def get(self, analyzer_name: str, operation: str, params: Dict[str, Any]) -> Optional[T]:
         """
         Récupère un objet du cache.
 
@@ -102,20 +96,14 @@ class CacheManager:
                 self.logger.debug(f"Cache hit: {analyzer_name}.{operation}")
                 return cached_data["data"]
             else:
-                self.logger.warning(
-                    f"Invalid cache format for {analyzer_name}.{operation}"
-                )
+                self.logger.warning(f"Invalid cache format for {analyzer_name}.{operation}")
                 return None
 
         except Exception as e:
-            self.logger.warning(
-                f"Error loading cache for {analyzer_name}.{operation}: {e}"
-            )
+            self.logger.warning(f"Error loading cache for {analyzer_name}.{operation}: {e}")
             return None
 
-    def set(
-        self, analyzer_name: str, operation: str, params: Dict[str, Any], data: T
-    ) -> bool:
+    def set(self, analyzer_name: str, operation: str, params: Dict[str, Any], data: T) -> bool:
         """
         Sauvegarde un objet dans le cache.
 
@@ -148,14 +136,10 @@ class CacheManager:
             return True
 
         except Exception as e:
-            self.logger.warning(
-                f"Error saving cache for {analyzer_name}.{operation}: {e}"
-            )
+            self.logger.warning(f"Error saving cache for {analyzer_name}.{operation}: {e}")
             return False
 
-    def clear(
-        self, analyzer_name: Optional[str] = None, operation: Optional[str] = None
-    ) -> int:
+    def clear(self, analyzer_name: Optional[str] = None, operation: Optional[str] = None) -> int:
         """
         Nettoie le cache.
 
@@ -230,9 +214,7 @@ class CacheManager:
                         if operation_dir.is_dir():
                             operation_name = operation_dir.name
                             operation_files = list(operation_dir.glob("*.pkl"))
-                            operation_size = sum(
-                                f.stat().st_size for f in operation_files
-                            )
+                            operation_size = sum(f.stat().st_size for f in operation_files)
 
                             analyzer_info["operations"][operation_name] = {
                                 "files": len(operation_files),

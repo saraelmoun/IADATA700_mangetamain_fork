@@ -77,9 +77,7 @@ class App:
             st.sidebar.caption("Analyse des interactions utilisateur-recette.")
 
         # Options de rechargement
-        refresh = st.sidebar.checkbox(
-            "Forcer le rechargement", value=False, key="force_refresh"
-        )
+        refresh = st.sidebar.checkbox("Forcer le rechargement", value=False, key="force_refresh")
 
         return {
             "page": page,
@@ -110,9 +108,7 @@ class App:
 
         # Logique des pages
         if page == "Analyse de clustering des ingrédients":
-            clustering_page = IngredientsClusteringPage(
-                str(self.config.default_recipes_path)
-            )
+            clustering_page = IngredientsClusteringPage(str(self.config.default_recipes_path))
             clustering_page.run()
             return
         if page == "Analyse popularité des recettes":
@@ -135,19 +131,13 @@ class App:
         loader = DataLoader(data_path)
 
         try:
-            self.logger.debug(
-                f"Attempting to load {dataset_type} data from {data_path}"
-            )
+            self.logger.debug(f"Attempting to load {dataset_type} data from {data_path}")
             loader.load_data(force=refresh)
             self.logger.info(f"Successfully loaded {dataset_type} data")
         except FileNotFoundError:
             self.logger.warning(f"File not found: {data_path}")
-            st.warning(
-                f"Fichier introuvable: {data_path}. Vous pouvez en téléverser un ci-dessous."
-            )
-            uploaded = st.file_uploader(
-                "Déposer un fichier CSV", type=["csv"], key="uploader"
-            )
+            st.warning(f"Fichier introuvable: {data_path}. Vous pouvez en téléverser un ci-dessous.")
+            uploaded = st.file_uploader("Déposer un fichier CSV", type=["csv"], key="uploader")
             if uploaded is not None:
                 import pandas as pd
 
@@ -173,8 +163,8 @@ class App:
             f"Data overview: {
                 explorer.df.shape} rows/cols, {
                 explorer.df.memory_usage(
-                    deep=True).sum() /
-                1024**2:.1f} MB"
+                    deep=True).sum()
+                / 1024**2:.1f} MB"
         )
 
         st.subheader("📋 Aperçu des données (10 premières lignes)")

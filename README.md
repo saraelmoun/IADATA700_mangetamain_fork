@@ -7,7 +7,7 @@
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat&logo=scikit-learn&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
 ![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-24%20passed-success?style=flat)
+![Tests](https://img.shields.io/badge/tests-140%20passed-success?style=flat)
 ![PlantUML](https://img.shields.io/badge/PlantUML-Documentation-blue?style=flat)
 
 Dans le cadre d'un enseignement à Telecom Paris, ce projet consiste en une application web interactive d'analyse de données pour une entreprise fictive : **Mangetamain** ; leader dans la recommandation B2C de recettes de cuisine à l'ancienne bio.
@@ -60,6 +60,23 @@ Chemins par défaut :
   - Scatter Caractéristiques vs Popularité (taille = note)
   - Aperçu DataFrame fusionné (diagnostic)
   - Filtre sur interactions minimales
+  - Prétraitement IQR configurable (exclut les notes pour préserver la distribution réelle)
+  - Segmentation par percentiles (Low ≤ P25, Medium ≤ P75, High ≤ P95, Viral > P95)
+
+### 🔧 Prétraitement & Segmentation
+
+**IQR (InterQuartile Range) Filtering**
+- Variables filtrées: `minutes`, `n_steps`, `n_ingredients`
+- Formule: Q1 − k·IQR ≤ valeur ≤ Q3 + k·IQR (k réglable 1.0 → 20.0)
+- `rating` n'est pas filtré pour conserver les avis extrêmes.
+
+**Segmentation Popularité**
+- Low: interaction_count ≤ P25
+- Medium: P25 < interaction_count ≤ P75
+- High: P75 < interaction_count ≤ P95
+- Viral: interaction_count > P95
+
+Cette segmentation reflète la distribution longue traîne et met en évidence l'extrême rareté des recettes virales.
 
 ## 📐 Architecture UML
 

@@ -94,9 +94,7 @@ class PopularityAnalysisPage:
             # Cache management buttons
             col1, col2 = st.sidebar.columns(2)
             with col1:
-                if st.button(
-                    "🗑️ Clear Cache", help="Supprimer tous les fichiers de cache"
-                ):
+                if st.button("🗑️ Clear Cache", help="Supprimer tous les fichiers de cache"):
                     if analyzer.clear_cache():
                         st.sidebar.success("Cache effacé!")
                         st.rerun()
@@ -109,15 +107,11 @@ class PopularityAnalysisPage:
 
             # Show total cache files
             if cache_info["cache_files_count"] > 0:
-                st.sidebar.caption(
-                    f"📁 {cache_info['cache_files_count']} fichier(s) de cache"
-                )
+                st.sidebar.caption(f"📁 {cache_info['cache_files_count']} fichier(s) de cache")
         else:
             st.sidebar.warning("Cache désactivé")
 
-    def _render_popularity_segmentation(
-        self, analyzer: InteractionsAnalyzer, pop_rating: pd.DataFrame
-    ):
+    def _render_popularity_segmentation(self, analyzer: InteractionsAnalyzer, pop_rating: pd.DataFrame):
         """Render popularity segmentation analysis."""
         st.subheader("📋 Segmentation par popularité")
 
@@ -144,32 +138,26 @@ class PopularityAnalysisPage:
                     if segment == "Low":
                         interval = f"1 à {int(thresholds['low_max'])} fois"
                     elif segment == "Medium":
-                        interval = f"{int(thresholds['low_max']) +
-                                      1} à {int(thresholds['medium_max'])} fois"
+                        interval = f"{int(thresholds['low_max'])
+                                      + 1} à {int(thresholds['medium_max'])} fois"
                     elif segment == "High":
-                        interval = f"{int(thresholds['medium_max']) +
-                                      1} à {int(thresholds['high_max'])} fois"
+                        interval = f"{int(thresholds['medium_max'])
+                                      + 1} à {int(thresholds['high_max'])} fois"
                     else:  # Viral
                         interval = f"Plus de {int(thresholds['high_max'])} fois"
 
-                    st.write(
-                        f"- **{segment}** ({interval}): {count:,} recettes ({percentage:.1f}%)"
-                    )
+                    st.write(f"- **{segment}** ({interval}): {count:,} recettes ({percentage:.1f}%)")
 
         with col2:
             # Average rating by segment
-            segment_ratings = segmented_data.groupby("popularity_segment")[
-                "avg_rating"
-            ].agg(["mean", "std", "count"])
+            segment_ratings = segmented_data.groupby("popularity_segment")["avg_rating"].agg(["mean", "std", "count"])
             st.write("**Note moyenne par segment:**")
             for segment in ["Low", "Medium", "High", "Viral"]:
                 if segment in segment_ratings.index:
                     mean_rating = segment_ratings.loc[segment, "mean"]
                     std_rating = segment_ratings.loc[segment, "std"]
                     count = segment_ratings.loc[segment, "count"]
-                    st.write(
-                        f"- {segment}: {mean_rating:.2f} ± {std_rating:.2f} ({count:,} recettes)"
-                    )
+                    st.write(f"- {segment}: {mean_rating:.2f} ± {std_rating:.2f} ({count:,} recettes)")
 
         # Visualization of segments
         self._plot_popularity_segments(segmented_data, analyzer)
@@ -180,9 +168,7 @@ class PopularityAnalysisPage:
 
         # Plot 1: Boxplot of ratings by segment
         segment_order = ["Low", "Medium", "High", "Viral"]
-        segments_present = [
-            s for s in segment_order if s in segmented_data["popularity_segment"].values
-        ]
+        segments_present = [s for s in segment_order if s in segmented_data["popularity_segment"].values]
 
         if segments_present:
             sns.boxplot(
@@ -200,89 +186,133 @@ class PopularityAnalysisPage:
         # Plot 2: Distribution des recettes par nombre d'interactions
         # Créons un histogramme pour visualiser la vraie distribution
         interactions_counts = segmented_data["interaction_count"].value_counts().sort_index()
-        
+
         # Limitons à 30 interactions max pour la lisibilité
         max_interactions = min(30, interactions_counts.index.max())
         interactions_limited = interactions_counts[interactions_counts.index <= max_interactions]
-        
+
         # Créons le graphique en barres
-        bars = ax2.bar(
-            interactions_limited.index, 
+        ax2.bar(
+            interactions_limited.index,
             interactions_limited.values,
             alpha=0.7,
-            color='steelblue',
-            edgecolor='black',
-            linewidth=0.5
+            color="steelblue",
+            edgecolor="black",
+            linewidth=0.5,
         )
-        
+
         # Ajoutons les lignes de seuils de segmentation
         thresholds = analyzer._popularity_segments_info["thresholds"]
-        ax2.axvline(thresholds['low_max'], color='blue', linestyle='--', alpha=0.8, label=f'P25 = {thresholds["low_max"]:.0f}')
-        ax2.axvline(thresholds['medium_max'], color='green', linestyle='--', alpha=0.8, label=f'P75 = {thresholds["medium_max"]:.0f}')
-        ax2.axvline(thresholds['high_max'], color='red', linestyle='--', alpha=0.8, label=f'P95 = {thresholds["high_max"]:.0f}')
-        
+        ax2.axvline(
+            thresholds["low_max"],
+            color="blue",
+            linestyle="--",
+            alpha=0.8,
+            label=f'P25 = {thresholds["low_max"]:.0f}',
+        )
+        ax2.axvline(
+            thresholds["medium_max"],
+            color="green",
+            linestyle="--",
+            alpha=0.8,
+            label=f'P75 = {thresholds["medium_max"]:.0f}',
+        )
+        ax2.axvline(
+            thresholds["high_max"],
+            color="red",
+            linestyle="--",
+            alpha=0.8,
+            label=f'P95 = {thresholds["high_max"]:.0f}',
+        )
+
         ax2.set_xlabel("Nombre d'interactions")
         ax2.set_ylabel("Nombre de recettes")
         ax2.set_title("Distribution: Combien de recettes pour chaque niveau d'interactions")
         ax2.legend()
         ax2.grid(True, alpha=0.3)
-        
+
         # Calculons les pourcentages réels dynamiquement
-        segment_counts = segmented_data['popularity_segment'].value_counts()
+        segment_counts = segmented_data["popularity_segment"].value_counts()
         total_recipes = len(segmented_data)
         segment_percentages = {}
-        for segment in ['Low', 'Medium', 'High', 'Viral']:
+        for segment in ["Low", "Medium", "High", "Viral"]:
             if segment in segment_counts.index:
                 segment_percentages[segment] = (segment_counts[segment] / total_recipes) * 100
             else:
                 segment_percentages[segment] = 0.0
-        
+
         # Ajoutons des annotations pour les zones avec pourcentages dynamiques
-        ax2.text(0.5, ax2.get_ylim()[1]*0.8, f'Low\n{segment_percentages["Low"]:.1f}%', ha='center', va='center', 
-                bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7))
-        ax2.text(2.5, ax2.get_ylim()[1]*0.6, f'Medium\n{segment_percentages["Medium"]:.1f}%', ha='center', va='center',
-                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
-        ax2.text(8, ax2.get_ylim()[1]*0.4, f'High\n{segment_percentages["High"]:.1f}%', ha='center', va='center',
-                bbox=dict(boxstyle='round', facecolor='orange', alpha=0.7))
+        ax2.text(
+            0.5,
+            ax2.get_ylim()[1] * 0.8,
+            f'Low\n{segment_percentages["Low"]:.1f}%',
+            ha="center",
+            va="center",
+            bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.7),
+        )
+        ax2.text(
+            2.5,
+            ax2.get_ylim()[1] * 0.6,
+            f'Medium\n{segment_percentages["Medium"]:.1f}%',
+            ha="center",
+            va="center",
+            bbox=dict(boxstyle="round", facecolor="lightgreen", alpha=0.7),
+        )
+        ax2.text(
+            8,
+            ax2.get_ylim()[1] * 0.4,
+            f'High\n{segment_percentages["High"]:.1f}%',
+            ha="center",
+            va="center",
+            bbox=dict(boxstyle="round", facecolor="orange", alpha=0.7),
+        )
         if max_interactions > 14:
-            ax2.text(20, ax2.get_ylim()[1]*0.2, f'Viral\n{segment_percentages["Viral"]:.1f}%', ha='center', va='center',
-                    bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
+            ax2.text(
+                20,
+                ax2.get_ylim()[1] * 0.2,
+                f'Viral\n{segment_percentages["Viral"]:.1f}%',
+                ha="center",
+                va="center",
+                bbox=dict(boxstyle="round", facecolor="lightcoral", alpha=0.7),
+            )
 
         plt.tight_layout()
         st.pyplot(fig)
-        
+
         # Calculons les statistiques pour l'explication (éviter de recalculer)
-        segment_counts = segmented_data['popularity_segment'].value_counts()
+        segment_counts = segmented_data["popularity_segment"].value_counts()
         total_recipes = len(segmented_data)
-        low_pct = (segment_counts.get('Low', 0) / total_recipes) * 100
-        viral_pct = (segment_counts.get('Viral', 0) / total_recipes) * 100
-        low_count = segment_counts.get('Low', 0)
+        low_pct = (segment_counts.get("Low", 0) / total_recipes) * 100
+        viral_pct = (segment_counts.get("Viral", 0) / total_recipes) * 100
+        low_count = segment_counts.get("Low", 0)
         thresholds = analyzer._popularity_segments_info["thresholds"]
-        
+
         # Explication de la distribution observée avec pourcentages dynamiques
-        st.markdown(f"""
+        st.markdown(
+            f"""
         **🔍 Lecture de la distribution (graphique de droite) :**
-        
+
         Ce graphique révèle la **réalité de l'engagement** sur les plateformes de contenu :
-        - **Très haute colonne à 1 interaction** : {low_pct:.1f}% des recettes (~{low_count//1000}k) n'ont qu'une seule interaction
+        - **Très haute colonne à 1 interaction** : {low_pct:.1f}% des recettes (~{low_count // 1000}k) n'ont qu'une seule interaction
         - **Décroissance rapide** : Plus le nombre d'interactions augmente, moins il y a de recettes
         - **Rareté du viral** : Très peu de recettes dépassent {thresholds['high_max']:.0f} interactions (seuil viral P95)
-        
-        Cette distribution de type **"longue traîne"** est typique des plateformes de contenu et 
-        **renforce la valeur** de notre analyse : identifier les facteurs qui distinguent les {viral_pct:.1f}% 
+
+        Cette distribution de type **"longue traîne"** est typique des plateformes de contenu et
+        **renforce la valeur** de notre analyse : identifier les facteurs qui distinguent les {viral_pct:.1f}%
         de recettes virales des {low_pct:.1f}% à faible engagement devient d'autant plus précieux !
-        
+
         **📐 Pourquoi pas exactement 25%/50%/75%/95% ?**
-        
-        Les percentiles P25/P75/P95 sont corrects, mais avec des **données discrètes entières** 
+
+        Les percentiles P25/P75/P95 sont corrects, mais avec des **données discrètes entières**
         (1, 2, 3... interactions), les segments ne peuvent pas être exactement équilibrés :
-        
+
         - **P25 = {thresholds['low_max']:.0f}** : mais {low_pct:.1f}% des recettes ont exactement {thresholds['low_max']:.0f} interaction
         - **Impossible d'avoir exactement 25%** sans utiliser des seuils fractionnaires (1.5, 2.3...)
         - **C'est mathématiquement normal** : les percentiles indiquent les valeurs, pas forcément des répartitions égales
-        
+
         Cette asymétrie **renforce l'analyse** : elle reflète la vraie nature de l'engagement numérique !
-        """)
+        """
+        )
 
     def _render_step_1(
         self,
@@ -329,7 +359,7 @@ class PopularityAnalysisPage:
 
             **� Implication :** Cette distribution non-linéaire indique que la popularité s'organise
             en segments distincts plutôt qu'en progression continue. Cependant une grande majorité des recettes possède une bonne note.
-            Les utilisateurs sont peut-être bienveillant entre eux ou les recettes sont peut-être toutes délicieuses. 
+            Les utilisateurs sont peut-être bienveillant entre eux ou les recettes sont peut-être toutes délicieuses.
             Nous allons donc plutôt nous focaliser dans la suite sur l'étude du nombre de fois où une recette a été faite soit sa
             popularité pour qualifier son succés tout en gardant un oeil sur sa note.
             """
@@ -364,12 +394,12 @@ class PopularityAnalysisPage:
         # Obtenir les seuils de segmentation pour l'explication
         segmented_data = analyzer.create_popularity_segments(pop_rating)
         thresholds = analyzer._popularity_segments_info["thresholds"]
-        
+
         # Calculer les pourcentages réels de chaque segment
-        segment_counts = segmented_data['popularity_segment'].value_counts()
+        segment_counts = segmented_data["popularity_segment"].value_counts()
         total_recipes = len(segmented_data)
         segment_percentages = {}
-        for segment in ['Low', 'Medium', 'High', 'Viral']:
+        for segment in ["Low", "Medium", "High", "Viral"]:
             if segment in segment_counts.index:
                 segment_percentages[segment] = (segment_counts[segment] / total_recipes) * 100
             else:
@@ -433,8 +463,8 @@ class PopularityAnalysisPage:
                         """
                     #### ⏱️ Impact du temps de préparation
 
-                    **Hypothèse :** Les recettes rapides sont plus populaires dans une société pressée.  
-                    **Variable :** Temps de préparation en minutes vs nombre d'interactions.  
+                    **Hypothèse :** Les recettes rapides sont plus populaires dans une société pressée.
+                    **Variable :** Temps de préparation en minutes vs nombre d'interactions.
                     """
                     )
                 elif feat == "n_steps":
@@ -442,8 +472,8 @@ class PopularityAnalysisPage:
                         """
                     #### 🧩 Influence de la complexité procédurale
 
-                    **Hypothèse :** La complexité (nombre d'étapes) peut freiner l'adoption mais améliorer la satisfaction.  
-                    **Variable :** Nombre d'étapes vs nombre d'interactions.  
+                    **Hypothèse :** La complexité (nombre d'étapes) peut freiner l'adoption mais améliorer la satisfaction.
+                    **Variable :** Nombre d'étapes vs nombre d'interactions.
                     **Observation :** Équilibre entre accessibilité et sophistication.
                     """
                     )
@@ -452,8 +482,8 @@ class PopularityAnalysisPage:
                         """
                     #### 🥘 Effet de la diversité des ingrédients
 
-                    **Hypothèse :** Plus d'ingrédients = recette plus complexe et potentiellement dissuasive.  
-                    **Variable :** Nombre d'ingrédients vs nombre d'interactions.  
+                    **Hypothèse :** Plus d'ingrédients = recette plus complexe et potentiellement dissuasive.
+                    **Variable :** Nombre d'ingrédients vs nombre d'interactions.
                     **Analyse :** Impact de la richesse compositionnelle sur l'engagement.
                     """
                     )
@@ -470,27 +500,17 @@ class PopularityAnalysisPage:
                         merged = df_pop_feat
                     # Normalisation de nom si interaction_count a été suffixé
                     # accidentellement
-                    if (
-                        "interaction_count_x" in merged.columns
-                        and "interaction_count" not in merged.columns
-                    ):
+                    if "interaction_count_x" in merged.columns and "interaction_count" not in merged.columns:
                         merged.rename(
                             columns={"interaction_count_x": "interaction_count"},
                             inplace=True,
                         )
-                    if (
-                        "interaction_count_y" in merged.columns
-                        and "interaction_count" not in merged.columns
-                    ):
+                    if "interaction_count_y" in merged.columns and "interaction_count" not in merged.columns:
                         merged.rename(
                             columns={"interaction_count_y": "interaction_count"},
                             inplace=True,
                         )
-                    y_col = (
-                        "interaction_count"
-                        if "interaction_count" in merged.columns
-                        else merged.columns[1]
-                    )
+                    y_col = "interaction_count" if "interaction_count" in merged.columns else merged.columns[1]
                     if "avg_rating" in merged.columns:
                         fig = self._create_plot(
                             merged,
@@ -523,9 +543,9 @@ class PopularityAnalysisPage:
                         L'analyse de la distribution révèle une concentration
                         de recettes bien notées dans certaines zones de temps, indiquant les "sweet spots"
                         temporels. Les recettes ultra-rapides (moins de 15 minutes) peuvent manquer de sophistication,
-                        tandis que les préparations longues (plus de 2 heures) peuvent décourager les utilisateurs.  
-                        Les données suggèrent un équilibre entre temps suffisant pour créer de la valeur et durée raisonnable pour maintenir l'engagement.  
-                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        tandis que les préparations longues (plus de 2 heures) peuvent décourager les utilisateurs.
+                        Les données suggèrent un équilibre entre temps suffisant pour créer de la valeur et durée raisonnable pour maintenir l'engagement.
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites
                         sont les recettes prenant moins d'une heure.
                         """
                         )
@@ -536,11 +556,11 @@ class PopularityAnalysisPage:
 
                         L'analyse révèle l'un des paradoxes les plus significatifs de la cuisine.
                         Une concentration de recettes bien notées (gros points) autour de 5-8 étapes
-                        confirme l'existence d'un "niveau de défi optimal".  
+                        confirme l'existence d'un "niveau de défi optimal".
                         L'engagement utilisateur optimal se situe entre
                         accomplissement satisfaisant et complexité gérable. Cette zone représente l'équilibre
-                        entre "trop simple", "ennuyeux" et "trop complexe","décourageant".  
-                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        entre "trop simple", "ennuyeux" et "trop complexe","décourageant".
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites
                         sont les recettes ayant moins de 15 étapes environ.
                         """
                         )
@@ -551,13 +571,13 @@ class PopularityAnalysisPage:
 
                         L'analyse révèle la relation entre nombre d'ingrédients et satisfaction utilisateur.
                         Cette distribution montre comment la perception de "richesse" d'une recette influence
-                        son succès.  
+                        son succès.
                         Les données révèlent un optimum entre richesse perçue
                         et accessibilité pratique. Un nombre trop faible d'ingrédients peut sembler "basique",
                         tandis qu'un nombre excessif peut paraître "intimidant" ou "coûteux".
                         La concentration des meilleures notes révèle le nombre optimal
-                        qui équilibre richesse et accessibilité.  
-                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites 
+                        qui équilibre richesse et accessibilité.
+                        En regardant l'histogramme avec suffisament de bins (>30), on voit clairement que les recettes les plus refaites
                         sont les recettes demandant moins de 15 ingrédients environ.
                         """
                         )
@@ -565,9 +585,7 @@ class PopularityAnalysisPage:
                 except ValueError as e:
                     st.caption(f"{feat}: {e}")
         else:
-            st.info(
-                "Aucune des colonnes minutes / n_steps / n_ingredients n'est présente dans l'agrégat."
-            )
+            st.info("Aucune des colonnes minutes / n_steps / n_ingredients n'est présente dans l'agrégat.")
 
     def _render_viral_recipe_analysis(
         self,
@@ -623,23 +641,15 @@ class PopularityAnalysisPage:
         corrected_stats = []
         for _, row in top_viral.iterrows():
             recipe_id = row["recipe_id"]
-            recipe_interactions = interactions_df[
-                interactions_df["recipe_id"] == recipe_id
-            ].copy()
+            recipe_interactions = interactions_df[interactions_df["recipe_id"] == recipe_id].copy()
 
             if len(recipe_interactions) > 0:
                 # Apply same filtering as 3D graph
-                date_columns = [
-                    col for col in interactions_df.columns if "date" in col.lower()
-                ]
+                date_columns = [col for col in interactions_df.columns if "date" in col.lower()]
                 if date_columns:
                     date_col = date_columns[0]
-                    recipe_interactions[date_col] = pd.to_datetime(
-                        recipe_interactions[date_col], errors="coerce"
-                    )
-                    complete_data = recipe_interactions.dropna(
-                        subset=[date_col, "rating"]
-                    ).copy()
+                    recipe_interactions[date_col] = pd.to_datetime(recipe_interactions[date_col], errors="coerce")
+                    complete_data = recipe_interactions.dropna(subset=[date_col, "rating"]).copy()
 
                     if len(complete_data) > 0:
                         corrected_stats.append(
@@ -654,9 +664,7 @@ class PopularityAnalysisPage:
         # Create corrected display dataframe
         if corrected_stats:
             corrected_df = pd.DataFrame(corrected_stats)
-            corrected_df = corrected_df.sort_values(
-                "interaction_count_filtered", ascending=False
-            )
+            corrected_df = corrected_df.sort_values("interaction_count_filtered", ascending=False)
 
             display_cols = [
                 "name",
@@ -689,9 +697,9 @@ class PopularityAnalysisPage:
 
         # Format the display
         if "Nom de la recette" in top_viral_display.columns:
-            top_viral_display["Nom de la recette"] = top_viral_display[
-                "Nom de la recette"
-            ].apply(lambda x: x[:60] + "..." if len(str(x)) > 60 else str(x))
+            top_viral_display["Nom de la recette"] = top_viral_display["Nom de la recette"].apply(
+                lambda x: x[:60] + "..." if len(str(x)) > 60 else str(x)
+            )
 
         # Format interaction count column (handle both old and new column names)
         interaction_col = next(
@@ -699,9 +707,7 @@ class PopularityAnalysisPage:
             None,
         )
         if interaction_col:
-            top_viral_display[interaction_col] = top_viral_display[
-                interaction_col
-            ].apply(lambda x: f"{x:,.0f}")
+            top_viral_display[interaction_col] = top_viral_display[interaction_col].apply(lambda x: f"{x:,.0f}")
 
         # Format rating column (handle both old and new column names)
         rating_col = next(
@@ -709,9 +715,7 @@ class PopularityAnalysisPage:
             None,
         )
         if rating_col:
-            top_viral_display[rating_col] = top_viral_display[rating_col].apply(
-                lambda x: f"{x:.2f} ⭐"
-            )
+            top_viral_display[rating_col] = top_viral_display[rating_col].apply(lambda x: f"{x:.2f} ⭐")
 
         # Display the table
         st.dataframe(top_viral_display, width="stretch", hide_index=True)
@@ -757,9 +761,7 @@ class PopularityAnalysisPage:
         examples_data = []
         for pattern, recipe_id in representative_examples.items():
             # Chercher dans les données
-            recipe_interactions = interactions_df[
-                interactions_df["recipe_id"] == recipe_id
-            ]
+            recipe_interactions = interactions_df[interactions_df["recipe_id"] == recipe_id]
             if len(recipe_interactions) > 0:
                 recipe_name = "N/A"
                 if "name" in recipes_df.columns:
@@ -775,11 +777,7 @@ class PopularityAnalysisPage:
                     {
                         "Rang": f"#{list(representative_examples.keys()).index(pattern) + 1}",
                         "ID": recipe_id,
-                        "Nom": (
-                            recipe_name[:50] + "..."
-                            if len(recipe_name) > 50
-                            else recipe_name
-                        ),
+                        "Nom": (recipe_name[:50] + "..." if len(recipe_name) > 50 else recipe_name),
                         "Interactions": f"{total_interactions:,}",
                         "Note Moyenne": f"{avg_rating:.2f} ⭐",
                     }
@@ -792,8 +790,7 @@ class PopularityAnalysisPage:
         # Utiliser ces exemples pour la visualisation 3D
         selected_recipe_ids = list(representative_examples.values())
         recipe_display = [
-            f"Top {i + 1}: {examples_data[i]['Nom']}"
-            for i, pattern in enumerate(representative_examples.keys())
+            f"Top {i + 1}: {examples_data[i]['Nom']}" for i, pattern in enumerate(representative_examples.keys())
         ]
         selected_indices = list(range(len(selected_recipe_ids)))
 
@@ -817,12 +814,8 @@ class PopularityAnalysisPage:
         # Note: 3D visualization shows actual recipe trajectories without preprocessing
         # to ensure no recipes are excluded from visualization
         # IMPROVEMENT: Enhanced temporal sampling for smoother trajectories
-        self.logger.info(
-            "Using raw data for 3D visualization with improved temporal sampling"
-        )
-        self._create_3d_visualization_real(
-            selected_recipe_ids, interactions_df, recipe_display, selected_indices
-        )
+        self.logger.info("Using raw data for 3D visualization with improved temporal sampling")
+        self._create_3d_visualization_real(selected_recipe_ids, interactions_df, recipe_display, selected_indices)
 
     def _create_3d_visualization_real(
         self,
@@ -838,8 +831,7 @@ class PopularityAnalysisPage:
 
         if not date_columns:
             st.error(
-                "Aucune colonne de date trouvée. Colonnes disponibles : "
-                + ", ".join(interactions_df.columns.tolist())
+                "Aucune colonne de date trouvée. Colonnes disponibles : " + ", ".join(interactions_df.columns.tolist())
             )
             return
 
@@ -866,9 +858,7 @@ class PopularityAnalysisPage:
             "Afficher un point tous les :",
             [1, 7, 14, 30, 90],
             index=1,  # Default: tous les 7 jours
-            format_func=lambda x: (
-                f"{x} jour{'s' if x > 1 else ''}" if x < 30 else f"{x // 30} mois"
-            ),
+            format_func=lambda x: (f"{x} jour{'s' if x > 1 else ''}" if x < 30 else f"{x // 30} mois"),
         )
 
         fig = plt.figure(figsize=(14, 10))
@@ -886,27 +876,19 @@ class PopularityAnalysisPage:
 
         for i, recipe_id in enumerate(recipe_ids):
             # Filter interactions for this recipe
-            recipe_interactions = interactions_df[
-                interactions_df["recipe_id"] == recipe_id
-            ].copy()
+            recipe_interactions = interactions_df[interactions_df["recipe_id"] == recipe_id].copy()
 
             if len(recipe_interactions) == 0:
                 continue
 
             # Ensure date column is properly converted to datetime
-            recipe_interactions[date_col] = pd.to_datetime(
-                recipe_interactions[date_col], errors="coerce"
-            )
+            recipe_interactions[date_col] = pd.to_datetime(recipe_interactions[date_col], errors="coerce")
 
             # Filter out rows with missing essential data (date, rating, recipe_id)
-            complete_data = recipe_interactions.dropna(
-                subset=[date_col, "rating"]
-            ).copy()
+            complete_data = recipe_interactions.dropna(subset=[date_col, "rating"]).copy()
 
             if len(complete_data) == 0:
-                st.warning(
-                    f"Aucune donnée complète trouvée pour la recette {recipe_id}"
-                )
+                st.warning(f"Aucune donnée complète trouvée pour la recette {recipe_id}")
                 continue
 
             # Sort by date to ensure strict chronological order
@@ -914,16 +896,12 @@ class PopularityAnalysisPage:
 
             # Convert dates to numeric for plotting (days since first interaction)
             first_date = complete_data[date_col].min()
-            complete_data["days_since_start"] = (
-                complete_data[date_col] - first_date
-            ).dt.days
+            complete_data["days_since_start"] = (complete_data[date_col] - first_date).dt.days
 
             # Filter based on temporal interval (every X days) - IMPROVED SAMPLING
             if interval_days > 1:
                 # Group by interval periods and take a representative point
-                complete_data["period"] = (
-                    complete_data["days_since_start"] // interval_days
-                )
+                complete_data["period"] = complete_data["days_since_start"] // interval_days
 
                 # Take the point closest to the middle of each period for better
                 # representation
@@ -932,24 +910,16 @@ class PopularityAnalysisPage:
                     period_end = group["days_since_start"].max()
                     period_middle = (period_start + period_end) / 2
                     # Find the interaction closest to the middle of the period
-                    closest_idx = (
-                        (group["days_since_start"] - period_middle).abs().idxmin()
-                    )
+                    closest_idx = (group["days_since_start"] - period_middle).abs().idxmin()
                     return group.loc[closest_idx]
 
-                display_data = (
-                    complete_data.groupby("period")
-                    .apply(get_middle_point)
-                    .reset_index(drop=True)
-                )
+                display_data = complete_data.groupby("period").apply(get_middle_point).reset_index(drop=True)
             else:
                 # Show ALL points (every single interaction)
                 display_data = complete_data.copy()
 
             # Calculate cumulative statistics correctly
-            display_data = display_data.sort_values("days_since_start").reset_index(
-                drop=True
-            )
+            display_data = display_data.sort_values("days_since_start").reset_index(drop=True)
 
             # For each point, calculate the cumulative average rating from ALL
             # previous interactions
@@ -960,9 +930,7 @@ class PopularityAnalysisPage:
                 current_day = display_data.iloc[idx]["days_since_start"]
                 # Get all interactions up to and including current day from original
                 # complete_data
-                interactions_up_to_day = complete_data[
-                    complete_data["days_since_start"] <= current_day
-                ]
+                interactions_up_to_day = complete_data[complete_data["days_since_start"] <= current_day]
 
                 # Calculate cumulative average rating (from day 1 to current day)
                 cumulative_avg_rating = interactions_up_to_day["rating"].mean()
@@ -976,17 +944,11 @@ class PopularityAnalysisPage:
 
             # Extract coordinates for 3D plot - only real data points
             x_dates = display_data["days_since_start"].values
-            y_ratings = display_data[
-                "cumulative_avg_rating"
-            ].values  # Cumulative average ratings
+            y_ratings = display_data["cumulative_avg_rating"].values  # Cumulative average ratings
             z_cumulative = display_data["cumulative_interactions"].values
 
             # Ensure we have valid data to plot
-            if (
-                len(x_dates) == 0
-                or np.any(np.isnan(x_dates))
-                or np.any(np.isnan(y_ratings))
-            ):
+            if len(x_dates) == 0 or np.any(np.isnan(x_dates)) or np.any(np.isnan(y_ratings)):
                 st.warning(f"Données invalides pour la recette {recipe_id}")
                 continue
 
@@ -1065,29 +1027,19 @@ class PopularityAnalysisPage:
         ax.set_xlabel("Jours depuis la première interaction", fontsize=12)
         ax.set_ylabel("Note moyenne cumulative", fontsize=12)
         ax.set_zlabel("Interactions cumulées", fontsize=12)
-        ax.set_title(
-            "Évolution Temporelle des Recettes Virales", fontsize=14, fontweight="bold"
-        )
+        ax.set_title("Évolution Temporelle des Recettes Virales", fontsize=14, fontweight="bold")
 
         # Set explicit axis limits to ensure correct scaling
         # Collect all data points to determine proper axis limits
         all_x, all_y, all_z = [], [], []
         for i, recipe_id in enumerate(recipe_ids):
-            recipe_interactions = interactions_df[
-                interactions_df["recipe_id"] == recipe_id
-            ].copy()
+            recipe_interactions = interactions_df[interactions_df["recipe_id"] == recipe_id].copy()
             if len(recipe_interactions) > 0:
-                date_columns = [
-                    col for col in interactions_df.columns if "date" in col.lower()
-                ]
+                date_columns = [col for col in interactions_df.columns if "date" in col.lower()]
                 if date_columns:
                     date_col = date_columns[0]
-                    recipe_interactions[date_col] = pd.to_datetime(
-                        recipe_interactions[date_col], errors="coerce"
-                    )
-                    complete_data = recipe_interactions.dropna(
-                        subset=[date_col, "rating"]
-                    ).copy()
+                    recipe_interactions[date_col] = pd.to_datetime(recipe_interactions[date_col], errors="coerce")
+                    complete_data = recipe_interactions.dropna(subset=[date_col, "rating"]).copy()
 
                     if len(complete_data) > 0:
                         # Calculate actual final values
@@ -1107,9 +1059,7 @@ class PopularityAnalysisPage:
             z_margin = max(all_z) * 0.05
 
             ax.set_xlim(0, max(all_x) + x_margin)
-            ax.set_ylim(
-                0, 5
-            )  # Note moyenne toujours de 0 à 5 pour référence standardisée
+            ax.set_ylim(0, 5)  # Note moyenne toujours de 0 à 5 pour référence standardisée
             ax.set_zlim(0, max(all_z) + z_margin)
 
         # Disable default shadow projections on XZ and YZ planes
@@ -1187,17 +1137,11 @@ class PopularityAnalysisPage:
 
         stats_data = []
         for i, recipe_id in enumerate(recipe_ids):
-            recipe_interactions = interactions_df[
-                interactions_df["recipe_id"] == recipe_id
-            ].copy()
+            recipe_interactions = interactions_df[interactions_df["recipe_id"] == recipe_id].copy()
             if len(recipe_interactions) > 0:
                 # Filter only complete data (same logic as 3D plot)
-                recipe_interactions[date_col] = pd.to_datetime(
-                    recipe_interactions[date_col], errors="coerce"
-                )
-                complete_data = recipe_interactions.dropna(
-                    subset=[date_col, "rating"]
-                ).copy()
+                recipe_interactions[date_col] = pd.to_datetime(recipe_interactions[date_col], errors="coerce")
+                complete_data = recipe_interactions.dropna(subset=[date_col, "rating"]).copy()
 
                 if len(complete_data) > 0:
                     first_interaction = complete_data[date_col].min()
@@ -1214,12 +1158,8 @@ class PopularityAnalysisPage:
                                 if len(recipe_display[selected_indices[i]]) > 40
                                 else recipe_display[selected_indices[i]]
                             ),
-                            "Première interaction": first_interaction.strftime(
-                                "%Y-%m-%d"
-                            ),
-                            "Dernière interaction": last_interaction.strftime(
-                                "%Y-%m-%d"
-                            ),
+                            "Première interaction": first_interaction.strftime("%Y-%m-%d"),
+                            "Dernière interaction": last_interaction.strftime("%Y-%m-%d"),
                             "Durée (jours)": duration,
                             "Total interactions (complètes)": total_interactions,
                             "Note moyenne": f"{avg_rating:.2f}",
@@ -1240,9 +1180,7 @@ class PopularityAnalysisPage:
         return interactions_df, recipes_df
 
     # ---------------- Visualization helpers ---------------- #
-    def _get_plot_title(
-        self, x: str, y: str, plot_type: str, bin_agg: str = "count"
-    ) -> str:
+    def _get_plot_title(self, x: str, y: str, plot_type: str, bin_agg: str = "count") -> str:
         """Get predefined French titles based on plot type and variables."""
 
         # Titres prédéfinis pour les graphiques les plus courants
@@ -1379,9 +1317,7 @@ class PopularityAnalysisPage:
         plt.tight_layout()
         return fig
 
-    def _scatter_plot(
-        self, data: pd.DataFrame, x: str, y: str, size: str | None, ax, alpha: float
-    ):
+    def _scatter_plot(self, data: pd.DataFrame, x: str, y: str, size: str | None, ax, alpha: float):
         """Enhanced scatter plot with all data points displayed."""
         if size is not None:
             # Plot all data points without sampling
@@ -1404,9 +1340,7 @@ class PopularityAnalysisPage:
                 cbar.set_label(size_label)
         else:
             # Plot all data points without sampling
-            ax.scatter(
-                data[x], data[y], alpha=alpha, s=30, c="steelblue", edgecolors="none"
-            )
+            ax.scatter(data[x], data[y], alpha=alpha, s=30, c="steelblue", edgecolors="none")
 
     def _histogram_plot(
         self,
@@ -1438,9 +1372,7 @@ class PopularityAnalysisPage:
 
         # Assign each point to a bin
         data_clean = data_clean.copy()
-        data_clean["bin_idx"] = pd.cut(
-            data_clean[x], bins=bin_edges, include_lowest=True, labels=False
-        )
+        data_clean["bin_idx"] = pd.cut(data_clean[x], bins=bin_edges, include_lowest=True, labels=False)
 
         # Calculate bin centers for plotting
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
@@ -1454,9 +1386,7 @@ class PopularityAnalysisPage:
         # Handle size aggregation if provided (count observations with that size)
         size_values = None
         if size and size in data_clean.columns:
-            size_agg = data_clean.groupby("bin_idx")[
-                size
-            ].mean()  # Moyenne de la variable size par bin
+            size_agg = data_clean.groupby("bin_idx")[size].mean()  # Moyenne de la variable size par bin
 
             # Align with y_values
             size_values = []
@@ -1468,11 +1398,7 @@ class PopularityAnalysisPage:
 
         # Create the bar plot
         valid_indices = agg_data["bin_idx"].dropna()
-        plot_x = [
-            bin_centers[int(idx)]
-            for idx in valid_indices
-            if int(idx) < len(bin_centers)
-        ]
+        plot_x = [bin_centers[int(idx)] for idx in valid_indices if int(idx) < len(bin_centers)]
         plot_y = y_values[: len(plot_x)]
 
         if size_values and len(size_values) >= len(plot_x):
@@ -1588,7 +1514,9 @@ class PopularityAnalysisPage:
             temp_interactions_df, temp_recipes_df = self._load_data()
 
             # Analyse des valeurs manquantes dans les colonnes critiques pour l'analyse
-            critical_interactions_cols = ["rating", "recipe_id", "user_id"]
+            # Ajout dynamique de la/les colonne(s) de date si présente(s)
+            date_cols = [c for c in temp_interactions_df.columns if "date" in c.lower()]
+            critical_interactions_cols = ["rating", "recipe_id", "user_id"] + date_cols
             critical_recipes_cols = ["minutes", "n_steps", "n_ingredients", "id"]
 
             col1, col2 = st.columns(2)
@@ -1608,9 +1536,7 @@ class PopularityAnalysisPage:
                 if interactions_critical_missing == 0:
                     st.success("✅ Toutes les colonnes critiques sont complètes")
                 else:
-                    st.error(
-                        f"❌ {interactions_critical_missing} valeurs manquantes dans les colonnes critiques"
-                    )
+                    st.error(f"❌ {interactions_critical_missing} valeurs manquantes dans les colonnes critiques")
 
             with col2:
                 st.markdown("**🎯 Colonnes critiques (recettes) :**")
@@ -1627,17 +1553,13 @@ class PopularityAnalysisPage:
                 if recipes_critical_missing == 0:
                     st.success("✅ Toutes les colonnes critiques sont complètes")
                 else:
-                    st.error(
-                        f"❌ {recipes_critical_missing} valeurs manquantes dans les colonnes critiques"
-                    )
+                    st.error(f"❌ {recipes_critical_missing} valeurs manquantes dans les colonnes critiques")
 
             # Analyse complète (toutes colonnes)
             interactions_total_missing = temp_interactions_df.isnull().sum().sum()
             recipes_total_missing = temp_recipes_df.isnull().sum().sum()
 
-            with st.expander(
-                "📊 Analyse complète de toutes les colonnes", expanded=False
-            ):
+            with st.expander("📊 Analyse complète de toutes les colonnes", expanded=False):
                 col1, col2 = st.columns(2)
 
                 with col1:
@@ -1646,9 +1568,7 @@ class PopularityAnalysisPage:
                     if interactions_total_missing == 0:
                         st.success("✅ Aucune valeur manquante")
                     else:
-                        st.info(
-                            f"ℹ️ {interactions_total_missing} valeurs manquantes (colonnes non-critiques)"
-                        )
+                        st.info(f"ℹ️ {interactions_total_missing} valeurs manquantes (colonnes non-critiques)")
                         missing_details = interactions_missing[interactions_missing > 0]
                         if len(missing_details) > 0:
                             st.code(missing_details.to_string())
@@ -1659,17 +1579,13 @@ class PopularityAnalysisPage:
                     if recipes_total_missing == 0:
                         st.success("✅ Aucune valeur manquante")
                     else:
-                        st.info(
-                            f"ℹ️ {recipes_total_missing} valeurs manquantes (colonnes non-critiques)"
-                        )
+                        st.info(f"ℹ️ {recipes_total_missing} valeurs manquantes (colonnes non-critiques)")
                         missing_details = recipes_missing[recipes_missing > 0]
                         if len(missing_details) > 0:
                             st.code(missing_details.to_string())
 
             # Conclusion sur la nécessité du KNN
-            total_critical_missing = (
-                interactions_critical_missing + recipes_critical_missing
-            )
+            total_critical_missing = interactions_critical_missing + recipes_critical_missing
             if total_critical_missing == 0:
                 st.success(
                     """
@@ -1690,20 +1606,12 @@ class PopularityAnalysisPage:
                 )
 
             # Statistiques globales
-            total_cells_interactions = (
-                temp_interactions_df.shape[0] * temp_interactions_df.shape[1]
-            )
+            total_cells_interactions = temp_interactions_df.shape[0] * temp_interactions_df.shape[1]
             total_cells_recipes = temp_recipes_df.shape[0] * temp_recipes_df.shape[1]
             total_missing = interactions_total_missing + recipes_total_missing
             total_cells = total_cells_interactions + total_cells_recipes
 
-            completeness_rate = ((total_cells - total_missing) / total_cells) * 100
-
-            st.info(
-                f"**Taux de complétude global :** "
-                f"{completeness_rate:.2f}% "
-                f"({total_cells - total_missing:,} cellules complètes sur {total_cells:,})"
-            )
+            ((total_cells - total_missing) / total_cells) * 100
 
             st.markdown(
                 """
@@ -1716,11 +1624,6 @@ class PopularityAnalysisPage:
             - **Toutes les notes utilisateurs** (aucun filtrage sur les ratings)
             - **Toutes les interactions datées** (comportements authentiques)
             - **Recettes avec caractéristiques extrêmes mais plausibles**
-
-            **Ce qui est filtré :**
-            - Temps de préparation = MAX_INT (erreurs système)
-            - Nombres d'étapes aberrants (ex: 999+ étapes)
-            - Incohérences techniques dans les métadonnées
 
             **Impact typique :** 80-99% des données conservées selon le seuil choisi.
             Le seuil est ajustable dans la barre latérale pour explorer différents niveaux de filtrage.
@@ -1756,9 +1659,7 @@ class PopularityAnalysisPage:
             preprocessing=config_selective,
             cache_enabled=True,  # Cache activé pour de meilleures performances
         )
-        self.logger.info(
-            f"Initialized InteractionsAnalyzer with preprocessing threshold {outlier_threshold}"
-        )
+        self.logger.info(f"Initialized InteractionsAnalyzer with preprocessing threshold {outlier_threshold}")
 
         # Affichage de l'impact du preprocessing avec détails statistiques
         try:
@@ -1778,20 +1679,6 @@ class PopularityAnalysisPage:
                     delta=f"{filtered_percentage:.1f}% du total",
                 )
             with col2:
-                if preprocessing_stats and "outliers_removed" in preprocessing_stats:
-                    outliers_removed = preprocessing_stats["outliers_removed"]
-                    st.metric(
-                        "🚫 Outliers supprimés",
-                        f"{outliers_removed:,}",
-                        delta=(
-                            f"-{(outliers_removed / original_count) * 100:.1f}%"
-                            if outliers_removed > 0
-                            else "0%"
-                        ),
-                    )
-                else:
-                    st.metric("🚫 Outliers supprimés", "0")
-            with col3:
                 st.metric(
                     "⚙️ Seuil IQR actuel",
                     f"{outlier_threshold:.1f}x",
@@ -1804,20 +1691,8 @@ class PopularityAnalysisPage:
                 if features_processed:
                     st.info(f"**Features analysées :** {', '.join(features_processed)}")
 
-                    # Bouton pour afficher les détails complets du preprocessing
-                    if st.button("🔍 Voir les détails du preprocessing"):
-                        st.json(preprocessing_stats)
-
-            st.success(
-                f"✅ **Preprocessing terminé** - {
-                    filtered_percentage:.1f}% des données conservées avec le seuil {
-                    outlier_threshold:.1f}x"
-            )
-
         except Exception as e:
-            st.info(
-                f"**Preprocessing** (seuil {outlier_threshold:.1f}) - Détails non disponibles: {str(e)}"
-            )
+            st.info(f"**Preprocessing** (seuil {outlier_threshold:.1f}) - Détails non disponibles: {str(e)}")
 
         # Cache management in sidebar
         self._render_cache_controls(analyzer)
@@ -1846,9 +1721,7 @@ class PopularityAnalysisPage:
         pop_rating = self._render_step_1(analyzer, plot_type, n_bins, bin_agg, alpha)
         if pop_rating is not None:
             self._render_step_2(analyzer, pop_rating)
-        self._render_step_3(
-            analyzer, agg, plot_type, n_bins, bin_agg, alpha, pop_rating
-        )
+        self._render_step_3(analyzer, agg, plot_type, n_bins, bin_agg, alpha, pop_rating)
         self._render_viral_recipe_analysis(analyzer, agg, interactions_df, recipes_df)
 
         # Synthèse et conclusions

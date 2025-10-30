@@ -505,18 +505,12 @@ name = "iadata700-mangetamain"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "black" },
-    { name = "coverage" },
-    { name = "flake8" },
     { name = "matplotlib" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
-    { name = "pylint" },
-    { name = "pytest" },
     { name = "scikit-learn" },
     { name = "seaborn" },
-    { name = "sphinx" },
     { name = "streamlit" },
 ]
 
@@ -524,24 +518,24 @@ dependencies = [
 dev = [
     { name = "autoflake" },
     { name = "autopep8" },
+    { name = "black" },
+    { name = "coverage" },
+    { name = "flake8" },
     { name = "isort" },
+    { name = "pylint" },
+    { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "sphinx" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "black", specifier = ">=25.9.0" },
-    { name = "coverage", specifier = ">=7.10.7" },
-    { name = "flake8", specifier = ">=7.3.0" },
     { name = "matplotlib", specifier = ">=3.10.6" },
     { name = "numpy", specifier = ">=2.3.3" },
     { name = "pandas", specifier = ">=2.3.2" },
     { name = "plotly", specifier = ">=5.17.0" },
-    { name = "pylint", specifier = ">=3.3.8" },
-    { name = "pytest", specifier = ">=8.4.2" },
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
-    { name = "sphinx", specifier = ">=8.2.3" },
     { name = "streamlit", specifier = ">=1.50.0" },
 ]
 
@@ -549,8 +543,14 @@ requires-dist = [
 dev = [
     { name = "autoflake", specifier = ">=2.3.1" },
     { name = "autopep8", specifier = ">=2.3.2" },
+    { name = "black", specifier = ">=25.9.0" },
+    { name = "coverage", specifier = ">=7.10.7" },
+    { name = "flake8", specifier = ">=7.3.0" },
     { name = "isort", specifier = ">=6.0.1" },
+    { name = "pylint", specifier = ">=3.3.8" },
+    { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "sphinx", specifier = ">=8.2.3" },
 ]
 
 [[package]]

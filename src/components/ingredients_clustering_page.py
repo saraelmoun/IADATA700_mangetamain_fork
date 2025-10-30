@@ -32,11 +32,9 @@ class IngredientsClusteringConfig:
     """
 
     recipes_path: Path
-    n_ingredients: int = 50
-    n_clusters: int = 5
-    tsne_perplexity: int = 30
-
-
+    n_ingredients: int = 30  # Réduit de 50 à 30 pour plus de rapidité
+    n_clusters: int = 4      # Réduit de 5 à 4 
+    tsne_perplexity: int = 15  # Réduit de 30 à 15 pour t-SNE plus rapide
 class IngredientsClusteringPage:
     """Page Streamlit pour l'analyse de clustering des ingrédients.
 
@@ -147,9 +145,7 @@ class IngredientsClusteringPage:
 
             # Show total cache files
             if cache_info["cache_files_count"] > 0:
-                st.sidebar.caption(
-                    f"📁 {cache_info['cache_files_count']} fichier(s) de cache"
-                )
+                st.sidebar.caption(f"📁 {cache_info['cache_files_count']} fichier(s) de cache")
         else:
             st.sidebar.warning("Cache désactivé")
 
@@ -174,18 +170,18 @@ class IngredientsClusteringPage:
         # Paramètres de clustering
         n_ingredients = st.sidebar.slider(
             "Nombre d'ingrédients à analyser",
-            min_value=10,
-            max_value=200,
-            value=50,
-            step=10,
-            help="Nombre d'ingrédients les plus fréquents à inclure dans l'analyse",
+            min_value=15,
+            max_value=100,  # Réduit de 200 à 100
+            value=30,       # Réduit de 50 à 30
+            step=5,         # Réduit de 10 à 5 pour plus de granularité
+            help="⚡ Performance: 15-40 = Rapide, 40-70 = Moyen, 70+ = Lent",
         )
 
         n_clusters = st.sidebar.slider(
             "Nombre de clusters",
             min_value=2,
-            max_value=20,
-            value=5,
+            max_value=15,   # Réduit de 20 à 15
+            value=4,        # Réduit de 5 à 4
             step=1,
             help="Nombre de groupes d'ingrédients à créer",
         )
@@ -195,11 +191,20 @@ class IngredientsClusteringPage:
         tsne_perplexity = st.sidebar.slider(
             "Perplexité t-SNE",
             min_value=5,
-            max_value=50,
-            value=30,
+            max_value=30,   # Réduit de 50 à 30
+            value=15,       # Réduit de 30 à 15
             step=5,
-            help="Contrôle la densité des groupes dans la visualisation",
+            help="⚡ Performance: 5-15 = Rapide, 15-25 = Moyen, 25+ = Lent",
         )
+
+        # Indicateur de performance
+        total_params = n_ingredients * tsne_perplexity
+        if total_params > 600:
+            st.sidebar.error("🐌 Configuration lente (>1 min)")
+        elif total_params > 300:
+            st.sidebar.warning("⚠️ Configuration moyenne (~30s)")
+        else:
+            st.sidebar.success("⚡ Configuration rapide (<15s)")
 
         # Bouton d'analyse dans la sidebar
         analyze_button = st.sidebar.button("🚀 Lancer l'analyse", type="primary")
@@ -211,9 +216,7 @@ class IngredientsClusteringPage:
             "analyze_button": analyze_button,
         }
 
-    def render_cooccurrence_analysis(
-        self, ingredient_names: list[str], ingredients_matrix: pd.DataFrame
-    ) -> None:
+    def render_cooccurrence_analysis(self, ingredient_names: list[str], ingredients_matrix: pd.DataFrame) -> None:
         """Affiche l'analyse de co-occurrence interactive.
 
         Permet à l'utilisateur de sélectionner deux ingrédients et visualise
@@ -258,9 +261,7 @@ class IngredientsClusteringPage:
 
                 # Calculer les statistiques de la matrice
                 matrix_values = ingredients_matrix.values
-                matrix_values_flat = matrix_values[
-                    matrix_values > 0
-                ]  # Seulement les valeurs non-nulles
+                matrix_values_flat = matrix_values[matrix_values > 0]  # Seulement les valeurs non-nulles
 
                 if len(matrix_values_flat) > 0:
                     max_score = np.max(matrix_values_flat)
@@ -316,9 +317,7 @@ class IngredientsClusteringPage:
             except (ValueError, IndexError, KeyError):
                 st.warning("Erreur lors du calcul du score de co-occurrence")
 
-    def render_clusters(
-        self, clusters: np.ndarray, ingredient_names: list[str], n_clusters: int
-    ) -> None:
+    def render_clusters(self, clusters: np.ndarray, ingredient_names: list[str], n_clusters: int) -> None:
         """Affiche les clusters d'ingrédients de manière organisée.
 
         Présente chaque cluster dans un expander séparé avec une couleur distinctive.
@@ -343,11 +342,7 @@ class IngredientsClusteringPage:
         colors = ["🔴", "🟠", "🟡", "🟢", "🔵", "🟣", "⚫", "⚪", "🟤", "🔘"]
 
         for cluster_id in range(n_clusters):
-            cluster_ingredients = [
-                ingredient_names[i]
-                for i, cluster in enumerate(clusters)
-                if cluster == cluster_id
-            ]
+            cluster_ingredients = [ingredient_names[i] for i, cluster in enumerate(clusters) if cluster == cluster_id]
 
             color_emoji = colors[cluster_id % len(colors)]
 
@@ -396,10 +391,16 @@ class IngredientsClusteringPage:
         should_generate_tsne = "tsne_data" not in st.session_state or regenerate_tsne
 
         if should_generate_tsne:
-            with st.spinner("Génération de la visualisation t-SNE..."):
-                tsne_data = analyzer.generate_tsne_visualization(
-                    clusters, perplexity=tsne_perplexity
+            # Information sur les performances
+            if tsne_perplexity > 20 or len(clusters) > 40:
+                st.warning(
+                    "⚠️ **Attention :** Les paramètres sélectionnés peuvent ralentir l'analyse. "
+                    "Pour une première exploration, essayez avec moins d'ingrédients (< 40) "
+                    "et une perplexité plus faible (< 20)."
                 )
+
+            with st.spinner("Génération de la visualisation t-SNE (peut prendre 30-60 secondes)..."):
+                tsne_data = analyzer.generate_tsne_visualization(clusters, perplexity=tsne_perplexity)
                 st.session_state["tsne_data"] = tsne_data
         else:
             tsne_data = st.session_state["tsne_data"]
@@ -427,20 +428,10 @@ class IngredientsClusteringPage:
             # Ajouter les points par cluster pour avoir des couleurs distinctes
             for cluster_id in range(n_clusters):
                 # Filtrer les données pour ce cluster
-                cluster_mask = [
-                    label == cluster_id for label in tsne_data["cluster_labels"]
-                ]
-                cluster_x = [
-                    x for i, x in enumerate(tsne_data["x_coords"]) if cluster_mask[i]
-                ]
-                cluster_y = [
-                    y for i, y in enumerate(tsne_data["y_coords"]) if cluster_mask[i]
-                ]
-                cluster_names = [
-                    name
-                    for i, name in enumerate(tsne_data["ingredient_names"])
-                    if cluster_mask[i]
-                ]
+                cluster_mask = [label == cluster_id for label in tsne_data["cluster_labels"]]
+                cluster_x = [x for i, x in enumerate(tsne_data["x_coords"]) if cluster_mask[i]]
+                cluster_y = [y for i, y in enumerate(tsne_data["y_coords"]) if cluster_mask[i]]
+                cluster_names = [name for i, name in enumerate(tsne_data["ingredient_names"]) if cluster_mask[i]]
 
                 color = tsne_colors[cluster_id % len(tsne_colors)]
 
@@ -474,16 +465,14 @@ class IngredientsClusteringPage:
                 height=600,
                 hovermode="closest",
                 plot_bgcolor="rgba(245,245,245,0.8)",
-                legend=dict(
-                    orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-                ),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             )
 
             # Afficher le graphique
             st.plotly_chart(fig_tsne, use_container_width=True)
 
             # Informations sur t-SNE
-            with st.expander("ℹ️ À propos de la visualisation t-SNE"):
+            with st.expander("ℹ️ À propos de la visualisation t-SNE / Diagnostics"):
                 st.markdown(
                     """
                 **t-SNE (t-Distributed Stochastic Neighbor Embedding)** est une technique de réduction de dimensionnalité
@@ -502,20 +491,55 @@ class IngredientsClusteringPage:
                 """
                 )
 
+                method = tsne_data.get("tsne_params", {}).get("method", "tsne")
                 st.markdown(
                     f"""
-                **Paramètres utilisés :**
-                - Perplexité : {tsne_data['tsne_params']['perplexity']}
+                **Paramètres & Méthode :**
+                - Méthode effective : `{method}`
+                - Perplexité (après ajustement) : {tsne_data['tsne_params']['perplexity']}
                 - Itérations max : {tsne_data['tsne_params']['max_iter']}
                 - Seed aléatoire : {tsne_data['tsne_params']['random_state']}
+                - Ingrédients (n_samples) : {len(tsne_data['ingredient_names'])}
                 """
                 )
+
+                if method != "tsne":
+                    if method == "fallback_circle":
+                        st.warning(
+                            "Fallback circle layout utilisé car t-SNE instable (trop peu d'ingrédients ou matrice dégénérée)."
+                        )
+                    elif method == "fallback_svd":
+                        st.info("Projection issue de la décomposition SVD (approximation PCA) suite à un échec t-SNE.")
+
+                # Afficher quelques stats basiques sur la dispersion
+                try:
+                    xs = tsne_data["x_coords"]
+                    ys = tsne_data["y_coords"]
+                    spread_x = max(xs) - min(xs)
+                    spread_y = max(ys) - min(ys)
+                    st.caption(f"Dispersion: Δx={spread_x:.2f}, Δy={spread_y:.2f} (échelle relative des clusters)")
+                except Exception:
+                    pass
         else:
             st.error("Erreur lors de la génération de la visualisation t-SNE")
+            with st.expander("🛠 Détails de l'erreur"):
+                st.json(tsne_data)
+                st.markdown(
+                    """
+                **Causes possibles :**
+                - Perplexité trop élevée par rapport au nombre d'ingrédients (doit être < n_samples)
+                - Matrice de co-occurrence vide ou dégénérée (toutes valeurs nulles)
+                - Incohérence entre le nombre de labels de clusters et la liste d'ingrédients
+                - Conflit de cache sur des anciennes données
 
-    def render_sidebar_statistics(
-        self, clusters: Optional[np.ndarray], ingredient_names: Optional[list[str]]
-    ) -> None:
+                **Actions suggérées :**
+                1. Réduire le nombre d'ingrédients ou ajuster la perplexité
+                2. Vider le cache (bouton Clear Cache) puis relancer
+                3. Vérifier que l'étape de clustering a bien été effectuée
+                """
+                )
+
+    def render_sidebar_statistics(self, clusters: Optional[np.ndarray], ingredient_names: Optional[list[str]]) -> None:
         """Affiche les statistiques de clustering dans la sidebar.
 
         Présente des métriques récapitulatives et un graphique de répartition
@@ -661,9 +685,7 @@ class IngredientsClusteringPage:
                     # Exemples de regroupements
                     multi_groups = [g for g in analyzer.ingredient_groups if len(g) > 1]
                     if multi_groups:
-                        st.markdown(
-                            "**🔗 Exemples de regroupements d'ingrédients similaires :**"
-                        )
+                        st.markdown("**🔗 Exemples de regroupements d'ingrédients similaires :**")
                         for i, group in enumerate(multi_groups[:5]):
                             members_display = " | ".join(group[:5])
                             if len(group) > 5:
@@ -681,9 +703,7 @@ class IngredientsClusteringPage:
         """
         )
 
-    def _render_step_2_cooccurrence(
-        self, ingredient_names: list[str], ingredients_matrix: pd.DataFrame
-    ) -> None:
+    def _render_step_2_cooccurrence(self, ingredient_names: list[str], ingredients_matrix: pd.DataFrame) -> None:
         """Affiche l'étape 2 : Création de la matrice de co-occurrence.
 
         Args:
@@ -742,9 +762,7 @@ class IngredientsClusteringPage:
         """
         )
 
-    def _render_step_3_clustering(
-        self, clusters: np.ndarray, ingredient_names: list[str], n_clusters: int
-    ) -> None:
+    def _render_step_3_clustering(self, clusters: np.ndarray, ingredient_names: list[str], n_clusters: int) -> None:
         """Affiche l'étape 3 : Clustering K-means.
 
         Args:
@@ -856,9 +874,7 @@ class IngredientsClusteringPage:
         """
         )
 
-    def _render_conclusion(
-        self, ingredient_names: list[str], clusters: np.ndarray, n_clusters: int
-    ) -> None:
+    def _render_conclusion(self, ingredient_names: list[str], clusters: np.ndarray, n_clusters: int) -> None:
         """Affiche la conclusion de l'analyse.
 
         Args:
@@ -956,9 +972,7 @@ class IngredientsClusteringPage:
                     )
 
                     # Debug pour des ingrédients problématiques
-                    debug_info = analyzer.debug_ingredient_mapping(
-                        ["pepper", "egg", "salt", "butter", "onion"]
-                    )
+                    debug_info = analyzer.debug_ingredient_mapping(["pepper", "egg", "salt", "butter", "onion"])
                     if "search_results" in debug_info:
                         st.write("**🔍 Debug - Exemples de normalisation:**")
                         for term, matches in debug_info["search_results"].items():
@@ -966,9 +980,7 @@ class IngredientsClusteringPage:
                                 st.write(f"*{term.title()}:*")
                                 for match in matches[:3]:  # Limiter à 3 résultats
                                     # Montrer aussi la normalisation
-                                    normalized = analyzer.normalize_ingredient(
-                                        match["ingredient"]
-                                    )
+                                    normalized = analyzer.normalize_ingredient(match["ingredient"])
                                     status = (
                                         "✅ Représentant"
                                         if match["is_representative"]
@@ -1045,20 +1057,14 @@ class IngredientsClusteringPage:
                                     f"• Dimensions: {
                                         summary['cooccurrence_matrix']['dimensions']}"
                                 )
-                                st.write(
-                                    f"• Co-occurrences: {summary['cooccurrence_matrix']['total_cooccurrences']:,}"
-                                )
-                                st.write(
-                                    f"• Paires non-nulles: {summary['cooccurrence_matrix']['non_zero_pairs']:,}"
-                                )
+                                st.write(f"• Co-occurrences: {summary['cooccurrence_matrix']['total_cooccurrences']:,}")
+                                st.write(f"• Paires non-nulles: {summary['cooccurrence_matrix']['non_zero_pairs']:,}")
                                 st.write(
                                     f"• Sparsité: {
                                         summary['cooccurrence_matrix']['sparsity']}%"
                                 )
                 else:
-                    st.warning(
-                        "Aucun regroupement détecté. Tous les ingrédients sont considérés comme uniques."
-                    )
+                    st.warning("Aucun regroupement détecté. Tous les ingrédients sont considérés comme uniques.")
 
     def run(self) -> None:
         """Point d'entrée principal de la page.
@@ -1131,11 +1137,7 @@ class IngredientsClusteringPage:
                     params_changed = True
 
             # Lancer l'analyse si bouton cliqué, première fois, ou paramètres changés
-            should_analyze = (
-                params["analyze_button"]
-                or "ingredient_names" not in st.session_state
-                or params_changed
-            )
+            should_analyze = params["analyze_button"] or "ingredient_names" not in st.session_state or params_changed
 
             if should_analyze:
                 self.logger.info(
@@ -1149,23 +1151,13 @@ class IngredientsClusteringPage:
                         f"Processing ingredients with n_ingredients={
                             params['n_ingredients']}"
                     )
-                    ingredients_matrix, ingredient_names = analyzer.process_ingredients(
-                        params["n_ingredients"]
-                    )
-                    self.logger.info(
-                        f"Processed ingredients matrix: {ingredients_matrix.shape}"
-                    )
+                    ingredients_matrix, ingredient_names = analyzer.process_ingredients(params["n_ingredients"])
+                    self.logger.info(f"Processed ingredients matrix: {ingredients_matrix.shape}")
 
                     # Clustering
-                    self.logger.debug(
-                        f"Performing clustering with n_clusters={params['n_clusters']}"
-                    )
-                    clusters = analyzer.perform_clustering(
-                        ingredients_matrix, params["n_clusters"]
-                    )
-                    self.logger.info(
-                        f"Clustering completed: {len(set(clusters))} unique clusters found"
-                    )
+                    self.logger.debug(f"Performing clustering with n_clusters={params['n_clusters']}")
+                    clusters = analyzer.perform_clustering(ingredients_matrix, params["n_clusters"])
+                    self.logger.info(f"Clustering completed: {len(set(clusters))} unique clusters found")
 
                     # Sauvegarde des résultats dans la session
                     st.session_state["ingredient_names"] = ingredient_names
@@ -1198,27 +1190,19 @@ class IngredientsClusteringPage:
                 self._render_step_2_cooccurrence(ingredient_names, ingredients_matrix)
 
                 # ÉTAPE 3 : Clustering
-                self._render_step_3_clustering(
-                    clusters, ingredient_names, params["n_clusters"]
-                )
+                self._render_step_3_clustering(clusters, ingredient_names, params["n_clusters"])
 
                 # ÉTAPE 4 : Visualisation t-SNE
-                self._render_step_4_visualization(
-                    analyzer, clusters, params["tsne_perplexity"]
-                )
+                self._render_step_4_visualization(analyzer, clusters, params["tsne_perplexity"])
 
                 # Conclusion
-                self._render_conclusion(
-                    ingredient_names, clusters, params["n_clusters"]
-                )
+                self._render_conclusion(ingredient_names, clusters, params["n_clusters"])
 
                 # Statistiques dans la sidebar
                 self.render_sidebar_statistics(clusters, ingredient_names)
 
         else:
-            st.error(
-                "Impossible de charger les données. Vérifiez la présence du fichier de données."
-            )
+            st.error("Impossible de charger les données. Vérifiez la présence du fichier de données.")
 
         # Footer
         st.markdown("---")

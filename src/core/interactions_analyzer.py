@@ -91,9 +91,7 @@ class InteractionsAnalyzer(CacheableMixin):
         return {
             "preprocessing_config": self.preprocessing.get_hash(),
             "has_merged": self.merged is not None,
-            "interactions_shape": (
-                self.interactions.shape if self.interactions is not None else None
-            ),
+            "interactions_shape": (self.interactions.shape if self.interactions is not None else None),
             "recipes_shape": self.recipes.shape if self.recipes is not None else None,
             "merged_shape": self.merged.shape if self.merged is not None else None,
         }
@@ -142,9 +140,7 @@ class InteractionsAnalyzer(CacheableMixin):
                     rec = rec.rename(columns={"id": RECIPE_ID_COL})
                 # prefer left join to keep only interactions that occurred
                 if RECIPE_ID_COL in rec.columns:
-                    df = inter.merge(
-                        rec, on=RECIPE_ID_COL, how="left", suffixes=("", "_r")
-                    )
+                    df = inter.merge(rec, on=RECIPE_ID_COL, how="left", suffixes=("", "_r"))
                 else:
                     df = inter
             else:
@@ -154,18 +150,14 @@ class InteractionsAnalyzer(CacheableMixin):
         if "n_ingredients" not in df.columns:
             ingredient_col = self._detect_ingredients_column(df.columns)
             if ingredient_col:
-                df["n_ingredients"] = df[ingredient_col].apply(
-                    self._safe_count_ingredients
-                )
+                df["n_ingredients"] = df[ingredient_col].apply(self._safe_count_ingredients)
 
         # Step 3: Apply preprocessing if enabled
         if self.preprocessing.enable_preprocessing:
             self.logger.info("Starting data preprocessing (outlier removal)")
             df, self.preprocessing_stats = self._preprocess_data(df)
             outliers_removed = self.preprocessing_stats.get("outliers_removed", 0)
-            self.logger.info(
-                f"Preprocessing completed: {outliers_removed} outliers removed"
-            )
+            self.logger.info(f"Preprocessing completed: {outliers_removed} outliers removed")
         else:
             self.preprocessing_stats = {"outliers_removed": 0}
 
@@ -220,11 +212,7 @@ class InteractionsAnalyzer(CacheableMixin):
         }
 
         # Get numerical features that exist in the dataframe
-        available_features = [
-            f
-            for f in ["minutes", "n_steps", "n_ingredients", "rating"]
-            if f in df_processed.columns
-        ]
+        available_features = [f for f in ["minutes", "n_steps", "n_ingredients", "rating"] if f in df_processed.columns]
         stats["features_processed"] = available_features
         # Removed debug logs for performance
 
@@ -234,9 +222,7 @@ class InteractionsAnalyzer(CacheableMixin):
 
         # Outlier detection and removal
         if self.preprocessing.outlier_method != "none":
-            df_processed, outliers_count = self._remove_outliers(
-                df_processed, available_features
-            )
+            df_processed, outliers_count = self._remove_outliers(df_processed, available_features)
             stats["outliers_removed"] = outliers_count
             if outliers_count > 0:
                 self.logger.info(
@@ -247,9 +233,7 @@ class InteractionsAnalyzer(CacheableMixin):
         stats["final_rows"] = len(df_processed)
         return df_processed, stats
 
-    def _remove_outliers(
-        self, df: pd.DataFrame, features: list
-    ) -> tuple[pd.DataFrame, int]:
+    def _remove_outliers(self, df: pd.DataFrame, features: list) -> tuple[pd.DataFrame, int]:
         """Remove outliers using IQR or Z-score method."""
         outlier_mask = pd.Series(False, index=df.index)
 
@@ -267,9 +251,7 @@ class InteractionsAnalyzer(CacheableMixin):
                 IQR = Q3 - Q1
                 lower_bound = Q1 - self.preprocessing.outlier_threshold * IQR
                 upper_bound = Q3 + self.preprocessing.outlier_threshold * IQR
-                feature_outliers = (df[feature] < lower_bound) | (
-                    df[feature] > upper_bound
-                )
+                feature_outliers = (df[feature] < lower_bound) | (df[feature] > upper_bound)
 
             elif self.preprocessing.outlier_method == "zscore":
                 z_scores = np.abs((df[feature] - values.mean()) / values.std())
@@ -331,20 +313,12 @@ class InteractionsAnalyzer(CacheableMixin):
     def popularity_vs_rating(self, min_interactions: int = 1) -> pd.DataFrame:
         agg = self.aggregate()
         if "avg_rating" not in agg.columns:
-            raise ValueError(
-                "Ratings not available; cannot compute popularity_vs_rating"
-            )
-        return self._filter_min(
-            agg[[RECIPE_ID_COL, "interaction_count", "avg_rating"]], min_interactions
-        )
+            raise ValueError("Ratings not available; cannot compute popularity_vs_rating")
+        return self._filter_min(agg[[RECIPE_ID_COL, "interaction_count", "avg_rating"]], min_interactions)
 
-    def rating_vs_feature(
-        self, feature: str, min_interactions: int = 1
-    ) -> pd.DataFrame:
+    def rating_vs_feature(self, feature: str, min_interactions: int = 1) -> pd.DataFrame:
         if feature not in {"minutes", "n_steps", "n_ingredients"}:
-            raise ValueError(
-                "Unsupported feature; choose among 'minutes', 'n_steps', 'n_ingredients'"
-            )
+            raise ValueError("Unsupported feature; choose among 'minutes', 'n_steps', 'n_ingredients'")
         agg = self.aggregate()
         needed = {feature, "avg_rating"}
         if not needed.issubset(agg.columns):
@@ -354,13 +328,9 @@ class InteractionsAnalyzer(CacheableMixin):
         subset = subset.dropna(subset=[feature, "avg_rating"])
         return self._filter_min(subset, min_interactions)
 
-    def popularity_vs_feature(
-        self, feature: str, min_interactions: int = 1
-    ) -> pd.DataFrame:
+    def popularity_vs_feature(self, feature: str, min_interactions: int = 1) -> pd.DataFrame:
         if feature not in {"minutes", "n_steps", "n_ingredients"}:
-            raise ValueError(
-                "Unsupported feature; choose among 'minutes', 'n_steps', 'n_ingredients'"
-            )
+            raise ValueError("Unsupported feature; choose among 'minutes', 'n_steps', 'n_ingredients'")
         agg = self.aggregate()
         needed = {feature}
         if not needed.issubset(agg.columns):
@@ -392,9 +362,7 @@ class InteractionsAnalyzer(CacheableMixin):
             else:
                 return "Viral"
 
-        df["popularity_segment"] = df["interaction_count"].apply(
-            assign_popularity_segment
-        )
+        df["popularity_segment"] = df["interaction_count"].apply(assign_popularity_segment)
 
         # Add segment statistics
         segment_stats = (
@@ -511,28 +479,18 @@ class InteractionsAnalyzer(CacheableMixin):
         if "popularity_segment" in df.columns:
             insights["popularity_segments"] = {
                 "distribution": df["popularity_segment"].value_counts().to_dict(),
-                "avg_rating_by_segment": df.groupby("popularity_segment")["avg_rating"]
-                .mean()
-                .round(2)
-                .to_dict(),
-                "thresholds": getattr(self, "_popularity_segments_info", {}).get(
-                    "thresholds", {}
-                ),
+                "avg_rating_by_segment": df.groupby("popularity_segment")["avg_rating"].mean().round(2).to_dict(),
+                "thresholds": getattr(self, "_popularity_segments_info", {}).get("thresholds", {}),
             }
 
         # Category correlations
-        categorical_cols = [
-            col for col in df.columns if "category" in col or "segment" in col
-        ]
+        categorical_cols = [col for col in df.columns if "category" in col or "segment" in col]
 
         for cat_col in categorical_cols:
             if cat_col in df.columns:
                 insights[cat_col] = {
                     "distribution": df[cat_col].value_counts().to_dict(),
-                    "avg_rating_by_category": df.groupby(cat_col)["avg_rating"]
-                    .mean()
-                    .round(2)
-                    .to_dict(),
+                    "avg_rating_by_category": df.groupby(cat_col)["avg_rating"].mean().round(2).to_dict(),
                 }
 
         return insights

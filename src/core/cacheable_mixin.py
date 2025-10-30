@@ -26,9 +26,7 @@ class CacheableMixin:
         if not hasattr(self, "_cache_manager"):
             self._cache_manager = get_cache_manager()
         if not hasattr(self, "_analyzer_name"):
-            self._analyzer_name = self.__class__.__name__.lower().replace(
-                "analyzer", ""
-            )
+            self._analyzer_name = self.__class__.__name__.lower().replace("analyzer", "")
 
     def cached_operation(
         self,
@@ -92,13 +90,9 @@ class CacheableMixin:
         Returns:
             Nombre de fichiers supprimés
         """
-        return self._cache_manager.clear(
-            analyzer_name=self._analyzer_name, operation=operation
-        )
+        return self._cache_manager.clear(analyzer_name=self._analyzer_name, operation=operation)
 
     def get_cache_info(self) -> Dict[str, Any]:
         """Retourne les informations de cache pour cet analyseur."""
         full_info = self._cache_manager.get_info()
-        return full_info.get("analyzers", {}).get(
-            self._analyzer_name, {"operations": {}, "files": 0, "size_mb": 0.0}
-        )
+        return full_info.get("analyzers", {}).get(self._analyzer_name, {"operations": {}, "files": 0, "size_mb": 0.0})

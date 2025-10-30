@@ -71,8 +71,8 @@ class DataLoader:
             f"Data loaded successfully: {
                 self._df.shape} rows/cols, {
                 self._df.memory_usage(
-                    deep=True).sum() /
-                1024**2:.1f} MB"
+                    deep=True).sum()
+                / 1024**2:.1f} MB"
         )
 
         return self._df
