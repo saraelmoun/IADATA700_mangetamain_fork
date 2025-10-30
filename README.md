@@ -1,44 +1,184 @@
 # IADATA700_mangetamain
-Dans le cadre d'un enseignement à Telecom Paris, ce projet consiste en une application web interactive d'analyse de données pour une entreprise fictive : Mangetamain ; leader dans la recommandation B2C de recettes de cuisine à l'ancienne bio.
 
-## Application Streamlit
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat&logo=pandas&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?style=flat&logo=numpy&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat&logo=scikit-learn&logoColor=white)
+![Plotly](https://img.shields.io/badge/Plotly-3F4F75?style=flat&logo=plotly&logoColor=white)
+![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=flat&logo=pytest&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-144%20passed-success?style=flat)
+![PlantUML](https://img.shields.io/badge/PlantUML-Documentation-blue?style=flat)
+![Sphinx](https://img.shields.io/badge/Sphinx-Documentation-blue?style=flat&logo=sphinx&logoColor=white)
 
-Version simplifiée et modulaire avec pages : Display, Analysis1 (recettes), Analysis2 (recettes + interactions).
+Dans le cadre d'un enseignement à Telecom Paris, ce projet consiste en une application web interactive d'analyse de données pour une entreprise fictive : **Mangetamain** ; leader dans la recommandation B2C de recettes de cuisine à l'ancienne bio.
 
-### Lancer
+## ⚡ Démarrage rapide
+
+```bash
+# Installation et lancement sécurisé (recommandé)
+uv sync
+uv run python run_app.py
 ```
+
+> 📥 **Auto-download intelligent** : Le script vérifie et télécharge automatiquement les données manquantes depuis S3 avant de lancer Streamlit.
+
+### 🎛️ Contrôle de l'application
+
+**Démarrage** :
+```bash
+python run_app.py          # Lancement avec téléchargement auto des données
+```
+
+**Arrêt** :
+- `Ctrl+C` dans le terminal de lancement
+- Ou utiliser le script d'arrêt : `python stop_app.py`
+
+**Alternative directe** (si les données sont déjà présentes) :
+```bash
+uv run streamlit run src/app.py
+```
+
+## 📚 Documentation
+
+- 📖 **[Documentation complète (Sphinx)](docs/build/html/index.html)** - API reference, architecture, guides
+- 🏗️ **[Diagramme de classes](docs/class-diagram.svg)** - Vue d'ensemble de l'architecture
+
+## 🆕 Nouveautés récentes
+
+- ✅ **Téléchargement automatique S3** - Provisioning automatique des données
+- ✅ **Documentation Sphinx complète** - API reference et guides d'architecture  
+- ✅ **144 tests unitaires** - Couverture complète avec pytest
+- ✅ **Optimisations performances** - Cache intelligent et paramètres t-SNE optimisés
+- ✅ **GitHub Actions CI/CD** - Tests automatiques et vérification qualité code
+
+## 🚀 Application Streamlit
+
+### 📋 Pages disponibles
+1. **🏠 Home** - Exploration générale des données (recettes ou interactions)
+2. **🍳 Analyse de clustering des ingrédients** - Clustering basé sur la co-occurrence
+3. **🔥 Analyse popularité des recettes** - Popularité (nombre d'interactions) vs note moyenne & caractéristiques (minutes, n_steps, n_ingredients)
+
+### 🛠️ Lancement
+```bash
 uv sync
 uv run streamlit run src/app.py
 ```
 
-Les chemins par défaut :
-- Recettes : `data/RAW_recipes.csv`
-- Interactions : `data/RAW_interactions.csv`
+### 📂 Structure du projet
+```
+src/
+├── app.py                          # Application principale Streamlit
+├── core/                          # Modules de base
+│   ├── data_loader.py            # Chargement des données
+│   ├── data_explorer.py          # Exploration de base (accès aux données)
+│   ├── interactions_analyzer.py  # Agrégations popularité / notes / features
+│   └── ingredients_analyzer.py   # Analyse des ingrédients
+├── components/                   # Composants de l'application
+│   ├── ingredients_clustering_page.py     # Page clustering des ingrédients
+│   └── popularity_analysis_page.py         # Page analyse popularité
+└── utils/                        # Utilitaires (vide actuellement)
+```
 
-> Prérequis données : pour le moment l'application suppose que ces deux fichiers existent localement dans un dossier `data/` à la racine. Aucun téléchargement automatique n'est encore implémenté.
+### 📊 Données requises
+Chemins par défaut :
+- **Recettes** : `data/RAW_recipes.csv`
+- **Interactions** : `data/RAW_interactions.csv`
+
+> 💡 **Prérequis** : Le fichier de données doit être présent localement dans le dossier `data/` à la racine du projet.
+
+### ✨ Fonctionnalités
+- **Page Home** : Exploration générale des données + métriques
+- **Clustering Ingrédients** :
+  - Sélection du nombre d'ingrédients à analyser
+  - Regroupement normalisé + co-occurrences
+  - Clustering K-means + t-SNE
+  - Analyse de groupes & debug mappings
+- **Popularité Recettes** :
+  - Agrégat par recette : interaction_count, avg_rating, minutes, n_steps, n_ingredients
+  - Scatter Note moyenne vs Popularité
+  - Scatter Caractéristiques vs Popularité (taille = note)
+  - Aperçu DataFrame fusionné (diagnostic)
+  - Filtre sur interactions minimales
+  - Prétraitement IQR configurable (exclut les notes pour préserver la distribution réelle)
+  - Segmentation par percentiles (Low ≤ P25, Medium ≤ P75, High ≤ P95, Viral > P95)
+
+### 🔧 Prétraitement & Segmentation
+
+**IQR (InterQuartile Range) Filtering**
+- Variables filtrées: `minutes`, `n_steps`, `n_ingredients`
+- Formule: Q1 − k·IQR ≤ valeur ≤ Q3 + k·IQR (k réglable 1.0 → 20.0)
+- `rating` n'est pas filtré pour conserver les avis extrêmes.
+
+**Segmentation Popularité**
+- Low: interaction_count ≤ P25
+- Medium: P25 < interaction_count ≤ P75
+- High: P75 < interaction_count ≤ P95
+- Viral: interaction_count > P95
+
+Cette segmentation reflète la distribution longue traîne et met en évidence l'extrême rareté des recettes virales.
+
+## 📐 Architecture UML
+
+### 🖼️ Visualisation directe
+
+![Diagramme UML](docs/class-diagram.svg)
+
+<details>
+<summary><b>Aperçu (image PNG)</b></summary>
+
+![Architecture UML](docs/class-diagram.png)
+
+> ⚠️ **Si l'image ne s'affiche pas** : Générez-la avec `plantuml docs/class-diagram.puml`
+
+</details>
+
+**Générer le diagramme :**
+```bash
+# Installation PlantUML (macOS)
+brew install plantuml
+
+# Génération PNG haute résolution (200 DPI)
+plantuml docs/class-diagram.puml
+
+# Ou SVG pour zoom sans perte
+plantuml -tsvg docs/class-diagram.puml
+```
 
 
-### Fonctionnalités actuelles
-- Page Display : aperçu (10 premières lignes) du dataset sélectionné (recettes ou interactions)
-- Page Analysis1 : aperçu + métriques ingrédients (diversité, moyenne par recette)
-- Page Analysis2 : aperçu des deux jeux + scatter "popularité vs note moyenne" (interactions)
-- Chargement paresseux des données via `DataLoader`
-- Architecture extensible via explorateurs spécialisés
 
-### Diagramme de classes (PlantUML)
-Le diagramme suivant décrit l'architecture principale (base + explorateurs + application) :
+## 🧪 Tests & Qualité
 
+### Exécuter les tests
+```bash
+# Tous les tests
+uv run pytest
 
+# Tests avec couverture
+uv run pytest --cov=src --cov-report=html
 
-![alt text](docs/ClassDiagram.png)
+# Tests spécifiques
+uv run pytest tests/test_ingredients_clustering_page.py
 
-Dans VS Code (extension PlantUML) vous pouvez simplement ouvrir le fichier et utiliser "Preview Current Diagram".
+# Mode verbose
+uv run pytest -v
+```
 
-#### Évolution possible
-- Ajouter d'autres pages d'analyse (ex: qualité nutritionnelle, temporalité)
-- Extraire un registre d'analyses plug-and-play
-- Remplacer `seaborn` par matplotlib pur pour alléger les dépendances
+### Logger
+Le projet utilise un système de logging structuré dans `debug/` :
+- **`debug/debug.log`** : Logs INFO/DEBUG détaillés
+- **`debug/errors.log`** : Erreurs uniquement
 
----
-_Ce README reflète l'état simplifié actuel après nettoyage des fonctionnalités inutilisées._
+Configuration dans `src/core/logger.py` :
+```python
+from src.core.logger import get_logger
+logger = get_logger(__name__)
+logger.info("Message d'information")
+```
+
+### Cache
+Système de cache automatique pour optimiser les analyses lourdes :
+- **Localisation** : `cache/analyzer/operation/hash.pkl`
+- **Contrôle** : Sidebar de chaque page (activation/nettoyage)
+- **Détection** : Changements de paramètres automatiques
 

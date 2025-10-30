@@ -22,7 +22,7 @@ DATA_DIR = Path("data")
 
 def download_file(url: str, destination: Path) -> bool:
     """
-    Download a file from a URL to a local destination.
+    Download a file from a URL to a local destination with optimizations.
     Args:
         url: The URL to download from
         destination: The local path to save the file
@@ -30,20 +30,29 @@ def download_file(url: str, destination: Path) -> bool:
         True if download successful, False otherwise
     """
     try:
-        print(f"Downloading {destination.name}...")
-        print(f"From: {url}")
-        # Create a request with a user agent to avoid potential blocks
+        print(f"📥 Downloading {destination.name}...")
+        print(f"🔗 URL: {url}")
+
+        # Create request with better headers and timeout
         req = urllib.request.Request(
             url,
-            headers={'User-Agent': 'Mozilla/5.0'}
+            headers={
+                "User-Agent": "Python-urllib/3.12 MangetamainApp/1.0",
+                "Accept": "*/*",
+                "Accept-Encoding": "identity",  # Disable compression for speed
+            },
         )
-        # Download with progress indication
-        with urllib.request.urlopen(req) as response:
-            file_size = int(response.headers.get('Content-Length', 0))
-            downloaded = 0
-            chunk_size = 8192
 
-            with open(destination, 'wb') as f:
+        # Open with timeout
+        with urllib.request.urlopen(req, timeout=30) as response:
+            file_size = int(response.headers.get("Content-Length", 0))
+            downloaded = 0
+            chunk_size = 1024 * 1024  # 1MB chunks instead of 8KB
+            last_progress = -1  # Track last shown progress to reduce prints
+
+            print(f"📦 Size: {file_size / (1024 * 1024):.1f} MB")
+
+            with open(destination, "wb") as f:
                 while True:
                     chunk = response.read(chunk_size)
                     if not chunk:
@@ -51,22 +60,23 @@ def download_file(url: str, destination: Path) -> bool:
                     f.write(chunk)
                     downloaded += len(chunk)
 
-                    # Show progress
+                    # Show progress less frequently (every 10%)
                     if file_size > 0:
-                        progress = (downloaded / file_size) * 100
-                        mb_downloaded = downloaded / (1024 * 1024)
-                        mb_total = file_size / (1024 * 1024)
-                        print(
-                            f"\rProgress: {progress:.1f}% "
-                            f"({mb_downloaded:.1f} MB / {mb_total:.1f} MB)",
-                            end=''
-                        )
+                        progress = int((downloaded / file_size) * 100)
+                        if progress >= last_progress + 10:  # Only print every 10%
+                            mb_downloaded = downloaded / (1024 * 1024)
+                            mb_total = file_size / (1024 * 1024)
+                            print(f"⏳ Progress: {progress}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)")
+                            last_progress = progress
 
-        print(f"\n✅ Successfully downloaded {destination.name}")
+        print(f"✅ Successfully downloaded {destination.name}")
         return True
 
+    except urllib.request.URLError as e:
+        print(f"❌ Network error downloading {destination.name}: {e}")
+        return False
     except Exception as e:
-        print(f"\n❌ Error downloading {destination.name}: {e}")
+        print(f"❌ Error downloading {destination.name}: {e}")
         return False
 
 

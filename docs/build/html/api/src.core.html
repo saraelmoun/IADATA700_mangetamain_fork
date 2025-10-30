@@ -1,0 +1,974 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.core package &mdash; Documentation MangetamainTESTWR 1.0</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=7a28dfa3"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/translations.js?v=e6b791cb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Recherche" href="../search.html" />
+    <link rel="next" title="Architecture du Projet" href="../ClassDiagram.html" />
+    <link rel="prev" title="src.components package" href="src.components.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            MangetamainTESTWR
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">IADATA700_mangetamain</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">src</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="src.html">src package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="src.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="src.components.html">src.components package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">src.core package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.html#module-src.app">src.app module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="src.html#module-src">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ClassDiagram.html">Diagramme de classes</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MangetamainTESTWR</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">src</a></li>
+          <li class="breadcrumb-item"><a href="src.html">src package</a></li>
+      <li class="breadcrumb-item active">src.core package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/src.core.rst.txt" rel="nofollow"> Afficher la source de la page</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-core-package">
+<h1>src.core package<a class="headerlink" href="#src-core-package" title="Lien vers cette rubrique"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Lien vers cette rubrique"></a></h2>
+</section>
+<section id="module-src.core.cache_manager">
+<span id="src-core-cache-manager-module"></span><h2>src.core.cache_manager module<a class="headerlink" href="#module-src.core.cache_manager" title="Lien vers cette rubrique"></a></h2>
+<p>Gestionnaire de cache centralisé pour tous les analyseurs.
+Permet une gestion uniforme du cache across l’application.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.cache_manager.CacheManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.cache_manager.</span></span><span class="sig-name descname"><span class="pre">CacheManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cache'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#CacheManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.CacheManager" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Gestionnaire de cache centralisé avec support multi-analyseurs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cache_manager.CacheManager.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analyzer_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#CacheManager.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.CacheManager.clear" title="Lien vers cette définition"></a></dt>
+<dd><p>Nettoie le cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analyzer_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Si spécifié, nettoie seulement cet analyseur</p></li>
+<li><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Si spécifié (avec analyzer_name), nettoie seulement cette opération</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nombre de fichiers supprimés</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cache_manager.CacheManager.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analyzer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#CacheManager.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.CacheManager.get" title="Lien vers cette définition"></a></dt>
+<dd><p>Récupère un objet du cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analyzer_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’analyseur</p></li>
+<li><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’opération</p></li>
+<li><p><strong>params</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – Paramètres de l’opération</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)]</span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Objet mis en cache ou None si pas trouvé</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cache_manager.CacheManager.get_info">
+<span class="sig-name descname"><span class="pre">get_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#CacheManager.get_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.CacheManager.get_info" title="Lien vers cette définition"></a></dt>
+<dd><p>Retourne des informations sur le cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+<dt class="field-even">Renvoie<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionnaire avec les statistiques du cache</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cache_manager.CacheManager.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analyzer_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#CacheManager.set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.CacheManager.set" title="Lien vers cette définition"></a></dt>
+<dd><p>Sauvegarde un objet dans le cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analyzer_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’analyseur</p></li>
+<li><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’opération</p></li>
+<li><p><strong>params</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span>) – Paramètres de l’opération</p></li>
+<li><p><strong>data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)</span>) – Données à mettre en cache</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True si la sauvegarde a réussi</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.cache_manager.get_cache_manager">
+<span class="sig-prename descclassname"><span class="pre">src.core.cache_manager.</span></span><span class="sig-name descname"><span class="pre">get_cache_manager</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cache_manager.html#get_cache_manager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cache_manager.get_cache_manager" title="Lien vers cette définition"></a></dt>
+<dd><p>Retourne l’instance globale du gestionnaire de cache.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.core.cache_manager.CacheManager" title="src.core.cache_manager.CacheManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">CacheManager</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.core.cacheable_mixin">
+<span id="src-core-cacheable-mixin-module"></span><h2>src.core.cacheable_mixin module<a class="headerlink" href="#module-src.core.cacheable_mixin" title="Lien vers cette rubrique"></a></h2>
+<p>Mixin pour ajouter des capacités de cache aux analyseurs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.cacheable_mixin.CacheableMixin">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.cacheable_mixin.</span></span><span class="sig-name descname"><span class="pre">CacheableMixin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cacheable_mixin.html#CacheableMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cacheable_mixin.CacheableMixin" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Mixin qui ajoute des capacités de cache à une classe.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cacheable_mixin.CacheableMixin.cached_operation">
+<span class="sig-name descname"><span class="pre">cached_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cacheable_mixin.html#CacheableMixin.cached_operation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cacheable_mixin.CacheableMixin.cached_operation" title="Lien vers cette définition"></a></dt>
+<dd><p>Exécute une opération avec mise en cache automatique.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’opération (pour la clé de cache)</p></li>
+<li><p><strong>operation_func</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)]</span>) – Fonction à exécuter si pas en cache</p></li>
+<li><p><strong>cache_params</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Paramètres pour générer la clé de cache</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Résultat de l’opération (depuis le cache ou calculé)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cacheable_mixin.CacheableMixin.clear_cache">
+<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cacheable_mixin.html#CacheableMixin.clear_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cacheable_mixin.CacheableMixin.clear_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Nettoie le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Si spécifié, nettoie seulement cette opération</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nombre de fichiers supprimés</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cacheable_mixin.CacheableMixin.enable_cache">
+<span class="sig-name descname"><span class="pre">enable_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cacheable_mixin.html#CacheableMixin.enable_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cacheable_mixin.CacheableMixin.enable_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Active ou désactive le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.cacheable_mixin.CacheableMixin.get_cache_info">
+<span class="sig-name descname"><span class="pre">get_cache_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/cacheable_mixin.html#CacheableMixin.get_cache_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.cacheable_mixin.CacheableMixin.get_cache_info" title="Lien vers cette définition"></a></dt>
+<dd><p>Retourne les informations de cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.data_explorer">
+<span id="src-core-data-explorer-module"></span><h2>src.core.data_explorer module<a class="headerlink" href="#module-src.core.data_explorer" title="Lien vers cette rubrique"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.data_explorer.DataExplorer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.data_explorer.</span></span><span class="sig-name descname"><span class="pre">DataExplorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_explorer.html#DataExplorer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_explorer.DataExplorer" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="src.core.data_explorer.DataExplorer.df">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">df</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DataFrame</span></em><a class="headerlink" href="#src.core.data_explorer.DataExplorer.df" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.data_explorer.DataExplorer.reload">
+<span class="sig-name descname"><span class="pre">reload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_explorer.html#DataExplorer.reload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_explorer.DataExplorer.reload" title="Lien vers cette définition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.data_loader">
+<span id="src-core-data-loader-module"></span><h2>src.core.data_loader module<a class="headerlink" href="#module-src.core.data_loader" title="Lien vers cette rubrique"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.data_loader.DataLoader">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.data_loader.</span></span><span class="sig-name descname"><span class="pre">DataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_loader.html#DataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_loader.DataLoader" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.data_loader.DataLoader.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_loader.html#DataLoader.get_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_loader.DataLoader.get_data" title="Lien vers cette définition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.data_loader.DataLoader.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_loader.html#DataLoader.load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_loader.DataLoader.load_data" title="Lien vers cette définition"></a></dt>
+<dd><p>Load data from the configured path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force</strong> (<em>bool</em>) – If True, bypass cache even if already loaded.</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.data_loader.DataLoader.preprocess">
+<span class="sig-name descname"><span class="pre">preprocess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/data_loader.html#DataLoader.preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.data_loader.DataLoader.preprocess" title="Lien vers cette définition"></a></dt>
+<dd><p>Apply light preprocessing steps. Override/customize as needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.ingredients_analyzer">
+<span id="src-core-ingredients-analyzer-module"></span><h2>src.core.ingredients_analyzer module<a class="headerlink" href="#module-src.core.ingredients_analyzer" title="Lien vers cette rubrique"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.ingredients_analyzer.</span></span><span class="sig-name descname"><span class="pre">IngredientsAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <a class="reference internal" href="#src.core.cacheable_mixin.CacheableMixin" title="src.core.cacheable_mixin.CacheableMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">CacheableMixin</span></code></a></p>
+<p>Classe pour analyser les ingrédients et effectuer le clustering basé sur la co-occurrence.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.build_similarity_groups">
+<span class="sig-name descname"><span class="pre">build_similarity_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ingredients</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.55</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.build_similarity_groups"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.build_similarity_groups" title="Lien vers cette définition"></a></dt>
+<dd><p>Regroupe les ingrédients similaires basé sur la normalisation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ingredients</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – Liste des ingrédients à regrouper</p></li>
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Seuil de similarité (non utilisé dans cette implémentation)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Liste de groupes d’ingrédients similaires</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.cached_operation">
+<span class="sig-name descname"><span class="pre">cached_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.cached_operation" title="Lien vers cette définition"></a></dt>
+<dd><p>Exécute une opération avec mise en cache automatique.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’opération (pour la clé de cache)</p></li>
+<li><p><strong>operation_func</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)]</span>) – Fonction à exécuter si pas en cache</p></li>
+<li><p><strong>cache_params</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Paramètres pour générer la clé de cache</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Résultat de l’opération (depuis le cache ou calculé)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.clean_ingredient">
+<span class="sig-name descname"><span class="pre">clean_ingredient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ingredient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.clean_ingredient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.clean_ingredient" title="Lien vers cette définition"></a></dt>
+<dd><p>Nettoie et standardise un ingrédient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ingredient</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’ingrédient brut</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Ingrédient nettoyé</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.clear_cache">
+<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.clear_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Nettoie le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Si spécifié, nettoie seulement cette opération</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nombre de fichiers supprimés</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.create_cooccurrence_matrix">
+<span class="sig-name descname"><span class="pre">create_cooccurrence_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ingredients</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.create_cooccurrence_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.create_cooccurrence_matrix" title="Lien vers cette définition"></a></dt>
+<dd><p>Crée une matrice de co-occurrence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>top_ingredients</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – Liste des ingrédients représentatifs à analyser</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matrice de co-occurrence sous forme de DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.debug_ingredient_mapping">
+<span class="sig-name descname"><span class="pre">debug_ingredient_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.debug_ingredient_mapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.debug_ingredient_mapping" title="Lien vers cette définition"></a></dt>
+<dd><p>Méthode de debug pour voir comment les ingrédients sont mappés.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>search_terms</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>]</span>) – Liste de termes à rechercher dans les mappings</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Informations de debug sur les mappings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.enable_cache">
+<span class="sig-name descname"><span class="pre">enable_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.enable_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Active ou désactive le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.generate_tsne_visualization">
+<span class="sig-name descname"><span class="pre">generate_tsne_visualization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cluster_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perplexity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.generate_tsne_visualization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.generate_tsne_visualization" title="Lien vers cette définition"></a></dt>
+<dd><p>Génère une visualisation t-SNE 2D des ingrédients colorés par cluster.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cluster_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Labels des clusters pour chaque ingrédient</p></li>
+<li><p><strong>perplexity</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Paramètre de perplexité pour t-SNE</p></li>
+<li><p><strong>random_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Seed pour reproductibilité</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Données pour la visualisation (coordonnées, labels, couleurs)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.get_cache_info">
+<span class="sig-name descname"><span class="pre">get_cache_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.get_cache_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.get_cache_info" title="Lien vers cette définition"></a></dt>
+<dd><p>Get cache information compatible with the old interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.get_most_common_ingredients">
+<span class="sig-name descname"><span class="pre">get_most_common_ingredients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_ingredients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.get_most_common_ingredients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.get_most_common_ingredients" title="Lien vers cette définition"></a></dt>
+<dd><p>Obtient les ingrédients les plus fréquents avec regroupement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_ingredients</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Nombre d’ingrédients à retourner</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Liste des ingrédients représentatifs les plus fréquents</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.get_processing_summary">
+<span class="sig-name descname"><span class="pre">get_processing_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.get_processing_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.get_processing_summary" title="Lien vers cette définition"></a></dt>
+<dd><p>Génère un résumé complet du processus de traitement des données.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+<dt class="field-even">Renvoie<span class="colon">:</span></dt>
+<dd class="field-even"><p>Statistiques complètes du pipeline de traitement</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.normalize_ingredient">
+<span class="sig-name descname"><span class="pre">normalize_ingredient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.normalize_ingredient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.normalize_ingredient" title="Lien vers cette définition"></a></dt>
+<dd><p>Normalise un ingrédient pour garder seulement l’essentiel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>txt</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’ingrédient brut</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Ingrédient normalisé à sa forme la plus générale</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.parse_ingredients">
+<span class="sig-name descname"><span class="pre">parse_ingredients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ingredients_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.parse_ingredients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.parse_ingredients" title="Lien vers cette définition"></a></dt>
+<dd><p>Parse une chaîne d’ingrédients et retourne une liste d’ingrédients nettoyés.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ingredients_str</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Chaîne contenant les ingrédients (format liste Python)</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Liste des ingrédients nettoyés</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.perform_clustering">
+<span class="sig-name descname"><span class="pre">perform_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">co_occurrence_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.perform_clustering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.perform_clustering" title="Lien vers cette définition"></a></dt>
+<dd><p>Effectue le clustering sur la matrice de co-occurrence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>co_occurrence_df</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span>) – Matrice de co-occurrence</p></li>
+<li><p><strong>n_clusters</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Nombre de clusters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Labels des clusters pour chaque ingrédient</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.ingredients_analyzer.IngredientsAnalyzer.process_ingredients">
+<span class="sig-name descname"><span class="pre">process_ingredients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_ingredients</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/ingredients_analyzer.html#IngredientsAnalyzer.process_ingredients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.ingredients_analyzer.IngredientsAnalyzer.process_ingredients" title="Lien vers cette définition"></a></dt>
+<dd><p>Pipeline principal : traite les ingrédients et crée la matrice de co-occurrence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_ingredients</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Nombre d’ingrédients représentatifs finaux</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple (matrice de co-occurrence DataFrame, noms des ingrédients représentatifs)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.interactions_analyzer">
+<span id="src-core-interactions-analyzer-module"></span><h2>src.core.interactions_analyzer module<a class="headerlink" href="#module-src.core.interactions_analyzer" title="Lien vers cette rubrique"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.interactions_analyzer.</span></span><span class="sig-name descname"><span class="pre">InteractionsAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interactions=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipes=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merged=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_enabled=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <a class="reference internal" href="#src.core.cacheable_mixin.CacheableMixin" title="src.core.cacheable_mixin.CacheableMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">CacheableMixin</span></code></a></p>
+<p>Compute relational aggregates between interactions &amp; recipe metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interactions</strong> (<em>pd.DataFrame</em>) – Raw interactions dataframe (expects at least recipe_id; may include rating)</p></li>
+<li><p><strong>recipes</strong> (<em>pd.DataFrame</em><em> | </em><em>None</em>) – Recipes dataframe providing features (minutes, n_steps, ingredients…)</p></li>
+<li><p><strong>merged</strong> (<em>pd.DataFrame</em><em> | </em><em>None</em>) – Pre‑merged dataframe (bypasses merge step if provided). If given it
+supersedes interactions/recipes arguments.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.aggregate">
+<span class="sig-name descname"><span class="pre">aggregate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.aggregate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.aggregate" title="Lien vers cette définition"></a></dt>
+<dd><p>Return core aggregate per recipe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Metrics:</dt><dd><ul class="simple">
+<li><p>interaction_count</p></li>
+<li><p>avg_rating (if ratings provided)</p></li>
+<li><p>minutes / n_steps / n_ingredients (if present)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.cache_enabled">
+<span class="sig-name descname"><span class="pre">cache_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.cache_enabled" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.cached_operation">
+<span class="sig-name descname"><span class="pre">cached_operation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.cached_operation" title="Lien vers cette définition"></a></dt>
+<dd><p>Exécute une opération avec mise en cache automatique.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Nom de l’opération (pour la clé de cache)</p></li>
+<li><p><strong>operation_func</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)]</span>) – Fonction à exécuter si pas en cache</p></li>
+<li><p><strong>cache_params</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Paramètres pour générer la clé de cache</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T</span></code>)</span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Résultat de l’opération (depuis le cache ou calculé)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.clear_cache">
+<span class="sig-name descname"><span class="pre">clear_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.clear_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Nettoie le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Si spécifié, nettoie seulement cette opération</p>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nombre de fichiers supprimés</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.create_popularity_segments">
+<span class="sig-name descname"><span class="pre">create_popularity_segments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.create_popularity_segments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.create_popularity_segments" title="Lien vers cette définition"></a></dt>
+<dd><p>Create popularity segments based on interaction_count.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.create_recipe_categories">
+<span class="sig-name descname"><span class="pre">create_recipe_categories</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.create_recipe_categories"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.create_recipe_categories" title="Lien vers cette définition"></a></dt>
+<dd><p>Create sophisticated categorization based on recipe characteristics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.enable_cache">
+<span class="sig-name descname"><span class="pre">enable_cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.enable_cache" title="Lien vers cette définition"></a></dt>
+<dd><p>Active ou désactive le cache pour cet analyseur.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.get_cache_info">
+<span class="sig-name descname"><span class="pre">get_cache_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.get_cache_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.get_cache_info" title="Lien vers cette définition"></a></dt>
+<dd><p>Get cache information compatible with the old interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.get_category_insights">
+<span class="sig-name descname"><span class="pre">get_category_insights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.get_category_insights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.get_category_insights" title="Lien vers cette définition"></a></dt>
+<dd><p>Get insights and statistics about the created categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.get_preprocessing_stats">
+<span class="sig-name descname"><span class="pre">get_preprocessing_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.get_preprocessing_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.get_preprocessing_stats" title="Lien vers cette définition"></a></dt>
+<dd><p>Get preprocessing statistics if available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.interactions">
+<span class="sig-name descname"><span class="pre">interactions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.interactions" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.merged">
+<span class="sig-name descname"><span class="pre">merged</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.merged" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.popularity_vs_feature">
+<span class="sig-name descname"><span class="pre">popularity_vs_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_interactions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.popularity_vs_feature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.popularity_vs_feature" title="Lien vers cette définition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.popularity_vs_rating">
+<span class="sig-name descname"><span class="pre">popularity_vs_rating</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_interactions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.popularity_vs_rating"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.popularity_vs_rating" title="Lien vers cette définition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.preprocessing">
+<span class="sig-name descname"><span class="pre">preprocessing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#src.core.interactions_analyzer.PreprocessingConfig" title="src.core.interactions_analyzer.PreprocessingConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreprocessingConfig</span></code></a></em><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.preprocessing" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.rating_vs_feature">
+<span class="sig-name descname"><span class="pre">rating_vs_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_interactions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#InteractionsAnalyzer.rating_vs_feature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.rating_vs_feature" title="Lien vers cette définition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsAnalyzer.recipes">
+<span class="sig-name descname"><span class="pre">recipes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsAnalyzer.recipes" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.InteractionsExplorer">
+<span class="sig-prename descclassname"><span class="pre">src.core.interactions_analyzer.</span></span><span class="sig-name descname"><span class="pre">InteractionsExplorer</span></span><a class="headerlink" href="#src.core.interactions_analyzer.InteractionsExplorer" title="Lien vers cette définition"></a></dt>
+<dd><p>alias de <a class="reference internal" href="#src.core.interactions_analyzer.InteractionsAnalyzer" title="src.core.interactions_analyzer.InteractionsAnalyzer"><code class="xref py py-class docutils literal notranslate"><span class="pre">InteractionsAnalyzer</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.PreprocessingConfig">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.interactions_analyzer.</span></span><span class="sig-name descname"><span class="pre">PreprocessingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable_preprocessing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'iqr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#PreprocessingConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.PreprocessingConfig" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration for data preprocessing options.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.PreprocessingConfig.enable_preprocessing">
+<span class="sig-name descname"><span class="pre">enable_preprocessing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#src.core.interactions_analyzer.PreprocessingConfig.enable_preprocessing" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.PreprocessingConfig.get_hash">
+<span class="sig-name descname"><span class="pre">get_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/interactions_analyzer.html#PreprocessingConfig.get_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.interactions_analyzer.PreprocessingConfig.get_hash" title="Lien vers cette définition"></a></dt>
+<dd><p>Generate hash for cache validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.PreprocessingConfig.outlier_method">
+<span class="sig-name descname"><span class="pre">outlier_method</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'iqr'</span></em><a class="headerlink" href="#src.core.interactions_analyzer.PreprocessingConfig.outlier_method" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.core.interactions_analyzer.PreprocessingConfig.outlier_threshold">
+<span class="sig-name descname"><span class="pre">outlier_threshold</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.5</span></em><a class="headerlink" href="#src.core.interactions_analyzer.PreprocessingConfig.outlier_threshold" title="Lien vers cette définition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.core.logger">
+<span id="src-core-logger-module"></span><h2>src.core.logger module<a class="headerlink" href="#module-src.core.logger" title="Lien vers cette rubrique"></a></h2>
+<p>Simple logging system for the Mangetamain application.</p>
+<p>Provides a centralized logger with appropriate levels and file output.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">MangetamainLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mangetamain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'INFO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger" title="Lien vers cette définition"></a></dt>
+<dd><p>Bases : <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Simple logger for the application with console and file output.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger.debug">
+<span class="sig-name descname"><span class="pre">debug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger.debug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger.debug" title="Lien vers cette définition"></a></dt>
+<dd><p>Log debug message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger.error">
+<span class="sig-name descname"><span class="pre">error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger.error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger.error" title="Lien vers cette définition"></a></dt>
+<dd><p>Log error message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger.exception">
+<span class="sig-name descname"><span class="pre">exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger.exception"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger.exception" title="Lien vers cette définition"></a></dt>
+<dd><p>Log exception with traceback.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger.info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger.info" title="Lien vers cette définition"></a></dt>
+<dd><p>Log info message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.core.logger.MangetamainLogger.warning">
+<span class="sig-name descname"><span class="pre">warning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#MangetamainLogger.warning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.MangetamainLogger.warning" title="Lien vers cette définition"></a></dt>
+<dd><p>Log warning message.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.get_logger">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mangetamain'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#get_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.get_logger" title="Lien vers cette définition"></a></dt>
+<dd><p>Get the global logger instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.core.logger.MangetamainLogger" title="src.core.logger.MangetamainLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">MangetamainLogger</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.log_debug">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">log_debug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#log_debug"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.log_debug" title="Lien vers cette définition"></a></dt>
+<dd><p>Quick debug log.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.log_error">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">log_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#log_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.log_error" title="Lien vers cette définition"></a></dt>
+<dd><p>Quick error log.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.log_info">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">log_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#log_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.log_info" title="Lien vers cette définition"></a></dt>
+<dd><p>Quick info log.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.log_warning">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">log_warning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#log_warning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.log_warning" title="Lien vers cette définition"></a></dt>
+<dd><p>Quick warning log.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.core.logger.setup_logging">
+<span class="sig-prename descclassname"><span class="pre">src.core.logger.</span></span><span class="sig-name descname"><span class="pre">setup_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'INFO'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug_log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_log_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/core/logger.html#setup_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.core.logger.setup_logging" title="Lien vers cette définition"></a></dt>
+<dd><p>Setup application logging with specified level and optional files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Paramètres<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Logging level (DEBUG, INFO, WARNING, ERROR)</p></li>
+<li><p><strong>debug_log_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – Optional file for debug logs (DEBUG+)</p></li>
+<li><p><strong>error_log_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – Optional file for error logs (ERROR+)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Type renvoyé<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#src.core.logger.MangetamainLogger" title="src.core.logger.MangetamainLogger"><code class="xref py py-class docutils literal notranslate"><span class="pre">MangetamainLogger</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Renvoie<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured logger instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-src.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.core" title="Lien vers cette rubrique"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pied de page">
+        <a href="src.components.html" class="btn btn-neutral float-left" title="src.components package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Précédent</a>
+        <a href="../ClassDiagram.html" class="btn btn-neutral float-right" title="Architecture du Projet" accesskey="n" rel="next">Suivant <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2025, William.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

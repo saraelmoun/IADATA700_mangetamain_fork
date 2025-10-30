@@ -43,13 +43,17 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../README.html">IADATA700_mangetamain</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">src</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="src.html">src package</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../ClassDiagram.html">Diagramme de classes</a></li>
 </ul>
 
         </div>
@@ -81,6 +85,28 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="src.html">src package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="src.components.html">src.components package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.components.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.components.html#module-src.components.ingredients_clustering_page">src.components.ingredients_clustering_page module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.components.html#module-src.components.popularity_analysis_page">src.components.popularity_analysis_page module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.components.html#module-src.components">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="src.core.html">src.core package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.cache_manager">src.core.cache_manager module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.cacheable_mixin">src.core.cacheable_mixin module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.data_explorer">src.core.data_explorer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.data_loader">src.core.data_loader module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.ingredients_analyzer">src.core.ingredients_analyzer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.interactions_analyzer">src.core.interactions_analyzer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core.logger">src.core.logger module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="src.core.html#module-src.core">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="src.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="src.html#module-src.app">src.app module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="src.html#src.app.App"><code class="docutils literal notranslate"><span class="pre">App</span></code></a><ul>
@@ -97,44 +123,6 @@
 <li class="toctree-l3"><a class="reference internal" href="src.html#src.app.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.data_explorer">src.data_explorer module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.data_explorer.DataExplorer"><code class="docutils literal notranslate"><span class="pre">DataExplorer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.data_explorer.DataExplorer.df"><code class="docutils literal notranslate"><span class="pre">DataExplorer.df</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.data_explorer.DataExplorer.reload"><code class="docutils literal notranslate"><span class="pre">DataExplorer.reload()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.data_loader">src.data_loader module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.data_loader.DataLoader"><code class="docutils literal notranslate"><span class="pre">DataLoader</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.data_loader.DataLoader.get_data"><code class="docutils literal notranslate"><span class="pre">DataLoader.get_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.data_loader.DataLoader.load_data"><code class="docutils literal notranslate"><span class="pre">DataLoader.load_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.data_loader.DataLoader.preprocess"><code class="docutils literal notranslate"><span class="pre">DataLoader.preprocess()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.interactions_explorer">src.interactions_explorer module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.interactions_explorer.InteractionsExplorer"><code class="docutils literal notranslate"><span class="pre">InteractionsExplorer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.interactions_explorer.InteractionsExplorer.df"><code class="docutils literal notranslate"><span class="pre">InteractionsExplorer.df</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.interactions_explorer.InteractionsExplorer.plot_popularity_vs_rating"><code class="docutils literal notranslate"><span class="pre">InteractionsExplorer.plot_popularity_vs_rating()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.interactions_explorer.InteractionsExplorer.popularity_vs_rating"><code class="docutils literal notranslate"><span class="pre">InteractionsExplorer.popularity_vs_rating()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.interactions_explorer.InteractionsExplorer.reload"><code class="docutils literal notranslate"><span class="pre">InteractionsExplorer.reload()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.recipes_explorer">src.recipes_explorer module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.recipes_explorer.RecipesExplorer"><code class="docutils literal notranslate"><span class="pre">RecipesExplorer</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.recipes_explorer.RecipesExplorer.avg_ingredients_per_recipe"><code class="docutils literal notranslate"><span class="pre">RecipesExplorer.avg_ingredients_per_recipe()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.recipes_explorer.RecipesExplorer.df"><code class="docutils literal notranslate"><span class="pre">RecipesExplorer.df</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.recipes_explorer.RecipesExplorer.ingredient_diversity"><code class="docutils literal notranslate"><span class="pre">RecipesExplorer.ingredient_diversity()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.html#src.recipes_explorer.RecipesExplorer.reload"><code class="docutils literal notranslate"><span class="pre">RecipesExplorer.reload()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.review">src.review module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="src.html#module-src">Module contents</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="src.html#src.App"><code class="docutils literal notranslate"><span class="pre">App</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="src.html#src.App.run"><code class="docutils literal notranslate"><span class="pre">App.run()</span></code></a></li>

@@ -40,9 +40,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">IADATA700_mangetamain</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">src</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../ClassDiagram.html">Diagramme de classes</a></li>
 </ul>
 
         </div>
@@ -70,37 +75,21 @@
            <div itemprop="articleBody">
              
   <h1>Code source de src.app</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">annotations</span><span class="p">,</span>
-<span class="p">)</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Path</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">dataclass</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">streamlit</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">st</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">data_loader</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DataLoader</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">data_explorer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DataExplorer</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">recipes_explorer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">RecipesExplorer</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">interactions_explorer</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">InteractionsExplorer</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">components.ingredients_clustering_page</span><span class="w"> </span><span class="kn">import</span> <span class="n">IngredientsClusteringPage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">components.popularity_analysis_page</span><span class="w"> </span><span class="kn">import</span> <span class="n">PopularityAnalysisPage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.data_explorer</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataExplorer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.data_loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">core.logger</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">setup_logging</span>
 
-<span class="n">DEFAULT_RECIPES</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-    <span class="s2">&quot;data/RAW_recipes.csv&quot;</span>
-<span class="p">)</span>
-<span class="n">DEFAULT_INTERACTIONS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-    <span class="s2">&quot;data/RAW_interactions.csv&quot;</span>
-<span class="p">)</span>
+<span class="n">DEFAULT_RECIPES</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/RAW_recipes.csv&quot;</span><span class="p">)</span>
+<span class="n">DEFAULT_INTERACTIONS</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/RAW_interactions.csv&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="AppConfig">
@@ -109,7 +98,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">AppConfig</span><span class="p">:</span>
     <span class="n">default_recipes_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_RECIPES</span>
     <span class="n">default_interactions_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">DEFAULT_INTERACTIONS</span>
-    <span class="n">page_title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Data Explorer&quot;</span>
+    <span class="n">page_title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Mangetamain - Analyse de Données&quot;</span>
     <span class="n">layout</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;wide&quot;</span></div>
 
 
@@ -117,535 +106,230 @@
 <div class="viewcode-block" id="App">
 <a class="viewcode-back" href="../../api/src.html#src.app.App">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level orchestrator for the Streamlit data exploration UI.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Application Streamlit pour l&#39;analyse de données de recettes.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">config</span><span class="p">:</span> <span class="p">(</span>
-            <span class="n">AppConfig</span>
-            <span class="o">|</span> <span class="kc">None</span>
-        <span class="p">)</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">config</span>
-            <span class="ow">or</span> <span class="n">AppConfig</span><span class="p">()</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">AppConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">AppConfig</span><span class="p">()</span>
 
-    <span class="c1"># Cached loader separated to allow instance usage</span>
-    <span class="nd">@st</span><span class="o">.</span><span class="n">cache_data</span><span class="p">(</span>
-        <span class="n">show_spinner</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_load_dataframe</span><span class="p">(</span>
-        <span class="n">_self</span><span class="p">,</span>
-        <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="p">):</span>  <span class="c1"># noqa: D401 - internal</span>
-        <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">path</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">loader</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
-        <span class="p">)</span>
+        <span class="c1"># Setup logging for the application with performance focus</span>
+        <span class="n">setup_logging</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;WARNING&quot;</span><span class="p">)</span>  <span class="c1"># Less verbose for better performance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Mangetamain application starting&quot;</span><span class="p">)</span>
 
-    <span class="c1"># ---------- UI Sections ---------- #</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_sidebar</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Render sidebar with two logical tabs (simulated via radio)</span>
-<span class="sd">        and return selection.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_data_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Download data files from S3 if not present locally.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="p">))</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">download_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_data_files</span>
+            <span class="n">ensure_data_files</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ Error downloading data files: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Please check your internet connection and refresh the page.&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
 
-<span class="sd">        Streamlit ne supporte pas encore des tabs directement dans la sidebar, on simule</span>
-<span class="sd">        donc deux onglets avec un composant radio horizontal. Les champs affichés</span>
-<span class="sd">        dépendent de l&#39;onglet actif.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sidebar</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configuration de la sidebar avec sélection des pages et datasets.&quot;&quot;&quot;</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">&quot;Navigation&quot;</span><span class="p">)</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict: {&quot;active&quot;: str, &quot;path&quot;: Path, &quot;refresh&quot;: bool}</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">header</span><span class="p">(</span>
-            <span class="s2">&quot;Navigation&quot;</span>
-        <span class="p">)</span>
+        <span class="c1"># Sélection de la page</span>
         <span class="n">page</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">selectbox</span><span class="p">(</span>
             <span class="s2">&quot;Page&quot;</span><span class="p">,</span>
             <span class="p">[</span>
-                <span class="s2">&quot;Display&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Analysis1&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Analysis2&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Home&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Analyse de clustering des ingrédients&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Analyse popularité des recettes&quot;</span><span class="p">,</span>
             <span class="p">],</span>
             <span class="n">key</span><span class="o">=</span><span class="s2">&quot;page_select_box&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">page</span>
-            <span class="ow">in</span> <span class="p">{</span>
-                <span class="s2">&quot;Analysis1&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Analysis2&quot;</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;### </span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">page</span>
-                <span class="o">==</span> <span class="s2">&quot;Analysis1&quot;</span>
-            <span class="p">):</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
-                    <span class="s2">&quot;Analyse dédiée aux recettes (RAW_recipes).&quot;</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
-                    <span class="s2">&quot;Analyse combinée recettes + interactions.&quot;</span>
-                <span class="p">)</span>
-            <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span>
-            <span class="p">}</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse de clustering des ingrédients&quot;</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### </span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;Clustering d&#39;ingrédients basé sur la co-occurrence.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse popularité des recettes&quot;</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;### </span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;Relations popularité / notes / caractéristiques&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">}</span>
 
-        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
-            <span class="s2">&quot;### Display configuration&quot;</span>
-        <span class="p">)</span>
-        <span class="n">active</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
-            <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
-            <span class="p">[</span>
-                <span class="s2">&quot;recettes&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;interactions&quot;</span><span class="p">,</span>
-            <span class="p">],</span>
-            <span class="n">horizontal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;active_explorer_radio&quot;</span><span class="p">,</span>
+        <span class="c1"># Configuration pour la page Home</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="s2">&quot;### Configuration des données&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Sélection du dataset</span>
+        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">radio</span><span class="p">(</span>
+            <span class="s2">&quot;Type de dataset&quot;</span><span class="p">,</span>
+            <span class="p">[</span><span class="s2">&quot;recettes&quot;</span><span class="p">,</span> <span class="s2">&quot;interactions&quot;</span><span class="p">],</span>
+            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dataset_type&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="c1"># On mémorise les deux chemins indépendamment dans session_state</span>
-        <span class="c1"># Migration simple si anciens noms en minuscules utilisés</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span>
-            <span class="ow">and</span> <span class="s2">&quot;raw_recipes.csv&quot;</span>
-            <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span>
-            <span class="ow">and</span> <span class="s2">&quot;raw_interactions.csv&quot;</span>
-            <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_interactions_path</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span>
-            <span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="ow">not</span> <span class="ow">in</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_interactions_path</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">active</span>
-            <span class="o">==</span> <span class="s2">&quot;recettes&quot;</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;recipes_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span>
-                <span class="s2">&quot;Fichier recettes&quot;</span><span class="p">,</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                    <span class="s2">&quot;recipes_path&quot;</span>
-                <span class="p">],</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;recipes_path_input&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">refresh</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                <span class="s2">&quot;Recharger recettes&quot;</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;reload_recettes&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">current_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                    <span class="s2">&quot;recipes_path&quot;</span>
-                <span class="p">]</span>
-            <span class="p">)</span>
+        <span class="c1"># Chemin par défaut selon le type</span>
+        <span class="k">if</span> <span class="n">dataset_type</span> <span class="o">==</span> <span class="s2">&quot;recettes&quot;</span><span class="p">:</span>
+            <span class="n">default_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;Analyse dédiée aux recettes (RAW_recipes).&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                <span class="s2">&quot;interactions_path&quot;</span>
-            <span class="p">]</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">text_input</span><span class="p">(</span>
-                <span class="s2">&quot;Fichier interactions&quot;</span><span class="p">,</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                    <span class="s2">&quot;interactions_path&quot;</span>
-                <span class="p">],</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;interactions_path_input&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">refresh</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">button</span><span class="p">(</span>
-                <span class="s2">&quot;Recharger interactions&quot;</span><span class="p">,</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;reload_interactions&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">current_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="p">[</span>
-                    <span class="s2">&quot;interactions_path&quot;</span>
-                <span class="p">]</span>
-            <span class="p">)</span>
+            <span class="n">default_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_interactions_path</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span><span class="s2">&quot;Analyse des interactions utilisateur-recette.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Options de rechargement</span>
+        <span class="n">refresh</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">sidebar</span><span class="o">.</span><span class="n">checkbox</span><span class="p">(</span><span class="s2">&quot;Forcer le rechargement&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;force_refresh&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
-            <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="n">active</span><span class="p">,</span>
-            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">current_path</span><span class="p">,</span>
+            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">default_path</span><span class="p">,</span>
             <span class="s2">&quot;refresh&quot;</span><span class="p">:</span> <span class="n">refresh</span><span class="p">,</span>
+            <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="n">dataset_type</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_render_summary</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">explorer</span><span class="p">:</span> <span class="n">DataExplorer</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="c1"># Simplified mode: no summary computation for now</span>
-        <span class="k">return</span> <span class="kc">None</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_render_visualisations</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">explorer</span><span class="p">:</span> <span class="n">DataExplorer</span><span class="p">,</span>
-        <span class="n">summary</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="c1"># Disabled in simplified view</span>
-        <span class="k">return</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_render_correlations</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">explorer</span><span class="p">:</span> <span class="n">DataExplorer</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="c1"># Disabled in simplified view</span>
-        <span class="k">return</span>
-
-    <span class="c1"># ---------- Public API ---------- #</span>
 <div class="viewcode-block" id="App.run">
 <a class="viewcode-back" href="../../api/src.html#src.app.App.run">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-    <span class="p">):</span>  <span class="c1"># noqa: D401 - Streamlit entry</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Point d&#39;entrée principal de l&#39;application.&quot;&quot;&quot;</span>
+        <span class="c1"># Ensure data files are downloaded from S3 if missing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_data_files</span><span class="p">()</span>
+        
         <span class="n">st</span><span class="o">.</span><span class="n">set_page_config</span><span class="p">(</span>
             <span class="n">page_title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">page_title</span><span class="p">,</span>
             <span class="n">layout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span>
-            <span class="s2">&quot;🔎 Data Explorer&quot;</span>
-        <span class="p">)</span>
 
-        <span class="n">selection</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sidebar</span><span class="p">()</span>
-        <span class="p">)</span>
-        <span class="n">page</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;page&quot;</span>
-        <span class="p">)</span>
+        <span class="c1"># Gestion du titre dynamique</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">session_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page_select_box&quot;</span><span class="p">,</span> <span class="s2">&quot;Home&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Pages d&#39;analyse (vides pour le moment)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">page</span>
-            <span class="o">==</span> <span class="s2">&quot;Analysis1&quot;</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span>
-                <span class="s2">&quot;Analysis 1 - Recettes&quot;</span>
-            <span class="p">)</span>
-            <span class="c1"># Charger le dataset recettes</span>
-            <span class="n">loader_r</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span>
-            <span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">df_r</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">loader_r</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Impossible de charger les recettes: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse de clustering des ingrédients&quot;</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;🍳 Analyse de clustering des ingrédients&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse popularité des recettes&quot;</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;🔥 Analyse popularité des recettes&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;🏠 Home - Data Explorer&quot;</span><span class="p">)</span>
 
-            <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
-                <span class="s2">&quot;Aperçu recettes (5 premières lignes)&quot;</span>
-            <span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
-                <span class="n">df_r</span><span class="o">.</span><span class="n">head</span><span class="p">(</span>
-                    <span class="mi">5</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sidebar</span><span class="p">()</span>
+        <span class="n">page</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">)</span>
 
-            <span class="n">explorer_r</span> <span class="o">=</span> <span class="n">RecipesExplorer</span><span class="p">(</span>
-                <span class="n">df</span><span class="o">=</span><span class="n">df_r</span>
+        <span class="c1"># Logique des pages</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse de clustering des ingrédients&quot;</span><span class="p">:</span>
+            <span class="n">clustering_page</span> <span class="o">=</span> <span class="n">IngredientsClusteringPage</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span><span class="p">))</span>
+            <span class="n">clustering_page</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">==</span> <span class="s2">&quot;Analyse popularité des recettes&quot;</span><span class="p">:</span>
+            <span class="n">popularity_page</span> <span class="o">=</span> <span class="n">PopularityAnalysisPage</span><span class="p">(</span>
+                <span class="n">interactions_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_interactions_path</span><span class="p">),</span>
+                <span class="n">recipes_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span><span class="p">),</span>
             <span class="p">)</span>
-            <span class="p">(</span>
-                <span class="n">col1</span><span class="p">,</span>
-                <span class="n">col2</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span>
-                <span class="mi">2</span>
-            <span class="p">)</span>
-            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">diversity</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">explorer_r</span><span class="o">.</span><span class="n">ingredient_diversity</span><span class="p">()</span>
-                    <span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
-                        <span class="s2">&quot;Diversité d&#39;ingrédients&quot;</span><span class="p">,</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">diversity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                    <span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Diversité indisponible: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">avg_ing</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">explorer_r</span><span class="o">.</span><span class="n">avg_ingredients_per_recipe</span><span class="p">()</span>
-                    <span class="p">)</span>
-                    <span class="k">if</span> <span class="p">(</span>
-                        <span class="n">avg_ing</span>
-                        <span class="o">==</span> <span class="n">avg_ing</span>
-                    <span class="p">):</span>  <span class="c1"># check not NaN</span>
-                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
-                            <span class="s2">&quot;Ingrédients moyens / recette&quot;</span><span class="p">,</span>
-                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">avg_ing</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                        <span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span>
-                            <span class="s2">&quot;Ingrédients moyens / recette&quot;</span><span class="p">,</span>
-                            <span class="s2">&quot;N/A&quot;</span><span class="p">,</span>
-                        <span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Moyenne indisponible: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="p">(</span>
-            <span class="n">page</span>
-            <span class="o">==</span> <span class="s2">&quot;Analysis2&quot;</span>
-        <span class="p">):</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span>
-                <span class="s2">&quot;Analysis 2 - Recettes + Interactions&quot;</span>
-            <span class="p">)</span>
-            <span class="c1"># Charger datasets nécessaires</span>
-            <span class="n">loader_r</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_recipes_path</span>
-            <span class="p">)</span>
-            <span class="n">loader_i</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_interactions_path</span>
-            <span class="p">)</span>
-            <span class="n">df_r</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="n">df_i</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">df_r</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">loader_r</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Recettes indisponible: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">df_i</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">loader_i</span><span class="o">.</span><span class="n">load_data</span><span class="p">()</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Interactions indisponible: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+            <span class="n">popularity_page</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="k">return</span>
 
-            <span class="p">(</span>
-                <span class="n">col_r</span><span class="p">,</span>
-                <span class="n">col_i</span><span class="p">,</span>
-            <span class="p">)</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span>
-                <span class="mi">2</span>
-            <span class="p">)</span>
-            <span class="k">with</span> <span class="n">col_r</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">df_r</span>
-                    <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="p">):</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
-                        <span class="s2">&quot;Aperçu recettes&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
-                        <span class="n">df_r</span><span class="o">.</span><span class="n">head</span><span class="p">(</span>
-                            <span class="mi">5</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-            <span class="k">with</span> <span class="n">col_i</span><span class="p">:</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="n">df_i</span>
-                    <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-                <span class="p">):</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">caption</span><span class="p">(</span>
-                        <span class="s2">&quot;Aperçu interactions&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
-                        <span class="n">df_i</span><span class="o">.</span><span class="n">head</span><span class="p">(</span>
-                            <span class="mi">5</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
+        <span class="c1"># Page Home - Affichage des données avec exploration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_render_home_page</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span></div>
 
-            <span class="c1"># Analyse popularité vs note (interactions)</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">df_i</span>
-                <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="p">):</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span>
-                    <span class="s2">&quot;---&quot;</span>
-                <span class="p">)</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span>
-                    <span class="s2">&quot;Popularité vs Note moyenne (Interactions)&quot;</span>
-                <span class="p">)</span>
-                <span class="n">interactions_explorer</span> <span class="o">=</span> <span class="n">InteractionsExplorer</span><span class="p">(</span>
-                    <span class="n">df</span><span class="o">=</span><span class="n">df_i</span>
-                <span class="p">)</span>
-                <span class="n">min_int</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">slider</span><span class="p">(</span>
-                    <span class="s2">&quot;Filtrer recettes avec au moins N interactions&quot;</span><span class="p">,</span>
-                    <span class="n">min_value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">max_value</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
-                    <span class="n">value</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="s2">&quot;min_interactions_slider_analysis2&quot;</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">fig</span> <span class="o">=</span> <span class="n">interactions_explorer</span><span class="o">.</span><span class="n">plot_popularity_vs_rating</span><span class="p">(</span>
-                        <span class="n">min_interactions</span><span class="o">=</span><span class="n">min_int</span>
-                    <span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">pyplot</span><span class="p">(</span>
-                        <span class="n">fig</span>
-                    <span class="p">)</span>
-                    <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span>
-                        <span class="s2">&quot;Données agrégées&quot;</span>
-                    <span class="p">):</span>
-                        <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
-                            <span class="n">interactions_explorer</span><span class="o">.</span><span class="n">popularity_vs_rating</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">(</span>
-                                <span class="mi">50</span>
-                            <span class="p">)</span>
-                        <span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Impossible d&#39;afficher le graphique: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s2">&quot;Dataset interactions requis pour la visualisation.&quot;</span>
-                <span class="p">)</span>
 
-            <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_render_home_page</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selection</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rendu de la page d&#39;accueil avec exploration des données.&quot;&quot;&quot;</span>
+        <span class="n">data_path</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+        <span class="n">refresh</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;refresh&quot;</span><span class="p">]</span>
+        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span>
 
-        <span class="n">data_path</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span>
-            <span class="s2">&quot;path&quot;</span>
-        <span class="p">]</span>
-        <span class="n">refresh</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span>
-            <span class="s2">&quot;refresh&quot;</span>
-        <span class="p">]</span>
-        <span class="n">dataset_type</span> <span class="o">=</span> <span class="n">selection</span><span class="p">[</span>
-            <span class="s2">&quot;active&quot;</span>
-        <span class="p">]</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
 
-        <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">data_path</span>
-        <span class="p">)</span>
-        <span class="n">uploaded_df</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">loader</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span>
-                <span class="n">force</span><span class="o">=</span><span class="n">refresh</span>
-            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Attempting to load </span><span class="si">{</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2"> data from </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">loader</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="n">refresh</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully loaded </span><span class="si">{</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2"> data&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Fichier introuvable: </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">. Vous pouvez en téléverser un ci-dessous.&quot;</span>
-            <span class="p">)</span>
-            <span class="n">uploaded</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span>
-                <span class="s2">&quot;Déposer un fichier CSV&quot;</span><span class="p">,</span>
-                <span class="nb">type</span><span class="o">=</span><span class="p">[</span>
-                    <span class="s2">&quot;csv&quot;</span>
-                <span class="p">],</span>
-                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;uploader&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="p">(</span>
-                <span class="n">uploaded</span>
-                <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="p">):</span>
-                <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># local import to avoid overhead otherwise</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File not found: </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fichier introuvable: </span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">. Vous pouvez en téléverser un ci-dessous.&quot;</span><span class="p">)</span>
+            <span class="n">uploaded</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="s2">&quot;Déposer un fichier CSV&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;csv&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;uploader&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">uploaded</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">tmp_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
-                        <span class="n">uploaded</span>
-                    <span class="p">)</span>
-                    <span class="n">uploaded_df</span> <span class="o">=</span> <span class="n">tmp_df</span>
-                    <span class="c1"># Inject uploaded df into loader instance</span>
-                    <span class="n">loader</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="n">tmp_df</span>  <span class="c1"># type: ignore[attr-defined]</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">success</span><span class="p">(</span>
-                        <span class="s2">&quot;Fichier chargé depuis l&#39;upload.&quot;</span>
+                    <span class="n">tmp_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">uploaded</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Successfully loaded </span><span class="si">{</span><span class="n">dataset_type</span><span class="si">}</span><span class="s2"> from upload: </span><span class="si">{</span>
+<span class="w">                            </span><span class="n">tmp_df</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
                     <span class="p">)</span>
                 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Erreur lecture CSV uploadé: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-                    <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - UI path</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Erreur chargement données: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="n">st</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error reading uploaded file: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Erreur lors de la lecture: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">return</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected error during data loading: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Erreur chargement données: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
 
-        <span class="c1"># Choix de l&#39;explorer spécialisé (on passe le loader, DataFrame lazy via property)</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">dataset_type</span>
-            <span class="o">==</span> <span class="s2">&quot;recettes&quot;</span>
-        <span class="p">):</span>
-            <span class="n">explorer</span><span class="p">:</span> <span class="n">DataExplorer</span> <span class="o">=</span> <span class="n">RecipesExplorer</span><span class="p">(</span>
-                <span class="n">loader</span><span class="o">=</span><span class="n">loader</span><span class="p">,</span>
-                <span class="n">df</span><span class="o">=</span><span class="n">uploaded_df</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="p">(</span>
-            <span class="n">dataset_type</span>
-            <span class="o">==</span> <span class="s2">&quot;interactions&quot;</span>
-        <span class="p">):</span>
-            <span class="n">explorer</span> <span class="o">=</span> <span class="n">InteractionsExplorer</span><span class="p">(</span>
-                <span class="n">loader</span><span class="o">=</span><span class="n">loader</span><span class="p">,</span>
-                <span class="n">df</span><span class="o">=</span><span class="n">uploaded_df</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># fallback de sécurité</span>
-            <span class="n">explorer</span> <span class="o">=</span> <span class="n">DataExplorer</span><span class="p">(</span>
-                <span class="n">loader</span><span class="o">=</span><span class="n">loader</span>
-            <span class="p">)</span>
-
-        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span>
-            <span class="s2">&quot;Aperçu (10 premières lignes)&quot;</span>
+        <span class="c1"># Explorer de base pour tous les types de données</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initializing DataExplorer&quot;</span><span class="p">)</span>
+        <span class="n">explorer</span> <span class="o">=</span> <span class="n">DataExplorer</span><span class="p">(</span><span class="n">loader</span><span class="o">=</span><span class="n">loader</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Data overview: </span><span class="si">{</span>
+<span class="w">                </span><span class="n">explorer</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> rows/cols, </span><span class="si">{</span>
+<span class="w">                </span><span class="n">explorer</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="w">                </span><span class="o">/</span><span class="w"> </span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span>
         <span class="p">)</span>
-        <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span>
-            <span class="n">explorer</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span>
-                <span class="mi">10</span>
+
+        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;📋 Aperçu des données (10 premières lignes)&quot;</span><span class="p">)</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span><span class="n">explorer</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+
+        <span class="c1"># Affichage des informations de base</span>
+        <span class="n">st</span><span class="o">.</span><span class="n">subheader</span><span class="p">(</span><span class="s2">&quot;📊 Informations sur le dataset&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Informations générales&quot;</span><span class="p">,</span> <span class="n">expanded</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">explorer</span><span class="o">.</span><span class="n">df</span>
+            <span class="n">missing_values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">memory_mb</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">memory_usage</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1024</span><span class="o">**</span><span class="mi">2</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Dataset analysis: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span><span class="si">}</span><span class="s2"> cols, </span><span class="si">{</span><span class="n">missing_values</span><span class="si">}</span><span class="s2"> missing values&quot;</span>
             <span class="p">)</span>
-        <span class="p">)</span></div>
-</div>
 
+            <span class="n">col1</span><span class="p">,</span> <span class="n">col2</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">columns</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">col1</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Nombre de lignes&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Nombre de colonnes&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">))</span>
+            <span class="k">with</span> <span class="n">col2</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Taille mémoire&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">memory_mb</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="s2">&quot;Valeurs manquantes&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">missing_values</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Plus d&#39;analyse spécifique interactions ici (déplacé vers Analysis2)</span>
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Types de données&quot;</span><span class="p">):</span>
+            <span class="c1"># Certains objets dtype (extension / objets Python) provoquent une erreur</span>
+            <span class="c1"># ArrowInvalid lors de la conversion interne Streamlit -&gt; Arrow</span>
+            <span class="c1"># (ex: numpy.dtype objects non sérialisables). On convertit donc en str.</span>
+            <span class="n">dtypes_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dtypes</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+            <span class="n">st</span><span class="o">.</span><span class="n">dataframe</span><span class="p">(</span><span class="n">dtypes_df</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">st</span><span class="o">.</span><span class="n">expander</span><span class="p">(</span><span class="s2">&quot;Analyse des colonnes clés&quot;</span><span class="p">):</span>
+            <span class="c1"># Analyse spécifique aux recettes si les colonnes existent</span>
+            <span class="k">if</span> <span class="s2">&quot;ingredients&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;🥘 **Ingrédients** :&quot;</span><span class="p">)</span>
+                <span class="c1"># Compter les recettes avec ingrédients valides</span>
+                <span class="n">valid_ingredients</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;ingredients&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Recettes avec ingrédients : </span><span class="si">{</span><span class="n">valid_ingredients</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;📝 **Noms de recettes** :&quot;</span><span class="p">)</span>
+                <span class="n">unique_names</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Recettes uniques : </span><span class="si">{</span><span class="n">unique_names</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;minutes&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;⏱️ **Temps de préparation** :&quot;</span><span class="p">)</span>
+                <span class="n">avg_minutes</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;minutes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Temps moyen : </span><span class="si">{</span><span class="n">avg_minutes</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> minutes&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;n_steps&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;📋 **Étapes de préparation** :&quot;</span><span class="p">)</span>
+                <span class="n">avg_steps</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;n_steps&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="n">st</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Nombre moyen d&#39;étapes : </span><span class="si">{</span><span class="n">avg_steps</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../api/src.html#src.app.main">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>  <span class="c1"># Retained for direct execution via streamlit run src/app.py</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Point d&#39;entrée pour l&#39;exécution directe via streamlit run.&quot;&quot;&quot;</span>
     <span class="n">App</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>
 
 
 
-<span class="k">if</span> <span class="p">(</span>
-    <span class="vm">__name__</span>
-    <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span>
-<span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="n">main</span><span class="p">()</span>
 </pre></div>
 
